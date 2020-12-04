@@ -6,20 +6,28 @@
         xmlns:local="clr-namespace:IDE_UI"
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="CMM-IDE" Height="450" Width="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="180"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" VerticalAlignment="Center">编辑器测试</TextBlock>
-        
+        <StackPanel Orientation="Horizontal">
+            <TextBlock VerticalAlignment="Center">编辑器测试</TextBlock>
+            <Button x:Name="loadSample" Click="loadSample_Click" Margin="20 5 0 5" Padding="10 0 10 0">加载测试代码</Button>
+            <Button x:Name="run" Click="run_Click" Margin="20 5 0 5" Padding="10 0 10 0">运行</Button>
+        </StackPanel>
+
+        <Rectangle Height="1" VerticalAlignment="Bottom" Fill="Black"/>
         <avalonEdit:TextEditor Grid.Row="1"
             ShowLineNumbers="True"
             Name="textEditor"
             FontFamily="Consolas"
             SyntaxHighlighting="C#"
             FontSize="14pt"/>
+
+        <TextBox Name="textBox" Grid.Row="2"/>
     </Grid>
 </Window>
