@@ -95,6 +95,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CMMInterpreter\CMMInterpreter.csproj">
+      <Project>{c5ce6cdd-4ab5-4f6e-b41d-d327ecbaa725}</Project>
+      <Name>CMMInterpreter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ICSharpCode.AvalonEdit\ICSharpCode.AvalonEdit.csproj">
       <Project>{f43f64a4-03fb-4ff5-870d-a8d9a5307237}</Project>
       <Name>ICSharpCode.AvalonEdit</Name>
