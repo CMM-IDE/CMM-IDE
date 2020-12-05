@@ -1,4 +1,5 @@
-﻿using Antlr4.Runtime;
+﻿using AduSkin.Controls.Metro;
+using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using System;
 using System.Windows;
@@ -9,7 +10,7 @@ namespace IDE_UI
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : Window, outputStreamDelegate
+    public partial class MainWindow : MetroWindow, outputStreamDelegate
     {
         public MainWindow()
         {
