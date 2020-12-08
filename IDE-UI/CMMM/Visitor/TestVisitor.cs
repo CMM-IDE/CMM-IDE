@@ -20,21 +20,11 @@ public class VarValue
 
 public class TestVisitor: CMMMBaseVisitor<object>
 {
-	private bool isDebug;
-	private LinkedList<int> breakpoints = new LinkedList<int>();
 	private Dictionary<string, VarValue> Variables = new Dictionary<string, VarValue>();
 
 	public outputStreamDelegate outputStream = null;
 
-	public void setDebug(bool isDebug)
-    {
-		this.isDebug = isDebug;
-    }
-
-	public void addBreakpoint(int line)
-    {
-		breakpoints.AddLast(line);
-    }
+	
 
 	public override object VisitIfStatement([NotNull] CMMMParser.IfStatementContext context) {
 		var condition = (bool)VisitQuoteExpr(context.quoteExpr());
@@ -60,28 +50,13 @@ public class TestVisitor: CMMMBaseVisitor<object>
 	}
 
 
-	public override object VisitWhileStatement([NotNull] CMMMParser.WhileStatementContext context) {
-		if (isDebug && breakpoints.Contains(context.GetToken(9, 0).Symbol.Line))
-        {
-			outputStream?.Print("Sept into while\n");
-			while (true)
-			{
-				var condition = (bool)VisitExpression(context.expression());
-				outputStream?.Print(context.expression().GetText()+": "+condition+"\n");
-
-				if (!(condition)) { break; }
-				VisitBlockStatement(context.blockStatement());
-			}
-			outputStream?.Print("while finish\n");
-		}
-        else
-        {
-			while (true)
-			{
-				var condition = (bool)VisitExpression(context.expression());
-				if (!(condition)) { break; }
-				VisitBlockStatement(context.blockStatement());
-			}
+	public override object VisitWhileStatement([NotNull] CMMMParser.WhileStatementContext context)
+	{
+		while (true)
+		{
+			var condition = (bool)VisitExpression(context.expression());
+			if (!(condition)) { break; }
+			VisitBlockStatement(context.blockStatement());
 		}
 		return null;
 	}
