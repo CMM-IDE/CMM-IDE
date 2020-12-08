@@ -1,0 +1,14 @@
+﻿int a = -10;
+if( a > 0 ){
+    write(a); 
+    write();
+}else{
+    write(-a); 
+    write();
+}
+
+/* 
+* Expected Output:
+* 10
+* program exit
+*/
