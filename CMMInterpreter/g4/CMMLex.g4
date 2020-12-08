@@ -48,6 +48,14 @@ Void
 	: 'void'
 	;
 
+Read
+	: 'read'
+	;
+
+Write
+	: 'write'
+	;
+
 Add
 	: '+'
 	;

@@ -51,7 +51,7 @@ relationalOperator
 	;
 
 additiveExpression
-	: additiveExpression operator=('+'|'¨C') term
+	: additiveExpression operator=('+'|'-') term
 	| term
 	;
 
