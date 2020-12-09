@@ -136,7 +136,12 @@ doWhileStatement
 	;
 
 forStatement
-	: 'for' '(' ( expression )? ';' ( expression )? ';' ( expression )? ')' codeBlock
+	: 'for' '(' ( forInitializer )? ';' ( expression )? ';' ( assignStatement )? ')' codeBlock
+	;
+
+forInitializer
+	: variableDeclaration
+	| assignStatement
 	;
 
 ifStatement
@@ -149,7 +154,7 @@ elseClause
 	;
 
 readStatement
-	: 'read' '(' Identifier ( ',' Identifier )? ')' ';'
+	: 'read' '(' ( Identifier | Identifier '[' expression ']' ) ( ',' ( Identifier | Identifier '[' expression ']' ) )* ')' ';'
 	;
 
 writeStatement

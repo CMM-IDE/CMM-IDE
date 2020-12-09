@@ -176,6 +176,12 @@ public interface ICMMVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitForStatement([NotNull] CMMParser.ForStatementContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="CMMParser.forInitializer"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitForInitializer([NotNull] CMMParser.ForInitializerContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="CMMParser.ifStatement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

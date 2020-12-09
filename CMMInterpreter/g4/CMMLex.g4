@@ -174,3 +174,7 @@ Digit
 	
 Whitespce
 	: [ \t\n\r]+ -> skip;
+
+Comment
+	: '/*' (.)*? '*/' -> skip
+	;

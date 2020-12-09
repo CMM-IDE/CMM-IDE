@@ -42,6 +42,7 @@ RealLiteral=41
 Alpha=42
 Digit=43
 Whitespce=44
+Comment=45
 'if'=1
 'else'=2
 'while'=3
