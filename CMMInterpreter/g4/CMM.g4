@@ -68,6 +68,7 @@ factor
 	| RealLiteral
 	| '-' factor
 	| Identifier '(' expressionList ')'
+	| Identifier '(' ')'
 	;
 
 declaration
@@ -174,6 +175,7 @@ jumpStatement
 
 callStatement
 	: Identifier '(' expressionList ')' ';'
+	| Identifier '(' ')' ';'
 	;
 
 codeBlock
