@@ -231,6 +231,16 @@ public interface ICMMListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitAssignStatement([NotNull] CMMParser.AssignStatementContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CMMParser.assignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterAssignment([NotNull] CMMParser.AssignmentContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CMMParser.assignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitAssignment([NotNull] CMMParser.AssignmentContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="CMMParser.leftValue"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

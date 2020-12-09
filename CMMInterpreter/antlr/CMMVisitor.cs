@@ -152,6 +152,12 @@ public interface ICMMVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitAssignStatement([NotNull] CMMParser.AssignStatementContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="CMMParser.assignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAssignment([NotNull] CMMParser.AssignmentContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="CMMParser.leftValue"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

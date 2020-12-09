@@ -119,7 +119,11 @@ typeSpecifier
 	;
 
 assignStatement
-	: leftValue '=' expression ';'
+	: assignment ';'
+	;
+
+assignment
+	: leftValue '=' expression
 	;
 
 leftValue
@@ -136,12 +140,12 @@ doWhileStatement
 	;
 
 forStatement
-	: 'for' '(' ( forInitializer )? ';' ( expression )? ';' ( leftValue '=' expression )? ')' codeBlock
+	: 'for' '(' ( forInitializer )? ';' ( expression )? ';' ( assignment )? ')' codeBlock
 	;
 
 forInitializer
 	: variableDeclaration
-	| leftValue '=' expression
+	| assignment
 	;
 
 ifStatement

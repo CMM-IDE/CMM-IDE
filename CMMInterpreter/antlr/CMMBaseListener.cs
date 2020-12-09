@@ -275,6 +275,18 @@ public partial class CMMBaseListener : ICMMListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAssignStatement([NotNull] CMMParser.AssignStatementContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CMMParser.assignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterAssignment([NotNull] CMMParser.AssignmentContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CMMParser.assignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitAssignment([NotNull] CMMParser.AssignmentContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="CMMParser.leftValue"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
