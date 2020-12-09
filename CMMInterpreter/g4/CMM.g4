@@ -136,12 +136,12 @@ doWhileStatement
 	;
 
 forStatement
-	: 'for' '(' ( forInitializer )? ';' ( expression )? ';' ( assignStatement )? ')' codeBlock
+	: 'for' '(' ( forInitializer )? ';' ( expression )? ';' ( leftValue '=' expression )? ')' codeBlock
 	;
 
 forInitializer
 	: variableDeclaration
-	| assignStatement
+	| leftValue '=' expression
 	;
 
 ifStatement
