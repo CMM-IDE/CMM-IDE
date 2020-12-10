@@ -11,7 +11,7 @@ write();
 
 /*  
 * Expected Output:
-* 0 0 0 0 0
-* 15 9 36 4 216
+* [ 0 0 0 0 0 ]
+* [ 15 9 36 4 216 ]
 * program exit
 */
