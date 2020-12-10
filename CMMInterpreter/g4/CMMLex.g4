@@ -56,6 +56,14 @@ Write
 	: 'write'
 	;
 
+True
+	: 'true'
+	;
+
+False
+	: 'false'
+	;
+
 Add
 	: '+'
 	;

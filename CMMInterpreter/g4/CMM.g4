@@ -66,6 +66,8 @@ factor
 	| '(' expression ')'
 	| IntegerLiteral
 	| RealLiteral
+	| 'true'
+	| 'false'
 	| '-' factor
 	| Identifier '(' expressionList ')'
 	| Identifier '(' ')'
