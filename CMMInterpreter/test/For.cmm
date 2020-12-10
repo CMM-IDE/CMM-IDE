@@ -4,8 +4,8 @@ for(i=0; i < 3; i = i + 1){
         sum = sum + i + j;
         write(sum);    
     }
-    write();
 }
+write();
 
 /* 
 * Expected Output:
