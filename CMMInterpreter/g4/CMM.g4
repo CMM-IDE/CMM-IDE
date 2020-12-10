@@ -159,7 +159,7 @@ elseClause
 	;
 
 readStatement
-	: 'read' '(' ( Identifier | Identifier '[' expression ']' ) ( ',' ( Identifier | Identifier '[' expression ']' ) )* ')' ';'
+	: 'read' '(' leftValue ( ',' leftValue )* ')' ';'
 	;
 
 writeStatement
