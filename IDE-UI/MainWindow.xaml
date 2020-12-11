@@ -335,12 +335,12 @@
 
             <Grid Grid.Row="3"  Background="#FFEE796D">
                 <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Top">
-                    <Button Name="btnConsole" Height="20" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                    <Button Name="btnConsole" Height="24" FontSize="10" Margin="0" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
                             Background="{Binding State.ConsoleShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="console" Click="windowButton_Click">
                         控制台
                     </Button>
                     
-                    <Button Height="20" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                    <Button Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
                             Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="windowButton_Click">
                         调试
                     </Button>
