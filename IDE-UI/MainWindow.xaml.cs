@@ -5,7 +5,10 @@ using CMMInterpreter.CMMException;
 using CMMInterpreter.inter;
 using System;
 using System.Windows;
-
+using System.Windows.Controls;
+using System.Diagnostics;
+using System.Windows.Input;
+using IDE_UI.Helper;
 
 namespace IDE_UI
 {
@@ -17,9 +20,14 @@ namespace IDE_UI
         public MainWindow()
         {
             InitializeComponent();
-            textBox.FontSize = 12;
+            textBox.FontSize = 14;
         }
 
+        private bool isInputMode = true;
+
+        private int inputLength = 0;
+
+        private IDEState state = new IDEState();
 
         private void loadSample_Click(object sender, RoutedEventArgs e)
         {
@@ -67,6 +75,59 @@ namespace IDE_UI
         public void Print(string s)
         {
             textBox.Text += s;
+        }
+
+
+        private void TextChangedEventHandler(object sender, TextChangedEventArgs e)
+        {
+            state.fileModified = true;
+            if(isInputMode) {
+                foreach (var change in e.Changes) {
+                    inputLength += change.AddedLength;
+                    inputLength -= change.RemovedLength;
+                }
+            }
+            
+        }
+
+        private void textBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter) {
+                var text = textBox.Text.Substring(textBox.Text.Length - inputLength, inputLength - 1);
+                Debug.WriteLine(text);
+                inputLength = 0;
+                e.Handled = false;
+            }
+        }
+
+        private async void OpenFileItem_Click(object sender, RoutedEventArgs e)
+        {
+            try {
+                var path = FileHelper.PickFileAsync();
+                if (path != null) {
+                    textEditor.Text = await FileHelper.ReadStringFromFileAsync(path);
+                    state.fileOpened = true;
+                    state.openedFilePath = path;
+                    state.fileModified = false;
+                }
+                
+            }
+            catch {
+                MessageBox.Show("打开文件出错，请重试。");
+            }
+            
+        }
+
+        private async void SaveFileItem_Click(object sender, RoutedEventArgs e)
+        {
+
+            var path = state.fileOpened ? state.openedFilePath : FileHelper.SaveFileAsync();
+            bool succeed = await FileHelper.WriteFileAsync(path, textEditor.Text);
+            if(succeed) {
+                state.fileOpened = true;
+                state.openedFilePath = path;
+                state.fileModified = false;
+            }
         }
     }
 }

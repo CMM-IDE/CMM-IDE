@@ -95,6 +95,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Controls\CMMCodeEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -109,6 +113,11 @@
     <Compile Include="CMMM\CMMMLexer.cs" />
     <Compile Include="CMMM\Parser\CMMMParser.cs" />
     <Compile Include="CMMM\Visitor\CMMMVisitor.cs" />
+    <Compile Include="Controls\CMMCodeEditor.xaml.cs">
+      <DependentUpon>CMMCodeEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Helper\IDEState.cs" />
+    <Compile Include="Helper\FileHelper.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
