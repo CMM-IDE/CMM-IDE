@@ -116,6 +116,7 @@
     <Compile Include="Controls\CMMCodeEditor.xaml.cs">
       <DependentUpon>CMMCodeEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converter\BoolToColor.cs" />
     <Compile Include="Helper\IDEState.cs" />
     <Compile Include="Helper\FileHelper.cs" />
     <Compile Include="MainWindow.xaml.cs">
@@ -163,6 +164,21 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="test\ArrayOperation.cmm" />
+    <None Include="test\Break.cmm" />
+    <None Include="test\Debug%28step into%29.cmm" />
+    <None Include="test\debug%28step over%29.cmm" />
+    <None Include="test\DoWhile.cmm" />
+    <None Include="test\For.cmm" />
+    <None Include="test\ForBlank.cmm" />
+    <None Include="test\Function.cmm" />
+    <None Include="test\IfElse.cmm" />
+    <None Include="test\LexicalError.cmm" />
+    <None Include="test\OpenFile.cmm" />
+    <None Include="test\ReadAndWrite.cmm" />
+    <None Include="test\SemanticError.cmm" />
+    <None Include="test\SyntaxError.cmm" />
+    <None Include="test\While.cmm" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

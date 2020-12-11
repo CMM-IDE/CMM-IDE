@@ -1,0 +1,6 @@
+﻿int i = 0, j = 0, sum= 0;
+for(I = 0; i < 3; i = i + 1){
+    for(j = 0; j < 3; j = j + 1){
+        sum = sum + i + j;
+    }
+}

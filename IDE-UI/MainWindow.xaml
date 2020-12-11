@@ -7,6 +7,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:cc="clr-namespace:IDE_UI.Converter"
     Title="CMM-IDE" MinWidth="600" MinHeight="350" d:DesignHeight="800" d:DesignWidth="1000"
     Width="800" Height="600"
     BorderThickness="0" WindowStyle="None"
@@ -49,6 +50,11 @@
             </Metro:MetroTitleMenuItem>
         </Metro:MetroTitleMenu>
     </Metro:MetroWindow.Menu>-->
+
+    <Window.Resources>
+        <cc:BoolToColor x:Key="BoolToColor"/>
+    </Window.Resources>
+    
     <DockPanel>
 
         <Grid x:Name="menuArea" DockPanel.Dock="Top" Background="#FFFAFAFA">
@@ -286,9 +292,9 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="10"/>
-                <RowDefinition Height="*" x:Name="extraWindow"/>
-                <RowDefinition Height="20"/>
+                <RowDefinition Height="0" x:Name="splitterRow"/>
+                <RowDefinition Height="0" x:Name="extraWindowRow"/>
+                <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
@@ -320,13 +326,27 @@
                           ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" 
                           VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
 
-            <TextBox Name="textBox" Grid.Row="2" TextWrapping="Wrap"
+            <ContentPresenter x:Name="extraWindowPresenter" Grid.Row="2">
+                
+            </ContentPresenter>
+            <!--<TextBox Name="textBox" Grid.Row="2" TextWrapping="Wrap"
                      TextChanged="TextChangedEventHandler" 
-                     KeyUp="textBox_KeyUp" AcceptsReturn="True"/>
+                     KeyUp="textBox_KeyUp" AcceptsReturn="True"/>-->
 
-            <StackPanel Grid.Row="3" Orientation="Horizontal">
-                <Button Height="20" FontSize="10" Style="{StaticResource MaterialDesignFlatAccentButton}" Background="AliceBlue">fdfafaa</Button>
-            </StackPanel>
+            <Grid Grid.Row="3"  Background="#FFEE796D">
+                <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Top">
+                    <Button Name="btnConsole" Height="20" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                            Background="{Binding State.ConsoleShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="console" Click="windowButton_Click">
+                        控制台
+                    </Button>
+                    
+                    <Button Height="20" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="windowButton_Click">
+                        调试
+                    </Button>
+                </StackPanel>
+            </Grid>
+            
         </Grid>
     </DockPanel>
 

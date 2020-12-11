@@ -5,6 +5,7 @@ using CMMInterpreter.CMMException;
 using CMMInterpreter.util;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace CMMInterpreter.inter
 {
@@ -16,6 +17,11 @@ namespace CMMInterpreter.inter
         bool enterFunctionScope = false;
         Stack<Scope> loopStack = new Stack<Scope>();
         public IOutputStream outputStream = null;
+
+        public event Action NeedInput;
+
+        public string buffer = null;
+
         public override object VisitStatements([NotNull] CMMParser.StatementsContext context)
         {
             //程序总入口
@@ -883,15 +889,18 @@ namespace CMMInterpreter.inter
                 throw new RuntimeException("变量" + symbol + "未定义，" + "或者对函数" + symbol + "进行了非法赋值！", context.Identifier().Symbol.Line);
             }
             string typeStr = symbol.getType().getName();
+            
             if (context.ChildCount == 1)
             {
                 if (typeStr.Equals("int"))
                 {
                     // Console.WriteLine("请输入一个整数:");
                     outputStream?.Print("请输入一个整数:\n");
+                    NeedInput?.Invoke();
+                    Thread.CurrentThread.Suspend();
                     try
                     {
-                        int rightValue = Int32.Parse(Console.ReadLine());
+                        int rightValue = Int32.Parse(buffer);
                         symbol.setValue(rightValue);
                     }
                     catch (OverflowException e)
@@ -908,9 +917,11 @@ namespace CMMInterpreter.inter
                 {
                    // Console.WriteLine("请输入一个实数:");
                     outputStream?.Print("请输入一个实数:\n");
+                    NeedInput?.Invoke();
+                    Thread.CurrentThread.Suspend();
                     try
                     {
-                        decimal rightValue = decimal.Parse(Console.ReadLine());
+                        decimal rightValue = decimal.Parse(buffer);
                         symbol.setValue(rightValue);
                     }
                     catch (OverflowException e)
@@ -926,9 +937,11 @@ namespace CMMInterpreter.inter
                 {
                     //Console.WriteLine("请输入一个bool值:");
                     outputStream?.Print("请输入一个bool值:\n");
+                    NeedInput?.Invoke();
+                    Thread.CurrentThread.Suspend();
                     try
                     {
-                        bool rightValue = bool.Parse(Console.ReadLine());
+                        bool rightValue = bool.Parse(buffer);
                         symbol.setValue(rightValue);
                     }
                     catch (FormatException e)
@@ -952,9 +965,11 @@ namespace CMMInterpreter.inter
                     indexCheck(arr.Length, index);
                    // Console.WriteLine("请输入一个整数：");
                     outputStream?.Print("请输入一个整数:\n");
+                    NeedInput?.Invoke();
+                    Thread.CurrentThread.Suspend();
                     try
                     {
-                        int rightValue = Int32.Parse(Console.ReadLine());
+                        int rightValue = Int32.Parse(buffer);
                         arr[index] = rightValue;
                     }
                     catch (OverflowException e)
@@ -972,9 +987,11 @@ namespace CMMInterpreter.inter
                     indexCheck(arr.Length, index);
                    // Console.WriteLine("请输入一个实数:");
                     outputStream?.Print("请输入一个实数:\n");
+                    NeedInput?.Invoke();
+                    Thread.CurrentThread.Suspend();
                     try
                     {
-                        decimal rightValue = decimal.Parse(Console.ReadLine());
+                        decimal rightValue = decimal.Parse(buffer);
                         arr[index] = rightValue;
                     }
                     catch (OverflowException e)
@@ -992,9 +1009,11 @@ namespace CMMInterpreter.inter
                     indexCheck(arr.Length, index);
                    // Console.WriteLine("请输入一个bool值:");
                     outputStream?.Print("请输入一个bool值:\n");
+                    NeedInput?.Invoke();
+                    Thread.CurrentThread.Suspend();
                     try
                     {
-                        bool rightValue = bool.Parse(Console.ReadLine());
+                        bool rightValue = bool.Parse(buffer);
                         arr[index] = rightValue;
                     }
                     catch (FormatException e)

@@ -1,0 +1,14 @@
+﻿int a = 3;
+do{
+    a = a - 1;
+    write(a); 
+    write();
+}while(a <> 0);
+
+/* 
+* Expected Output:
+* 2
+* 1
+* 0
+* program exit
+*/

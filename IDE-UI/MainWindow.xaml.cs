@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Diagnostics;
 using System.Windows.Input;
 using IDE_UI.Helper;
+using System.Threading;
 
 namespace IDE_UI
 {
@@ -19,19 +20,43 @@ namespace IDE_UI
     {
         public MainWindow()
         {
+            
             InitializeComponent();
+            this.DataContext = this;
+            textBox = new TextBox();
             textBox.FontSize = 14;
+            textBox.AcceptsReturn = true;
+            textBox.TextWrapping = TextWrapping.Wrap;
+            textBox.TextChanged += TextChangedEventHandler;
+            textBox.KeyUp += textBox_KeyUp;
+
+            extraWindowPresenter.SizeChanged += handleSizeChanged;
         }
 
-        private bool isInputMode = true;
+        private TextBox textBox;
+
+        private bool isInputMode = false;
 
         private int inputLength = 0;
 
-        private IDEState state = new IDEState();
+        public IDEState State {
+            get {
+                return state;
+            }
+            set {
+                state = value;
+            }
+        }
+
+        public IDEState state = new IDEState();
+
+        private Thread runnerThread = null;
+
+        private RefPhase visitor = null;
 
         private void loadSample_Click(object sender, RoutedEventArgs e)
         {
-            textEditor.Text = "write(\"CMMM语言while循环示例:\");\nnumber a = 10;\nwhile (a <> 0) {\n\ta = a - 1;\n\twrite(a + \" \");\n}";
+            textEditor.Text = "int a = 10;\nwhile (a <> 0) {\n\ta = a - 1;\n\twrite(a);\n}";
         }
 
         private void run_Click(object sender, RoutedEventArgs e)
@@ -47,40 +72,58 @@ namespace IDE_UI
             var visitor = new TestVisitor();
             visitor.outputStream = this;
             visitor.Visit(tree);*/
-            try
-            {
-                textBox.Text = "";
-                String input = textEditor.Text;
-                ICharStream stream = CharStreams.fromstring(input);
-                ITokenSource lexer = new CMMLexer(stream);
-                ITokenStream tokens = new CommonTokenStream(lexer);
-                CMMParser parser = new CMMParser(tokens);
-                parser.BuildParseTree = true;
-                IParseTree tree = parser.statements();
-                var visitor = new RefPhase();
-                visitor.outputStream = this;
-                visitor.Visit(tree);
-                Print("\nprogram exit\n");
-            }catch(RuntimeException e1)
-            {
-                Print("Line:"+e1.line.ToString()+" "+e1.Message);
-                //Print(e1.Message);
+
+            if(!state.ConsoleShowed) {
+                windowButton_Click(btnConsole, null);
             }
-            catch(Exception e2)
-            {
-                Print(e2.Message);
-            }
+            
+            textBox.Text = "";
+            String input = textEditor.Text;
+            ICharStream stream = CharStreams.fromstring(input);
+            ITokenSource lexer = new CMMLexer(stream);
+            ITokenStream tokens = new CommonTokenStream(lexer);
+            CMMParser parser = new CMMParser(tokens);
+            parser.BuildParseTree = true;
+            IParseTree tree = parser.statements();
+
+            var visitor = new RefPhase();
+            this.visitor = visitor;
+            visitor.outputStream = this;
+            visitor.NeedInput += handleNeedInput;
+
+            runnerThread = new Thread(() => {
+
+                try {
+                    visitor.Visit(tree);
+                    Print("\nprogram exit\n");
+                }
+                catch (RuntimeException e1) {
+                    Print("Line:" + e1.line.ToString() + " " + e1.Message);
+                    //Print(e1.Message);
+                }
+                catch (Exception e2) {
+                    Print(e2.Message);
+                }
+            });
+
+            runnerThread.Start();
         }
 
         public void Print(string s)
         {
-            textBox.Text += s;
+            Dispatcher.Invoke(() => {
+                textBox.Text += s;
+            });
+            
         }
 
+        private void handleSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+        }
 
         private void TextChangedEventHandler(object sender, TextChangedEventArgs e)
         {
-            state.fileModified = true;
+            state.FileModified = true;
             if(isInputMode) {
                 foreach (var change in e.Changes) {
                     inputLength += change.AddedLength;
@@ -92,10 +135,13 @@ namespace IDE_UI
 
         private void textBox_KeyUp(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter) {
-                var text = textBox.Text.Substring(textBox.Text.Length - inputLength, inputLength - 1);
-                Debug.WriteLine(text);
+            if (isInputMode && e.Key == Key.Enter) {
+                var text = textBox.Text.Substring(textBox.Text.Length - inputLength - 1, inputLength - 1);
+                isInputMode = false;
                 inputLength = 0;
+
+                visitor.buffer = text;
+                runnerThread.Resume();
                 e.Handled = false;
             }
         }
@@ -106,9 +152,9 @@ namespace IDE_UI
                 var path = FileHelper.PickFileAsync();
                 if (path != null) {
                     textEditor.Text = await FileHelper.ReadStringFromFileAsync(path);
-                    state.fileOpened = true;
-                    state.openedFilePath = path;
-                    state.fileModified = false;
+                    state.FileOpened = true;
+                    state.OpenedFilePath = path;
+                    state.FileModified = false;
                 }
                 
             }
@@ -121,12 +167,53 @@ namespace IDE_UI
         private async void SaveFileItem_Click(object sender, RoutedEventArgs e)
         {
 
-            var path = state.fileOpened ? state.openedFilePath : FileHelper.SaveFileAsync();
+            var path = state.FileOpened ? state.OpenedFilePath : FileHelper.SaveFileAsync();
             bool succeed = await FileHelper.WriteFileAsync(path, textEditor.Text);
             if(succeed) {
-                state.fileOpened = true;
-                state.openedFilePath = path;
-                state.fileModified = false;
+                state.FileOpened = true;
+                state.OpenedFilePath = path;
+                state.FileModified = false;
+            }
+        }
+
+        private void handleNeedInput()
+        {
+            Dispatcher.Invoke(() => {
+                textBox.Select(textBox.Text.Length - 1, 0);
+                isInputMode = true;
+            });
+            
+        }
+
+        private void windowButton_Click(object sender, RoutedEventArgs e)
+        {
+            var btn = sender as Button;
+            var tag = btn.Tag as string;
+
+            switch (tag) {
+                case "console":
+                    state.ConsoleShowed = !state.ConsoleShowed;
+                    if(state.ConsoleShowed) {
+                        state.DebugWindowShowed = false;
+                        extraWindowPresenter.Content = textBox;
+                    }
+                    break;
+                case "debug":
+                    state.DebugWindowShowed = !state.DebugWindowShowed;
+                    if (state.DebugWindowShowed) {
+                        state.ConsoleShowed = false;
+                        extraWindowPresenter.Content = null;
+                    }
+                    break;
+            }
+
+            if(state.DebugWindowShowed || state.ConsoleShowed) {
+                splitterRow.Height = new GridLength(10);
+                extraWindowRow.Height = new GridLength(Height * 0.3);
+            }
+            else {
+                splitterRow.Height = new GridLength(0);
+                extraWindowRow.Height = new GridLength(0);
             }
         }
     }
