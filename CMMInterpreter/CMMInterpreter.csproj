@@ -1,8 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="g4\antlr\**" />
+    <Compile Remove="g4\inter\**" />
+    <EmbeddedResource Remove="g4\antlr\**" />
+    <EmbeddedResource Remove="g4\inter\**" />
+    <None Remove="g4\antlr\**" />
+    <None Remove="g4\inter\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="g4\antlr%281%29.rar" />
+    <None Remove="g4\inter.rar" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.9.0" />

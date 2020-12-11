@@ -1,6 +1,8 @@
 ﻿using AduSkin.Controls.Metro;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
+using CMMInterpreter.CMMException;
+using CMMInterpreter.inter;
 using System;
 using System.Windows;
 
@@ -10,7 +12,7 @@ namespace IDE_UI
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : MetroWindow, outputStreamDelegate
+    public partial class MainWindow : MetroWindow, IOutputStream
     {
         public MainWindow()
         {
@@ -26,7 +28,7 @@ namespace IDE_UI
 
         private void run_Click(object sender, RoutedEventArgs e)
         {
-            textBox.Text = "";
+            /*textBox.Text = "";
             String input = textEditor.Text;
             ICharStream stream = CharStreams.fromstring(input);
             ITokenSource lexer = new CMMMLexer(stream);
@@ -36,7 +38,29 @@ namespace IDE_UI
             IParseTree tree = parser.program();
             var visitor = new TestVisitor();
             visitor.outputStream = this;
-            visitor.Visit(tree);
+            visitor.Visit(tree);*/
+            try
+            {
+                textBox.Text = "";
+                String input = textEditor.Text;
+                ICharStream stream = CharStreams.fromstring(input);
+                ITokenSource lexer = new CMMLexer(stream);
+                ITokenStream tokens = new CommonTokenStream(lexer);
+                CMMParser parser = new CMMParser(tokens);
+                parser.BuildParseTree = true;
+                IParseTree tree = parser.statements();
+                var visitor = new RefPhase();
+                visitor.outputStream = this;
+                visitor.Visit(tree);
+            }catch(RuntimeException e1)
+            {
+                Print("Line:"+e1.line.ToString()+" "+e1.Message);
+                //Print(e1.Message);
+            }
+            catch(Exception e2)
+            {
+                Print(e2.Message);
+            }
         }
 
         public void Print(string s)
