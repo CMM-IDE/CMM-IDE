@@ -52,6 +52,7 @@ namespace IDE_UI
                 var visitor = new RefPhase();
                 visitor.outputStream = this;
                 visitor.Visit(tree);
+                Print("\nprogram exit\n");
             }catch(RuntimeException e1)
             {
                 Print("Line:"+e1.line.ToString()+" "+e1.Message);

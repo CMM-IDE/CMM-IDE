@@ -168,7 +168,7 @@ namespace CMMInterpreter.inter
             return null;
         }
 
-        private void checkType(string typeStr,object value)
+        /*private void checkType(string typeStr,object value,IToken token)
         {
             bool res = false;
             switch (typeStr)
@@ -190,10 +190,34 @@ namespace CMMInterpreter.inter
             }
             if (!res)
             {
-              
+                throw new RuntimeException(token.Text+"类型非法！", token.Line);
+            }
+        }*/
+        private void checkType(string typeStr, object value)
+        {
+            bool res = false;
+            switch (typeStr)
+            {
+                case "int":
+                case "int_arr":
+                    res = value is int || value is int[];
+                    break;
+                case "real":
+                    res = value is decimal || value is int;
+                    break;
+                case "real_arr":
+                    res = value is decimal || value is int || value is decimal[];
+                    break;
+                case "bool":
+                case "bool_arr":
+                    res = value is bool || value is bool[];
+                    break;
+            }
+            if (!res)
+            {
+                throw new Exception();
             }
         }
-
         /*
          * 函数声明
          */
@@ -420,22 +444,31 @@ namespace CMMInterpreter.inter
 	        | assignment
 	        ;
          */
-        public override object VisitForInitializer(CMMParser.ForInitializerContext context)
+        private void visitForInitializer(CMMParser.ForInitializerContext context, List<string> forIds)
         {
             if (context != null)
             {
-                return base.VisitForInitializer(context);
+                if (context.variableDeclaration() != null)
+                {
+                    handleForVariableDeclaration(context.variableDeclaration(), forIds);
+                }
+                else
+                {
+                    VisitAssignment(context.assignment());
+                }
             }
-            return null;
         }
+
         public override object VisitForStatement([NotNull] CMMParser.ForStatementContext context)
         {
+            List<string> forIds = new List<string>();
+            visitForInitializer(context.forInitializer(), forIds);
             if (context.expression() != null)
             {
                 object condition = VisitExpression(context.expression());
                 checkType("bool", condition);
                 loopStack.Push(currentScope);
-                for (VisitForInitializer(context.forInitializer()); (bool)VisitExpression(context.expression()); VisitAssignment(context.assignment()))
+                for (; (bool)VisitExpression(context.expression()); VisitAssignment(context.assignment()))
                 {
                     try
                     {
@@ -446,6 +479,7 @@ namespace CMMInterpreter.inter
                         if (e.Message.Equals("break"))
                         {
                             currentScope = loopStack.Pop();
+                            forIds.ForEach(item => currentScope.remove(item));
                             return null;
                         }
                     }
@@ -454,7 +488,7 @@ namespace CMMInterpreter.inter
             else
             {
                 loopStack.Push(currentScope);
-                for (VisitForInitializer(context.forInitializer()); ; VisitAssignment(context.assignment()))
+                for (; ; VisitAssignment(context.assignment()))
                 {
                     try
                     {
@@ -465,13 +499,16 @@ namespace CMMInterpreter.inter
                         if (e.Message.Equals("break"))
                         {
                             currentScope = loopStack.Pop();
+                            forIds.ForEach(item => currentScope.remove(item));
                             return null;
                         }
                     }
                 }
             }
             loopStack.Pop();
+            forIds.ForEach(item => currentScope.remove(item));
             return null;
+
             //这里可能复杂了，有可能可以直接visit,不管是不是空
             ////有两个思路，手动匹配 和 正则表达式匹配，这里手动匹配
             //bool initialize = false;//是否有初始化语句
@@ -673,7 +710,109 @@ namespace CMMInterpreter.inter
             //}
             //return null;
         }
+        private void handleForVariableDeclaration(CMMParser.VariableDeclarationContext context, List<string> forIds)
+        {
+            string typeStr = context.typeSpecifier().GetText();
+            CMMParser.InitializerListContext initializerListContext = context.initializerList();
+            List<CMMParser.InitializerContext> initializerContexts = getInitializerContexts(initializerListContext);
+            initializerContexts.ForEach(item => handleForDeclarationHelper(typeStr, item, forIds));
+        }
 
+        private List<CMMParser.InitializerContext> getInitializerContexts(CMMParser.InitializerListContext context)
+        {
+            List<CMMParser.InitializerContext> res = new List<CMMParser.InitializerContext>();
+            res.Add(context.initializer());
+            if (context.ChildCount != 1)
+            {
+                res.AddRange(getInitializerContexts(context.initializerList()));
+            }
+            return res;
+        }
+        private void handleForDeclarationHelper(string typeStr, CMMParser.InitializerContext context, List<string> forIds)
+        {
+            string id = context.Identifier().GetText();
+            if (currentScope.redundant(id))
+            {
+                //变量重复声明
+                throw new RuntimeException("变量" + id + "重复声明！", context.Identifier().Symbol.Line);
+            }
+            if (context.ChildCount == 3)
+            {
+                object value = VisitExpression(context.expression(0));
+                checkType(typeStr, value);
+                BuiltInTypeSymbol type = new BuiltInTypeSymbol(typeStr);
+                Symbol symbol = new VariableSymbol(id, type, value, currentScope);
+                currentScope.define(symbol);
+                forIds.Add(id);
+            }
+            else
+            {
+                object rt = VisitExpression(context.expression(0));
+                checkType("int", rt);
+                int size = (int)rt;
+                if (size <= 0)
+                {
+                    //数组大小应大于0
+                    throw new RuntimeException("数组" + id + "的大小应该是正整数！", context.Identifier().Symbol.Line);
+                }
+                int childCount = 8 + (size - 1) * 2;
+                if (context.ChildCount != childCount)
+                {
+                    // 元素不够
+                    throw new RuntimeException("没有足够的元素给数组" + id + "进行初始化！", context.Identifier().Symbol.Line);
+                }
+                List<object> al = new List<object>(size);
+                for (int i = 6; i < childCount - 1; i += 2)
+                {
+                    object value = Visit(context.GetChild(i));
+                    checkType(typeStr, value);
+                    al.Add(value);
+                }
+                switch (typeStr)
+                {
+                    case "int":
+                        int[] i_res = new int[size];
+                        for (int i = 0; i < size; ++i)
+                        {
+                            i_res[i] = (int)al[i];
+                        }
+                        BuiltInTypeSymbol int_arr = new BuiltInTypeSymbol(typeStr + "_arr");
+                        Symbol int_arr_symbol = new VariableSymbol(id, int_arr, i_res, currentScope);
+                        currentScope.define(int_arr_symbol);
+                        forIds.Add(id);
+                        break;
+                    case "real":
+                        decimal[] d_res = new decimal[size];
+                        for (int i = 0; i < size; ++i)
+                        {
+                            if (al[i] is int)
+                            {
+                                d_res[i] = (int)al[i];
+                            }
+                            else
+                            {
+                                d_res[i] = (decimal)al[i];
+                            }
+                        }
+                        BuiltInTypeSymbol dec_arr = new BuiltInTypeSymbol(typeStr + "_arr");
+                        Symbol dec_arr_symbol = new VariableSymbol(id, dec_arr, d_res, currentScope);
+                        currentScope.define(dec_arr_symbol);
+                        forIds.Add(id);
+                        break;
+                    case "bool":
+                        bool[] b_res = new bool[size];
+                        for (int i = 0; i < size; ++i)
+                        {
+                            b_res[i] = (bool)al[i];
+                        }
+                        BuiltInTypeSymbol bool_arr = new BuiltInTypeSymbol(typeStr + "_arr");
+                        Symbol bool_arr_symbol = new VariableSymbol(id, bool_arr, b_res, currentScope);
+                        currentScope.define(bool_arr_symbol);
+                        forIds.Add(id);
+                        break;
+                }
+            }
+        }
         /*
          * if 语句
          */

@@ -15,5 +15,7 @@ namespace CMMInterpreter.inter
          Symbol resolve(string name);
 
         bool redundant(string name);
+
+        void remove(string name);
     }
 }

@@ -35,6 +35,11 @@ namespace CMMInterpreter.inter
             return symbol != null && !symbol.getScope().getScopeName().Equals("global");
         }
 
+        public void remove(string name)
+        {
+            symbols.Remove(name);
+        }
+
         public Symbol resolve(string name)
         {
             Symbol s;
