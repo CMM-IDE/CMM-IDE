@@ -1,7 +1,7 @@
-﻿write(100); 
-write();
 int a = 0;
 read(a);
+write(100); 
+write();
 write(a); 
 write();
 
