@@ -7,7 +7,8 @@ statements
 	;
 
 statement
-	: expressionStatement
+	: callStatement
+	| expressionStatement
 	| declaration                                                   
 	| assignStatement                                               
 	| whileStatement                                                
@@ -17,7 +18,6 @@ statement
 	| readStatement                                                 
 	| writeStatement                                                
 	| jumpStatement                                                 
-	| callStatement
 	;	
 
 expressionStatement
