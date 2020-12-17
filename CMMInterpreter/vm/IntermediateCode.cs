@@ -17,17 +17,21 @@ namespace CMMInterpreter.vm
 
         private InstructionType type;
 
-        IntermediateCode(InstructionType _type)
+        public IntermediateCode(InstructionType _type)
         {
             type = _type;
         }
 
-        IntermediateCode(Object _operant, InstructionType _type)
+        public IntermediateCode(Object _operant, InstructionType _type)
         {
             operant = _operant;
             type = _type;
         }
 
+        public void setOperant(Object _operant)
+        {
+            operant = _operant;
+        }
 
 
     }
