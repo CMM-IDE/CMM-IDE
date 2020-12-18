@@ -87,11 +87,19 @@ namespace IDE_UI
             parser.BuildParseTree = true;
             IParseTree tree = parser.statements();
             var visitor = new CompileVisitor();
-            visitor.Visit(tree);
-            foreach(IntermediateCode code in visitor.codes)
+            try
             {
-                Print(code.toString());
+                visitor.Visit(tree);
+                foreach (IntermediateCode code in visitor.codes)
+                {
+                    Print(code.toString());
+                }
             }
+            catch(VariableNotFountException exp)
+            {
+                Print(exp.ToString());
+            }
+
             /*
             var visitor = new RefPhase();
             this.visitor = visitor;
