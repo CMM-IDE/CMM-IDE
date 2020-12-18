@@ -19,9 +19,13 @@ namespace CMMInterpreter.vm
         // 当前局部变量表
         Dictionary<string, int> curLocalVariablesTable;
 
+        // 局部变量表大小
+        int curLocalVariablesTableLength = 0;
+
 
         // 指令集合
         List<IntermediateCode> codes = new List<IntermediateCode>();
+
 
         /**
          * 读取identifier的text，然后从函数地址表中读取该函数的中间代码起始地址
@@ -34,7 +38,7 @@ namespace CMMInterpreter.vm
             // 看一下有多少参数
             VisitExpressionList(context.expressionList());
             int count = getLen(context.expressionList());
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 IntermediateCode code1 = new IntermediateCode(curLocalVariablesTable.Count + i, InstructionType.pop);
                 codes.Add(code1);
@@ -45,7 +49,17 @@ namespace CMMInterpreter.vm
                 codes.Add(code1);
             }
             return base.VisitCallStatement(context);
+        }
 
+        public override object VisitExpressionStatement([NotNull] CMMParser.ExpressionStatementContext context)
+        {
+            return base.VisitExpressionStatement(context);
+        }
+
+
+        public override object VisitExpressionList([NotNull] CMMParser.ExpressionListContext context)
+        {
+            return base.VisitExpressionList(context);
         }
 
         /*
@@ -61,24 +75,33 @@ namespace CMMInterpreter.vm
 
 
         /**
-         * 处理生成函数的中间代码时
-         * 在函数的第一行地址前加入j指令跳转到函数的最后一行地址之后
-         * 
-         */
-        public override object VisitFunctionDeclaration([NotNull] CMMParser.FunctionDeclarationContext context)
-        {
-            return base.VisitFunctionDeclaration(context);
-        }
-
-
-        /**
          * 将expression的值求出来并压到栈中
          * 具体的值要看children的情况
          * 
          */
         public override object VisitExpression([NotNull] CMMParser.ExpressionContext context)
         {
-            return base.VisitExpression(context);
+            // 访问子树
+            Object result = VisitChildren(context);
+            if (context.ChildCount.Equals(3))
+            {
+                
+                switch(context.GetChild(1).GetText())
+                {
+                    case "&&":
+                        codes.Add(new IntermediateCode(InstructionType.and));
+                        break;
+                    case "||":
+                        codes.Add(new IntermediateCode(InstructionType.or));
+                        break;
+                }
+
+            }
+            else if (context.ChildCount.Equals(2)) {
+                codes.Add(new IntermediateCode(InstructionType.not));
+            }
+
+            return result;
         }
 
 
@@ -89,16 +112,161 @@ namespace CMMInterpreter.vm
          */
         public override object VisitBoolExpression([NotNull] CMMParser.BoolExpressionContext context)
         {
-            return base.VisitBoolExpression(context);
+            if(context.ChildCount.Equals(3))
+            {
+                string relationalOperator = context.GetChild(1).GetText();
+                IntermediateCode code = new IntermediateCode();
+                switch (relationalOperator)
+                {
+                    case "<=":
+                        code.type = InstructionType.le;
+                        break;
+                    case ">=":
+                        code.type = InstructionType.ge;
+                        break;
+                    case "==":
+                        code.type = InstructionType.eq;
+                        break;
+                    case "<":
+                        code.type = InstructionType.l;
+                        break;
+                    case ">":
+                        code.type = InstructionType.g;
+                        break;
+                    case "<>":
+                        code.type = InstructionType.ne;
+                        break;
+                    default:
+                        break;
+                }
+                codes.Add(code);
+
+
+            }
+
+            // 遍历子树
+            return Visit(context);
         }
+
+
+        public override object VisitRelationalOperator([NotNull] CMMParser.RelationalOperatorContext context)
+        {
+            return base.VisitRelationalOperator(context);
+        }
+
+
+        /**
+         * factor 情况比较多
+         * 
+         * 
+         */
+        public override object VisitFactor([NotNull] CMMParser.FactorContext context)
+        {
+            return base.VisitFactor(context);
+        }
+
+
+        public override object VisitDeclaration([NotNull] CMMParser.DeclarationContext context)
+        {
+            return base.VisitDeclaration(context);
+        }
+
+        public override object VisitVariableDeclaration([NotNull] CMMParser.VariableDeclarationContext context)
+        {
+            
+
+
+            return base.VisitVariableDeclaration(context);
+
+
+        }
+
+        public override object VisitInitializerList([NotNull] CMMParser.InitializerListContext context)
+        {
+            // 直接遍历所有初始化变量即可
+            return base.VisitInitializerList(context);
+        }
+
 
         /**
          * 
          */
         public override object VisitAdditiveExpression([NotNull] CMMParser.AdditiveExpressionContext context)
         {
-            return base.VisitAdditiveExpression(context);
+            IntermediateCode code = new IntermediateCode();
+            // 先遍历左右子树
+            VisitChildren(context);
+            if (context.ChildCount.Equals(3))
+            {
+                
+
+                // 左右
+                switch (context.GetChild(1).GetText())
+                {
+                    case "+":
+                        code.operant = InstructionType.add;
+                        break;
+                    case "-":
+                        code.operant = InstructionType.sub;
+                        break;
+                }
+            }
+            else
+            {
+                // 子树是term的情况
+            }
+            codes.Add(code);
+
+            return null;
         }
+
+        public override object VisitTerm([NotNull] CMMParser.TermContext context)
+        {
+            if (context.ChildCount.Equals(3))
+            {
+                // 访问左边的term
+                Visit(context.GetChild(0));
+                // 右边的factor压栈
+                codes.Add(new IntermediateCode(context.GetChild(1).GetText(), InstructionType.push));
+                // 添加计算代码
+                switch(context.GetChild(1).GetText())
+                {
+                    case "*":
+                        codes.Add(new IntermediateCode(InstructionType.mul));
+                        break;
+                    case "/":
+                        codes.Add(new IntermediateCode(InstructionType.div));
+                        break;
+                }
+
+            }
+            else
+            {
+                // 是factor压栈
+                codes.Add(new IntermediateCode(context.GetChild(0).GetText(),InstructionType.push));
+            }
+            
+
+            return base.VisitTerm(context);
+        }
+
+        /**
+         * 处理生成函数的中间代码时
+         * 在函数的第一行地址前加入j指令跳转到函数的最后一行地址之后
+         * 
+         */
+        public override object VisitFunctionDeclaration([NotNull] CMMParser.FunctionDeclarationContext context)
+        {
+
+
+
+
+            return base.VisitFunctionDeclaration(context);
+        }
+
+
+
+
 
 
         /*

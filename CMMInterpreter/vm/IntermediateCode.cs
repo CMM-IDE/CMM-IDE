@@ -13,9 +13,13 @@ namespace CMMInterpreter.vm
     class IntermediateCode
     {
 
-        private Object operant;
+        public Object operant { get; set; }
 
-        private InstructionType type;
+        public InstructionType type { get; set; }
+
+        public IntermediateCode()
+        {
+        }
 
         public IntermediateCode(InstructionType _type)
         {
@@ -28,6 +32,7 @@ namespace CMMInterpreter.vm
             type = _type;
         }
 
+
         public void setOperant(Object _operant)
         {
             operant = _operant;
@@ -37,9 +42,6 @@ namespace CMMInterpreter.vm
         {
             return type;
         }
-
-
-
 
     }
 }
