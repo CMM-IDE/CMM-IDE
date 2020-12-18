@@ -9,15 +9,18 @@ namespace CMMInterpreter.vm
         // 运行时栈 每个线程对应一个运行时栈
         List<List<StackFrame>> stacks;
 
+        int pc = 0;
+
         public VirtualMachine()
         {
             stacks = new List<List<StackFrame>>();
         }
 
+
         // 解释执行代码
         public Object interpret(List<IntermediateCode> codes)
         {
-            int pc = 0;
+            
             // 初始化栈
             List<StackFrame> stack = new List<StackFrame>();
             stacks.Add(stack);
@@ -25,8 +28,10 @@ namespace CMMInterpreter.vm
             StackFrame currentStackFrame = new StackFrame(0);
             stack.Add(currentStackFrame);
 
-            foreach (IntermediateCode code in codes)
+            IntermediateCode[] codesArray = codes.ToArray();
+            for (; pc < codes.Count; pc++)
             {
+                IntermediateCode code = codesArray[pc];
                 switch (code.type)
                 {
                     case InstructionType.add:
@@ -60,37 +65,37 @@ namespace CMMInterpreter.vm
                         pop(currentStackFrame, code.operant);
                         break;
                     case InstructionType.g:
-                        g(stack);
+                        g(currentStackFrame);
                         break;
                     case InstructionType.l:
-                        l(stack);
+                        l(currentStackFrame);
                         break;
                     case InstructionType.ge:
-                        ge(stack);
+                        ge(currentStackFrame);
                         break;
                     case InstructionType.le:
-                        le(stack);
+                        le(currentStackFrame);
                         break;
                     case InstructionType.eq:
-                        eq(stack);
+                        eq(currentStackFrame);
                         break;
                     case InstructionType.ne:
-                        ne(stack);
+                        ne(currentStackFrame);
                         break;
                     case InstructionType.j:
-                        j(stack);
+                        j(code.operant);
                         break;
                     case InstructionType.je:
-                        je(stack);
+                        je(currentStackFrame, code.operant);
                         break;
                     case InstructionType.jg:
-                        jg(stack);
+                        jg(currentStackFrame, code.operant);
                         break;
                     case InstructionType.jl:
-                        jl(stack);
+                        jl(currentStackFrame, code.operant);
                         break;
                     case InstructionType.jne:
-                        jne(stack);
+                        jne(currentStackFrame, code.operant);
                         break;
                     case InstructionType.call:
                         call(stack);
@@ -121,7 +126,6 @@ namespace CMMInterpreter.vm
                         break;
 
                 }
-                pc++;
 
 
             }
@@ -136,7 +140,7 @@ namespace CMMInterpreter.vm
         {
             double op1 = (double)frame.popFromOperantStack();
             double op2 = (double)frame.popFromOperantStack();
-            frame.pushToOperantStack(op1 + op2);
+            frame.pushToOperantStack(op2 + op1);
         }
 
 
@@ -144,21 +148,21 @@ namespace CMMInterpreter.vm
         {
             double op1 = (double)frame.popFromOperantStack();
             double op2 = (double)frame.popFromOperantStack();
-            frame.pushToOperantStack(op1 - op2);
+            frame.pushToOperantStack(op2 - op1);
         }
 
         void mul(StackFrame frame)
         {
             double op1 = (double)frame.popFromOperantStack();
             double op2 = (double)frame.popFromOperantStack();
-            frame.pushToOperantStack(op1 * op2);
+            frame.pushToOperantStack(op2 * op1);
         }
 
         void div(StackFrame frame)
         {
             double op1 = (double)frame.popFromOperantStack();
             double op2 = (double)frame.popFromOperantStack();
-            frame.pushToOperantStack(op1 / op2);
+            frame.pushToOperantStack(op2 / op1);
         }
         void neg(StackFrame frame)
         {
@@ -194,54 +198,112 @@ namespace CMMInterpreter.vm
                 frame.popFromOperantStack((int)operant, false);
             }
         }
-        void g(List<StackFrame> frame)
+        void g(StackFrame frame)
         {
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (op2 > op1)
+                frame.pushToOperantStack(1.0);
+            else
+                frame.pushToOperantStack(0.0);
+        }
+        void l(StackFrame frame)
+        {
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (op2 < op1)
+                frame.pushToOperantStack(1.0);
+            else
+                frame.pushToOperantStack(0.0);
+        }
+        void ge(StackFrame frame)
+        {
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (op2 < op1)
+                frame.pushToOperantStack(1.0);
+            else
+                frame.pushToOperantStack(0.0);
+        }
+        void le(StackFrame frame)
+        {
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (op2 <= op1)
+                frame.pushToOperantStack(1.0);
+            else
+                frame.pushToOperantStack(0.0);
+        }
+        void eq(StackFrame frame)
+        {
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (op2.Equals(op1))
+                frame.pushToOperantStack(1.0);
+            else
+                frame.pushToOperantStack(0.0);
+        }
+        void ne(StackFrame frame)
+        {
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (!op2.Equals(op1))
+                frame.pushToOperantStack(1.0);
+            else
+                frame.pushToOperantStack(0.0);
+        }
+
+
+        void j(Object operant)
+        {
+            pc = (int)operant;
 
         }
-        void l(List<StackFrame> frame)
-        {
 
-        }
-        void ge(List<StackFrame> frame)
+        /**
+         * TODO：
+         * 
+         * 目前几个跳转指令都是将栈顶元素弹出来然后比较 不用放缓
+         * 之后要改掉
+         * 
+         */
+        void je(StackFrame frame, Object operant)
         {
-
-        }
-        void le(List<StackFrame> frame)
-        {
-
-        }
-        void eq(List<StackFrame> frame)
-        {
-
-        }
-        void ne(List<StackFrame> frame)
-        {
-
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (op1.Equals(op2))
+            {
+                pc = (int)operant;
+            }
         }
 
-
-        void j(List<StackFrame> frame)
+        void jg(StackFrame frame, Object operant)
         {
-
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (op2 > op1)
+            {
+                pc = (int)operant;
+            }
         }
 
-        void je(List<StackFrame> frame)
+        void jl(StackFrame frame, Object operant)
         {
-
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (op2 < op1)
+            {
+                pc = (int)operant;
+            }
         }
-
-        void jg(List<StackFrame> frame)
+        void jne(StackFrame frame, Object operant)
         {
-
-        }
-
-        void jl(List<StackFrame> frame)
-        {
-
-        }
-        void jne(List<StackFrame> frame)
-        {
-
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
+            if (!op2.Equals(op1))
+            {
+                pc = (int)operant;
+            }
         }
         void call(List<StackFrame> frame)
         {
