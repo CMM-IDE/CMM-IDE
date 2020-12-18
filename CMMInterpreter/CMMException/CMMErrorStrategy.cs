@@ -10,7 +10,6 @@ namespace CMMInterpreter.CMMException
         public override void Recover(Parser recognizer, RecognitionException e)
         {
             throw e;
-
         }
         public override IToken RecoverInline(Parser recognizer)
         {

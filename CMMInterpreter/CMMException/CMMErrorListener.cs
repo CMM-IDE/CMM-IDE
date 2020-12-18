@@ -21,6 +21,7 @@ namespace CMMInterpreter.CMMException
             errorMsg.Append("syntax error:\n");
             errorMsg.Append("line" + line + ":" + charPositionInLine + ": " + msg+"\n");
             outputStream?.Print(errorMsg.ToString());
+            throw new ErrorInfo(msg, line, charPositionInLine);
         }
     }
 }
