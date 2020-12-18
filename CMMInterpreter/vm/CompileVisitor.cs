@@ -516,6 +516,8 @@ out(a);
             // 这里面可能会定义新的变量，不过没关系，直接插入局部变量表中就可以了，最后我们恢复的。
             Visit(context.forInitializer());
             // 访问expression，将执行的结果压入栈中
+            // addr_expression是expression（比较）的地址
+            int addr_expression = codes.Count;
             Visit(context.expression());
             // 如果expression的结果是真，才会访问
             // 这里的0是数字，不是索引，要加上范围！！
@@ -533,21 +535,12 @@ out(a);
             // 访问更新操作,更新操作的起始地址是addr1
             int addr1 = codes.Count;
             Visit(context.assignment());
+            // 跳转回去expression去判断
+            codes.Add(new IntermediateCode(addr_expression, InstructionType.j));
 
-            // 再次判断一下expression
-            Visit(context.expression());
-
-            // 访问assignment
-            Visit(context.assignment());
-
-            // 判断一下expression的结果和0的关系吧
-            IntermediateCode code2 = new IntermediateCode(0, InstructionType.push);
-            IntermediateCode code3 = new IntermediateCode(addr0, InstructionType.jne);
-            // 如果是相等的话，就要跳转回到codeBlock的起始地址
-            codes.Add(code2);
-            codes.Add(code3);
             // addr2是执行完codeBlock，而且判断确定不跳转的代码
             int addr2 = codes.Count;
+            code1.setOperant(addr2);
             // 替换所有出现的continue break，代码的范围是addr0-add2， 更新操作的代码在addr1
             replaceBreakAndConti(codes, addr0, addr2-1, addr1);
             //局部变量表大于等于curSize的部分全部删掉！
@@ -566,7 +559,7 @@ out(a);
                 switch (codeArray[i].getType())
                 {
                     case InstructionType.b:
-                        code = new IntermediateCode(addr2, InstructionType.j);
+                        code = new IntermediateCode(addr2+1, InstructionType.j);
                         codes.RemoveAt(i);
                         codes.Insert(i, code);
                         break;
@@ -587,30 +580,39 @@ out(a);
          */
         public override object VisitIfStatement([NotNull] CMMParser.IfStatementContext context)
         {
-            IntermediateCode code0 = new IntermediateCode(0, InstructionType.push);
+            
             // 查看expression的结果
             Visit(context.expression());
-
+            IntermediateCode code0 = new IntermediateCode(0, InstructionType.push);
+            codes.Add(code0);
             // 比较expression的结果和0的关系,等于0的话就跳转走,code1的目的地址待回填
             IntermediateCode code1 = new IntermediateCode(InstructionType.je);
             
+            codes.Add(code1);
             Visit(context.codeBlock());
             // 条件不符合的情况应该执行的代码行号为addr0,回填一下
             int addr0 = codes.Count;
             code1.setOperant(addr0);
+            
 
-            codes.Add(code0);
-            codes.Add(code1);
             // 每个else语句都执行一下
             if(context.elseClause() != null)
             {
                 foreach(CMMParser.ElseClauseContext ctx in context.elseClause())
                 {
-                    Visit(ctx);
+                    if (ctx.ifStatement() == null) {
+                        Visit(ctx.codeBlock());
+                        codes.Add(new IntermediateCode(codes.Count, InstructionType.j));
+                    }
+                    else
+                    {
+                        Visit(ctx.ifStatement());
+                    }
+                    
                 }
                 
             }
-            
+
             return null;
         }
 
@@ -651,7 +653,15 @@ out(a);
                     code = new IntermediateCode(InstructionType.cnt);
                     break;
                 case "return":
-                    code = new IntermediateCode(InstructionType.ret);
+                    if(context.ChildCount == 2)
+                        code = new IntermediateCode(InstructionType.ret);
+                    else
+                    {
+                        Visit(context.GetChild(2));
+                        int tmp = curLocalVariablesTable.Count;
+                        codes.Add(new IntermediateCode(tmp, InstructionType.pop));
+                        code = new IntermediateCode(tmp, InstructionType.ret);
+                    }
                     break;
             }
             codes.Add(code);
