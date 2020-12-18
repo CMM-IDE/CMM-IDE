@@ -11,14 +11,14 @@ namespace CMMInterpreter.CMMException
         /*
          * 调用实例：
          * CMMStaticErrorHandler handler=new CMMStaticErrorHandler(IOutputstream对象);
-         * handler.StaticError(输入字符);
+         * ErroInfo erroInfo=handler.StaticError(输入字符);存在错误返回一个ErrorInfo对象，否则返回null；
          */
         public IOutputStream outputStream;
         public CMMStaticErrorHandler(IOutputStream outputStream)
         {
             this.outputStream = outputStream;
         }
-        public void StaticError(String input)
+        public ErrorInfo StaticError(String input)
         {
             try{
             ICharStream stream = CharStreams.fromstring(input);
@@ -32,15 +32,17 @@ namespace CMMInterpreter.CMMException
             parser.AddErrorListener(errorListener);//添加自定义错误监听器
             CMMErrorStrategy errorStrategy = new CMMErrorStrategy();
             parser.ErrorHandler = errorStrategy;//添加自定义错误策略
-                parser.statements();
-                }
-                catch (RuntimeException e1)
-                {
-                    outputStream?.Print("Line:" + e1.line.ToString() + " " + e1.Message);
-                }
-                catch (Exception)
-                {
-                }
+            parser.statements();
+                return null;
+            }
+            catch (ErrorInfo e1)
+            {
+                return e1;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
             
         }
     }
