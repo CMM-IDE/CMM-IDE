@@ -21,7 +21,7 @@ namespace CMMInterpreter.vm
 
 
         // 指令集合
-        ArrayList<IntermediateCode> codes = new ArrayList<IntermediateCode>();
+        List<IntermediateCode> codes = new List<IntermediateCode>();
 
         /**
          * 读取identifier的text，然后从函数地址表中读取该函数的中间代码起始地址
