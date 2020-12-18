@@ -34,6 +34,7 @@ namespace CMMInterpreter.vm
         delVar, // delVar <addr> 删除局部变量表中从addr开始的所有变量
         brea,   // break语句，回填之后会被更换为jmp语句 
         conti,  //continue语句，回填之后会被更换为jmp语句
+        pushNext, // 压入到下一个栈帧的局部变量表中，用于传递参数
         ret     // 函数返回 返回后将函数返回值压到上一个函数的stack frame的操作栈中
         
 

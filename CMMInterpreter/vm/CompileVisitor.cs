@@ -25,15 +25,40 @@ namespace CMMInterpreter.vm
 
         /**
          * 读取identifier的text，然后从函数地址表中读取该函数的中间代码起始地址
-         * 将expression list压入调用函数的stack frame的参数列表栈中（如果有的话）
-         * 并且插入一条call指令
+         * 调用call指令
+         * 将expression List压入被调用函数的局部变量表中
          */
         public override object VisitCallStatement([NotNull] CMMParser.CallStatementContext context)
         {
-
+            IntermediateCode code0 = new IntermediateCode(context.Identifier().GetText(), InstructionType.call);
+            // 看一下有多少参数
+            VisitExpressionList(context.expressionList());
+            int count = getLen(context.expressionList());
+            for(int i = 0; i < count; i++)
+            {
+                IntermediateCode code1 = new IntermediateCode(curLocalVariablesTable.Count + i, InstructionType.pop);
+                codes.Add(code1);
+            }
+            for (int i = 0; i < count; i++)
+            {
+                IntermediateCode code1 = new IntermediateCode(curLocalVariablesTable.Count + count - 1 - i, InstructionType.pushNext);
+                codes.Add(code1);
+            }
             return base.VisitCallStatement(context);
 
         }
+
+        /*
+         获取expressionList的长度
+         */
+        private int getLen(CMMParser.ExpressionListContext expressionListContext)
+        {
+            if (expressionListContext.ChildCount == 1) return 1;
+            else
+                return getLen(expressionListContext.expressionList()) + 1;
+        }
+
+
 
         /**
          * 处理生成函数的中间代码时
@@ -388,8 +413,7 @@ namespace CMMInterpreter.vm
             return null;
         }
 
-        /*
-         调用函数，需要将当前局部变更量表保存，更换成为新的局部变量表。将参数要加入到局部变量表中。
-         */
+
     }
+
 }
