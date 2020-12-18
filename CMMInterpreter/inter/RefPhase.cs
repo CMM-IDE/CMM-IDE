@@ -1379,6 +1379,23 @@ namespace CMMInterpreter.inter
             }
         }
 
+
+        /*
+         
+         c = 3*3; // c -> mem[index0]
+        // c -> 当前栈的位置sp0， sp++
+
+        a = 0;
+        // mem[index0] > 0
+        // 去栈sp0的位置去找
+        if(c > 0){
+        }
+        // 最后再把栈弹出 sp--；ｚ
+         
+         */
+
+        
+// mem的话，没有办法回收空间。相当于放在了堆里，但是没有gcZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ 
         public override object VisitFactor([NotNull] CMMParser.FactorContext context)
         {
             if (context.True() != null)
