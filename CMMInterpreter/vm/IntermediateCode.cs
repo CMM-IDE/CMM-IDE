@@ -10,7 +10,7 @@ namespace CMMInterpreter.vm
      * 中间代码
      * 
      */
-    class IntermediateCode
+    public class IntermediateCode
     {
 
         public Object operant { get; set; }
@@ -41,6 +41,11 @@ namespace CMMInterpreter.vm
         public InstructionType getType()
         {
             return type;
+        }
+        
+        public string toString()
+        {
+            return this.type + " " + this.operant + "\n" ;
         }
 
     }

@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Windows.Input;
 using IDE_UI.Helper;
 using System.Threading;
+using CMMInterpreter.vm;
 
 namespace IDE_UI
 {
@@ -85,7 +86,13 @@ namespace IDE_UI
             CMMParser parser = new CMMParser(tokens);
             parser.BuildParseTree = true;
             IParseTree tree = parser.statements();
-
+            var visitor = new CompileVisitor();
+            visitor.Visit(tree);
+            foreach(IntermediateCode code in visitor.codes)
+            {
+                Print(code.toString());
+            }
+            /*
             var visitor = new RefPhase();
             this.visitor = visitor;
             visitor.outputStream = this;
@@ -107,6 +114,7 @@ namespace IDE_UI
             });
 
             runnerThread.Start();
+            */
         }
 
         public void Print(string s)

@@ -11,20 +11,20 @@ namespace CMMInterpreter.vm
      * Visitor用于生成中间代码
      * 
      */
-    class CompileVisitor : CMMBaseVisitor<object>
+    public class CompileVisitor : CMMBaseVisitor<object>
     {
         // 函数地址表
         Dictionary<string, int> functionAddressTable;
 
         // 当前局部变量表
-        Dictionary<string, int> curLocalVariablesTable;
+        Dictionary<string, int> curLocalVariablesTable = new Dictionary<string, int>();
 
         // 局部变量表大小
         int curLocalVariablesTableLength = 0;
 
 
         // 指令集合
-        List<IntermediateCode> codes = new List<IntermediateCode>();
+        public List<IntermediateCode> codes = new List<IntermediateCode>();
 
 
         /**
@@ -34,21 +34,21 @@ namespace CMMInterpreter.vm
          */
         public override object VisitCallStatement([NotNull] CMMParser.CallStatementContext context)
         {
-            IntermediateCode code0 = new IntermediateCode(context.Identifier().GetText(), InstructionType.call);
+            
+
             // 看一下有多少参数
             VisitExpressionList(context.expressionList());
-            int count = getLen(context.expressionList());
-            for (int i = 0; i < count; i++)
-            {
-                IntermediateCode code1 = new IntermediateCode(curLocalVariablesTable.Count + i, InstructionType.pop);
-                codes.Add(code1);
-            }
-            for (int i = 0; i < count; i++)
-            {
-                IntermediateCode code1 = new IntermediateCode(curLocalVariablesTable.Count + count - 1 - i, InstructionType.pushNext);
-                codes.Add(code1);
-            }
-            return base.VisitCallStatement(context);
+            int count = 0;
+            if(context.expressionList() != null)
+                count = getLen(context.expressionList());
+            //
+            IntermediateCode code1 = new IntermediateCode(count, InstructionType.push);
+            codes.Add(code1);
+
+            IntermediateCode code0 = new IntermediateCode(context.Identifier().GetText(), InstructionType.call);
+            codes.Add(code0);
+
+            return null;
         }
 
         public override object VisitExpressionStatement([NotNull] CMMParser.ExpressionStatementContext context)
@@ -112,7 +112,9 @@ namespace CMMInterpreter.vm
          */
         public override object VisitBoolExpression([NotNull] CMMParser.BoolExpressionContext context)
         {
-            if(context.ChildCount.Equals(3))
+            Object res = VisitChildren(context);
+
+            if (context.ChildCount.Equals(3))
             {
                 string relationalOperator = context.GetChild(1).GetText();
                 IntermediateCode code = new IntermediateCode();
@@ -144,8 +146,7 @@ namespace CMMInterpreter.vm
 
             }
 
-            // 遍历子树
-            return Visit(context);
+            return res;
         }
 
 
@@ -160,8 +161,81 @@ namespace CMMInterpreter.vm
          * 
          * 
          */
+
+        /*
+         
+         
+         int a = 1;
+a = a+2;
+out(a);
+         */
         public override object VisitFactor([NotNull] CMMParser.FactorContext context)
         {
+
+            // TODO: 还没写完，有空再写
+            if(context.Identifier() != null && context.ChildCount == 1)
+            {
+                if(!curLocalVariablesTable.TryGetValue(context.Identifier().GetText(), out int addr)){
+                    throw new VariableNotFountException(context.Identifier().GetText(), context);
+                }
+                codes.Add(new IntermediateCode(addr, InstructionType.pushv));
+            }
+            if (context.IntegerLiteral() != null)
+            {
+                codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push));
+            }
+            if (context.RealLiteral() != null)
+            {
+                codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push));
+            }
+            if (context.True() != null)
+            {
+                codes.Add(new IntermediateCode(1, InstructionType.push));
+            }
+            if (context.False() != null)
+            {
+                codes.Add(new IntermediateCode(0, InstructionType.push));
+            }
+
+
+            /*
+            switch (context.GetChild(0).GetText())
+            {
+                case CMMParser.Identifier:
+                    // Identifier
+                    break;
+                case CMMParser.LeftBracket:
+                    // (
+                    break;
+                case CMMParser.RightBrace:
+                    // ）
+                    break;
+                case CMMParser.LeftParen:
+                    // 
+                    break;
+                case CMMParser.RightParen:
+                    break;
+                case CMMParser.IntegerLiteral:
+                    codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()),InstructionType.push));
+
+                    break;
+                case CMMParser.RealLiteral:
+                    codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push));
+
+                    break;
+                case CMMParser.True:
+                    codes.Add(new IntermediateCode(1, InstructionType.push));
+
+                    break;
+                case CMMParser.False:
+                    codes.Add(new IntermediateCode(1, InstructionType.push));
+                    break;
+                case CMMParser.Sub:
+                    break;
+                default:
+                    break;
+            }
+            */
             return base.VisitFactor(context);
         }
 
@@ -204,30 +278,29 @@ namespace CMMInterpreter.vm
                 switch (context.GetChild(1).GetText())
                 {
                     case "+":
-                        code.operant = InstructionType.add;
+                        code.type = InstructionType.add;
                         break;
                     case "-":
-                        code.operant = InstructionType.sub;
+                        code.type = InstructionType.sub;
                         break;
                 }
+                codes.Add(code);
             }
             else
             {
                 // 子树是term的情况
             }
-            codes.Add(code);
+            
 
             return null;
         }
 
         public override object VisitTerm([NotNull] CMMParser.TermContext context)
         {
+            Object res = VisitChildren(context);
             if (context.ChildCount.Equals(3))
             {
-                // 访问左边的term
-                Visit(context.GetChild(0));
-                // 右边的factor压栈
-                codes.Add(new IntermediateCode(context.GetChild(1).GetText(), InstructionType.push));
+                
                 // 添加计算代码
                 switch(context.GetChild(1).GetText())
                 {
@@ -242,12 +315,12 @@ namespace CMMInterpreter.vm
             }
             else
             {
-                // 是factor压栈
-                codes.Add(new IntermediateCode(context.GetChild(0).GetText(),InstructionType.push));
+                
+                
+                // codes.Add(new IntermediateCode(context.GetChild(0).GetText(),InstructionType.push));
             }
-            
 
-            return base.VisitTerm(context);
+            return res;
         }
 
         /**
@@ -286,11 +359,10 @@ namespace CMMInterpreter.vm
                 {
                     throw new VariableNotFountException();
                 }
-                // 待赋值的变量地址
-                curLocalVariablesTable.TryGetValue(context.GetChild(0).GetText(), out int addr);
+                curLocalVariablesTable.Add(context.GetChild(0).GetText(), curLocalVariablesTable.Count);
                 Visit(context.GetChild(2));
-                // 这里相当于把栈顶的元素pop到局部变量区中addr的位置。
-                IntermediateCode code = new IntermediateCode(addr, InstructionType.pop);
+                curLocalVariablesTable.TryGetValue(context.GetChild(0).GetText(), out int index);
+                IntermediateCode code = new IntermediateCode(index, InstructionType.pop);
                 codes.Add(code);
 
             }
@@ -315,19 +387,25 @@ namespace CMMInterpreter.vm
          */
         public override object VisitAssignment([NotNull] CMMParser.AssignmentContext context)
         {
+
             Visit(context.leftValue());
+
+            // tmp是一个虚拟的变量，用于 存储leftVal的索引 在局部变量表的位置
+            int tmp = curLocalVariablesTable.Count;
+
             // 把leftVal的值放到局部变更量表Count位置上
-            IntermediateCode code0 = new IntermediateCode(curLocalVariablesTable.Count, InstructionType.pop);
+            IntermediateCode code0 = new IntermediateCode(tmp, InstructionType.pop);
+            codes.Add(code0);
 
             // 把Expression的值压入栈中
             Visit(context.expression());
+            
             //将Experession的值放入Count中
-            IntermediateCode code1 = new IntermediateCode("(" + curLocalVariablesTable.Count+")", InstructionType.pop);
-            // 这个过程中，局部变量表并没有增加新的元素，所以curLocalVariable并没有Add操作。
-            codes.Add(code0);
+            IntermediateCode code1 = new IntermediateCode("("+tmp+")", InstructionType.pop);
+            // 这个过程中，局部变量表并没有增加新的元素，所以curLocalVariable并没有Add操作
             codes.Add(code1);
-
-
+            
+            // 局部变量表里面，1号位置的值是0
             return null;
         }
 
@@ -341,7 +419,7 @@ namespace CMMInterpreter.vm
             {
                 //只定义成了identifier,将identifier对应的索引地址压栈
                 if (!curLocalVariablesTable.ContainsKey(context.GetChild(0).GetText())) {
-                    throw new VariableNotFountException(context.GetChild(0).GetText(), context);
+                   throw new VariableNotFountException(context.GetChild(0).GetText(), context);
                 }
                 curLocalVariablesTable.TryGetValue(context.GetChild(0).GetText(), out int addr);
                 IntermediateCode code = new IntermediateCode(addr, InstructionType.push);
@@ -471,9 +549,9 @@ namespace CMMInterpreter.vm
             // addr2是执行完codeBlock，而且判断确定不跳转的代码
             int addr2 = codes.Count;
             // 替换所有出现的continue break，代码的范围是addr0-add2， 更新操作的代码在addr1
-            replaceBreakAndConti(codes, addr0, addr2, addr1);
+            replaceBreakAndConti(codes, addr0, addr2-1, addr1);
             //局部变量表大于等于curSize的部分全部删掉！
-            codes.Add(new IntermediateCode(curSize, InstructionType.delVar));
+            codes.Add(new IntermediateCode(curSize, InstructionType.delv));
             
             return null;
         }
@@ -487,12 +565,12 @@ namespace CMMInterpreter.vm
                 IntermediateCode code;
                 switch (codeArray[i].getType())
                 {
-                    case InstructionType.brea:
+                    case InstructionType.b:
                         code = new IntermediateCode(addr2, InstructionType.j);
                         codes.RemoveAt(i);
                         codes.Insert(i, code);
                         break;
-                    case InstructionType.conti:
+                    case InstructionType.cnt:
                         code = new IntermediateCode(addr1, InstructionType.j);
                         codes.RemoveAt(i);
                         codes.Insert(i, code);
@@ -567,10 +645,10 @@ namespace CMMInterpreter.vm
             switch (context.GetChild(0).GetText())
             {
                 case "break":
-                    code = new IntermediateCode(InstructionType.brea);
+                    code = new IntermediateCode(InstructionType.b);
                     break;
                 case "continue":
-                    code = new IntermediateCode(InstructionType.conti);
+                    code = new IntermediateCode(InstructionType.cnt);
                     break;
                 case "return":
                     code = new IntermediateCode(InstructionType.ret);

@@ -19,7 +19,7 @@ namespace CMMInterpreter.vm
         {
         }
 
-        public VariableNotFountException(string message, CMMParser.LeftValueContext context) : this(message)
+        public VariableNotFountException(string message, Antlr4.Runtime.ParserRuleContext context) : this(message)
         {
             this.context = context;
         }
