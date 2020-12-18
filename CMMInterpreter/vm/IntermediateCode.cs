@@ -33,6 +33,13 @@ namespace CMMInterpreter.vm
             operant = _operant;
         }
 
+        public InstructionType getType()
+        {
+            return type;
+        }
+
+
+
 
     }
 }

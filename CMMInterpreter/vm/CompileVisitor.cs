@@ -21,7 +21,7 @@ namespace CMMInterpreter.vm
 
 
         // 指令集合
-        List<IntermediateCode> codes = new List<IntermediateCode>();
+        ArrayList<IntermediateCode> codes = new ArrayList<IntermediateCode>();
 
         /**
          * 读取identifier的text，然后从函数地址表中读取该函数的中间代码起始地址
@@ -109,7 +109,7 @@ namespace CMMInterpreter.vm
          */
         public override object VisitParameterList([NotNull] CMMParser.ParameterListContext context)
         {
-            // 把参数加入到局部变量表中。运行时在遇到call指令的时候将要将参数按照顺序加入局部变更量表中。
+            // 把参数加入到局部变量表中。运行时在遇到call指令的时候将要将参数按照顺序加入局部变更量表。
             curLocalVariablesTable.Add(context.GetChild(1).GetText(), curLocalVariablesTable.Count);
 
 
@@ -184,25 +184,25 @@ namespace CMMInterpreter.vm
             如果expression的操作结果是false，就在栈中压入0，否则压入1.
              
              */
-            IntermediateCode code0 = new IntermediateCode(1, InstructionType.push);
+            IntermediateCode code0 = new IntermediateCode(0, InstructionType.push);
             // 查看expression的结果
             Visit(context.expression());
 
             // 比较expression的结果和1的关系
-            // code1的目的地址等待后续回填。因为如果不相等，说明是false，则需要跳转到codeBlock后面的位置。
-            IntermediateCode code1 = new IntermediateCode(InstructionType.jne);
+            // code1的目的地址等待后续回填。因为如果与0相等，说明是false，则需要跳转到codeBlock后面的位置。
+            IntermediateCode code1 = new IntermediateCode(InstructionType.je);
             // addr0是codeBlock的开始地址。
             int addr0 = codes.Count;
             
             Visit(context.codeBlock());
-            IntermediateCode code2 = new IntermediateCode(1, InstructionType.push);
+            IntermediateCode code2 = new IntermediateCode(0, InstructionType.push);
 
             // 再次查看expression的结果
             Visit(context.expression());
 
 
-            // 比较expression的结果和1的关系,是1的话重新跳转回去addr0
-            IntermediateCode code3 = new IntermediateCode(addr0, InstructionType.je);
+            // 比较expression的结果和0的关系,不是0的话重新跳转回去addr0
+            IntermediateCode code3 = new IntermediateCode(addr0, InstructionType.jne);
             int addr1 = codes.Count;
             // 这个时候回填地址，如果刚才的条件判断不满足，那么目的地址是codeBlock结束的地址addr1
             code1.setOperant(addr1);
@@ -236,11 +236,79 @@ namespace CMMInterpreter.vm
         }
 
         /*
-         处理for语句,还没做
+         处理for语句
          */
         public override object VisitForStatement([NotNull] CMMParser.ForStatementContext context)
         {
-            return base.VisitForStatement(context);
+            // 当前局部变量表的大小，访问完ForStatement之后要恢复局部变量表
+            int curSize = curLocalVariablesTable.Count;
+            // 这里面可能会定义新的变量，不过没关系，直接插入局部变量表中就可以了，最后我们恢复的。
+            Visit(context.forInitializer());
+            // 访问expression，将执行的结果压入栈中
+            Visit(context.expression());
+            // 如果expression的结果是真，才会访问
+            // 这里的0是数字，不是索引，要加上范围！！
+            IntermediateCode code0 = new IntermediateCode(0, InstructionType.push);
+            // 如果是0的话，就直接跳转到codeBlock之后，并且释放局部变量。目的地址待回填
+            IntermediateCode code1 = new IntermediateCode(InstructionType.jne);
+
+            // addr0是codeBlock的起始地址
+            codes.Add(code0);
+            codes.Add(code1);
+            int addr0 = codes.Count;
+            // 访问codeBlock
+            Visit(context.codeBlock());
+
+            // 访问更新操作,更新操作的起始地址是addr1
+            int addr1 = codes.Count;
+            Visit(context.assignment());
+
+            // 再次判断一下expression
+            Visit(context.expression());
+
+            // 访问assignment
+            Visit(context.assignment());
+
+            // 判断一下expression的结果和0的关系吧
+            IntermediateCode code2 = new IntermediateCode(0, InstructionType.push);
+            IntermediateCode code3 = new IntermediateCode(addr0, InstructionType.jne);
+            // 如果是相等的话，就要跳转回到codeBlock的起始地址
+            codes.Add(code2);
+            codes.Add(code3);
+            // addr2是执行完codeBlock，而且判断确定不跳转的代码
+            int addr2 = codes.Count;
+            // 替换所有出现的continue break，代码的范围是addr0-add2， 更新操作的代码在addr1
+            replaceBreakAndConti(codes, addr0, addr2, addr1);
+            //局部变量表大于等于curSize的部分全部删掉！
+            codes.Add(new IntermediateCode(curSize, InstructionType.delVar));
+            
+            return null;
+        }
+
+        // 替换codes[addr0, addr2]中所有的break和continue语句，其中break -> jump addr2, continue -> jump addr1
+        private void replaceBreakAndConti(List<IntermediateCode> codes, int addr0, int addr2, int addr1) 
+        {
+            IntermediateCode[] codeArray = codes.ToArray();
+            for(int i = addr0; i <= addr2; i++)
+            {
+                IntermediateCode code;
+                switch (codeArray[i].getType())
+                {
+                    case InstructionType.brea:
+                        code = new IntermediateCode(addr2, InstructionType.j);
+                        codes.RemoveAt(i);
+                        codes.Insert(i, code);
+                        break;
+                    case InstructionType.conti:
+                        code = new IntermediateCode(addr1, InstructionType.j);
+                        codes.RemoveAt(i);
+                        codes.Insert(i, code);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            
         }
 
         /*
@@ -248,12 +316,12 @@ namespace CMMInterpreter.vm
          */
         public override object VisitIfStatement([NotNull] CMMParser.IfStatementContext context)
         {
-            IntermediateCode code0 = new IntermediateCode(1, InstructionType.push);
+            IntermediateCode code0 = new IntermediateCode(0, InstructionType.push);
             // 查看expression的结果
             Visit(context.expression());
 
-            // 比较expression的结果和1的关系,不是1的话就跳转走,code1的目的地址待回填
-            IntermediateCode code1 = new IntermediateCode(InstructionType.jne);
+            // 比较expression的结果和0的关系,等于0的话就跳转走,code1的目的地址待回填
+            IntermediateCode code1 = new IntermediateCode(InstructionType.je);
             
             Visit(context.codeBlock());
             // 条件不符合的情况应该执行的代码行号为addr0,回填一下
@@ -296,7 +364,32 @@ namespace CMMInterpreter.vm
         }
 
         /*
-         调用函数，需要将
+         jumpStatement
+        return 语句在第一遍扫描结束之后回填
+        break continue 可以在for while语句的时候，直接转换成为jump语句
+         */
+        public override object VisitJumpStatement([NotNull] CMMParser.JumpStatementContext context)
+        {
+            IntermediateCode code = null;
+            switch (context.GetChild(0).GetText())
+            {
+                case "break":
+                    code = new IntermediateCode(InstructionType.brea);
+                    break;
+                case "continue":
+                    code = new IntermediateCode(InstructionType.conti);
+                    break;
+                case "return":
+                    code = new IntermediateCode(InstructionType.ret);
+                    break;
+            }
+            codes.Add(code);
+            
+            return null;
+        }
+
+        /*
+         调用函数，需要将当前局部变更量表保存，更换成为新的局部变量表。将参数要加入到局部变量表中。
          */
     }
 }
