@@ -14,7 +14,7 @@ namespace CMMInterpreter.vm
     {
 
         // 局部变量栈
-        private List<Object> variableStack;
+        private Object[] variableStack;
 
         // 操作栈
         private Stack<Object> operantStack;
@@ -28,9 +28,10 @@ namespace CMMInterpreter.vm
         private int operantStackSp;
 
 
-        StackFrame(int _returnAddress)
+        public StackFrame(int _returnAddress)
         {
-            variableStack = new List<object>();
+            // ＴＯＤＯ:变量站暂时设置成100大小 实际应该运行时推断大小
+            variableStack = new Object[100];
             operantStack = new Stack<object>();
             returnAddress = _returnAddress;
             variableStackSp = 0;
@@ -38,7 +39,7 @@ namespace CMMInterpreter.vm
         }
 
 
-        StackFrame(int _returnAddress, Object[] parameters)
+        public StackFrame(int _returnAddress, Object[] parameters)
         {
             foreach (Object parameter in parameters)
             {
@@ -46,11 +47,14 @@ namespace CMMInterpreter.vm
             }
         }
 
+        public Object getVariable(int address)
+        {
+            return variableStack[address];
+        }
 
         public void pushToVariableStack(Object o)
         {
-            variableStack.Add(o);
-            variableStackSp++;
+            variableStack[++variableStackSp] = o;
         }
 
         public Object popFromVariableStack()
@@ -58,8 +62,7 @@ namespace CMMInterpreter.vm
             try
             {
 
-                Object o = variableStack.ToArray()[variableStackSp];
-                variableStackSp--;
+                Object o = variableStack[variableStackSp--];
                 return o;
             }
             catch (Exception e)
@@ -75,16 +78,24 @@ namespace CMMInterpreter.vm
         {
             try
             {
-                variableStack.RemoveAt(index);
+                for (int i = index; i < index - 1; i++)
+                {
+                    variableStack[i] = variableStack[i + 1];
+                }
                 variableStackSp--;
             }
             catch (Exception e)
             {
-                Console.WriteLine("弹栈异常：" + e.Message);
+                Console.WriteLine("移除元素异常：" + e.Message);
             }
 
         }
 
+        public void pushToOperantStackFromVariable(int variableAddress)
+        {
+            operantStack.Push(variableStack[variableAddress]);
+            operantStackSp++;
+        }
 
         public void pushToOperantStack(Object o)
         {
@@ -92,14 +103,50 @@ namespace CMMInterpreter.vm
             operantStackSp++;
         }
 
+        public Object popFromOperantStack(int index, bool isPointer)
+        {
+            
+            try
+            {
+                if (isPointer)
+                {
+                    // pop (1)表示把局部变量地址为1元素的值作为地址，将栈顶元素出栈并赋值给这个地址的局部变量
+                    int address = (int)variableStack[index];
+                    operantStackSp--;
+                    Object op = operantStack.Pop();
+                    // 修改局部变量的值
+                    variableStack[address] = op;
+                    return op;
+
+
+                }
+                else
+                {
+                    operantStackSp--;
+                    Object op = operantStack.Pop();
+                    // 修改局部变量的值
+                    variableStack[index] = op;
+                    return op;
+                }
+                
+            }
+            catch ( Exception e)
+            {
+                Console.WriteLine("弹栈异常：" + e.Message);
+                return null;
+            }
+        }
+
+
         public Object popFromOperantStack()
         {
             try
             {
                 operantStackSp--;
                 return operantStack.Pop();
+
             }
-            catch ( Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine("弹栈异常：" + e.Message);
                 return null;

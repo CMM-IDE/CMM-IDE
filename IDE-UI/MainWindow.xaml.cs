@@ -100,6 +100,10 @@ namespace IDE_UI
                 Print(exp.ToString());
             }
 
+
+            VirtualMachine vm = new VirtualMachine();
+
+            Print("最终结果为：" + vm.interpret(visitor.codes).ToString());
             /*
             var visitor = new RefPhase();
             this.visitor = visitor;

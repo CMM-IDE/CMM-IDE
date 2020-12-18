@@ -4,12 +4,12 @@ using System.Text;
 
 namespace CMMInterpreter.vm
 {
-    class VirtualMachine
+    public class VirtualMachine
     {
         // 运行时栈 每个线程对应一个运行时栈
-        private List<List<StackFrame>> stacks;
+        List<List<StackFrame>> stacks;
 
-        VirtualMachine()
+        public VirtualMachine()
         {
             stacks = new List<List<StackFrame>>();
         }
@@ -54,10 +54,10 @@ namespace CMMInterpreter.vm
                         not(stack);
                         break;
                     case InstructionType.push:
-                        push(stack);
+                        push(currentStackFrame, code.operant);
                         break;
                     case InstructionType.pop:
-                        pop(stack);
+                        pop(currentStackFrame, code.operant);
                         break;
                     case InstructionType.g:
                         g(stack);
@@ -111,7 +111,7 @@ namespace CMMInterpreter.vm
                         cnt(stack);
                         break;
                     case InstructionType.pushv:
-                        pushv(stack);
+                        pushv(currentStackFrame, code.operant);
                         break;
                     case InstructionType.ret:
                         ret(stack);
@@ -129,10 +129,10 @@ namespace CMMInterpreter.vm
             
             // 运行结束销毁
             stacks.Remove(stack);
-            return currentStackFrame.popFromOperantStack();
+            return currentStackFrame.getVariable(0);
         }
 
-        public void add(StackFrame frame, int pc)
+        void add(StackFrame frame, int pc)
         {
             double op1 = (double)frame.popFromOperantStack();
             double op2 = (double)frame.popFromOperantStack();
@@ -140,135 +140,144 @@ namespace CMMInterpreter.vm
         }
 
 
-        public void sub(StackFrame frame, int pc)
+        void sub(StackFrame frame, int pc)
         {
             double op1 = (double)frame.popFromOperantStack();
             double op2 = (double)frame.popFromOperantStack();
             frame.pushToOperantStack(op1 - op2);
         }
 
-        public void mul(StackFrame frame)
+        void mul(StackFrame frame)
         {
             double op1 = (double)frame.popFromOperantStack();
             double op2 = (double)frame.popFromOperantStack();
             frame.pushToOperantStack(op1 * op2);
         }
 
-        public void div(StackFrame frame)
+        void div(StackFrame frame)
         {
             double op1 = (double)frame.popFromOperantStack();
             double op2 = (double)frame.popFromOperantStack();
             frame.pushToOperantStack(op1 / op2);
         }
-        public void neg(StackFrame frame)
+        void neg(StackFrame frame)
         {
             double op = (double)frame.popFromOperantStack();
             frame.pushToOperantStack(-op);
         }
-        public void and(List<StackFrame> frame)
+        void and(List<StackFrame> frame)
         {
 
         }
-        public void or(List<StackFrame> frame)
+        void or(List<StackFrame> frame)
         {
 
         }
-        public void not(List<StackFrame> frame)
+        void not(List<StackFrame> frame)
         {
 
         }
-        public void push(List<StackFrame> frame)
+        void push(StackFrame frame, Object operant)
+        {
+            frame.pushToOperantStack(operant);
+        }
+        void pop(StackFrame frame, Object operant)
         {
             
+            if (operant.ToString().Contains("("))
+            {
+                // 指针寻址模式
+                frame.popFromOperantStack(Convert.ToInt32(operant.ToString().Substring(1, operant.ToString().Length - 2)), true);
+            }
+            else
+            {
+                frame.popFromOperantStack((int)operant, false);
+            }
         }
-        public void pop(List<StackFrame> frame)
+        void g(List<StackFrame> frame)
         {
 
         }
-        public void g(List<StackFrame> frame)
+        void l(List<StackFrame> frame)
         {
 
         }
-        public void l(List<StackFrame> frame)
+        void ge(List<StackFrame> frame)
         {
 
         }
-        public void ge(List<StackFrame> frame)
+        void le(List<StackFrame> frame)
         {
 
         }
-        public void le(List<StackFrame> frame)
+        void eq(List<StackFrame> frame)
         {
 
         }
-        public void eq(List<StackFrame> frame)
-        {
-
-        }
-        public void ne(List<StackFrame> frame)
-        {
-
-        }
-
-
-        public void j(List<StackFrame> frame)
-        {
-
-        }
-
-        public void je(List<StackFrame> frame)
+        void ne(List<StackFrame> frame)
         {
 
         }
 
-        public void jg(List<StackFrame> frame)
+
+        void j(List<StackFrame> frame)
         {
 
         }
 
-        public void jl(List<StackFrame> frame)
-        {
-
-        }
-        public void jne(List<StackFrame> frame)
-        {
-
-        }
-        public void call(List<StackFrame> frame)
-        {
-
-        }
-        public void read(List<StackFrame> frame)
+        void je(List<StackFrame> frame)
         {
 
         }
 
-        public void write(List<StackFrame> frame)
+        void jg(List<StackFrame> frame)
         {
 
         }
 
-        public void delv(List<StackFrame> frame)
+        void jl(List<StackFrame> frame)
+        {
+
+        }
+        void jne(List<StackFrame> frame)
+        {
+
+        }
+        void call(List<StackFrame> frame)
+        {
+
+        }
+        void read(List<StackFrame> frame)
         {
 
         }
 
-        public void b(List<StackFrame> frame)
+        void write(List<StackFrame> frame)
         {
 
         }
 
-        public void cnt(List<StackFrame> frame)
+        void delv(List<StackFrame> frame)
         {
 
         }
 
-        public void pushv(List<StackFrame> frame)
+        void b(List<StackFrame> frame)
         {
 
         }
 
-        public void ret(List<StackFrame> frame)
+        void cnt(List<StackFrame> frame)
+        {
+
+        }
+
+        void pushv(StackFrame frame, Object o)
+        {
+            frame.pushToOperantStackFromVariable((int)o);
+        }
+
+        void ret(List<StackFrame> frame)
         {
 
         }
