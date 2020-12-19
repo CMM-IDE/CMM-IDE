@@ -9,6 +9,9 @@ namespace IDE_UI.Helper
 {
     public class IDEState: INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        
 
         public bool IsRunning {
             get {
@@ -18,8 +21,8 @@ namespace IDE_UI.Helper
                 isRunning = value;
             }
         }
-
         private bool isRunning = false;
+
 
         public bool FileOpened {
             get {
@@ -29,8 +32,8 @@ namespace IDE_UI.Helper
                 fileOpened = value;
             }
         }
-
         private bool fileOpened = false;
+
 
         public string OpenedFilePath {
             get {
@@ -42,6 +45,7 @@ namespace IDE_UI.Helper
         }
         private string openedFilePath = null;
 
+
         public bool FileModified {
             get {
                 return fileModified;
@@ -51,6 +55,7 @@ namespace IDE_UI.Helper
             }
         }
         private bool fileModified = false;
+
 
         public bool ConsoleShowed {
             get {
@@ -63,6 +68,7 @@ namespace IDE_UI.Helper
         }
         private bool consoleShowed = false;
 
+
         public bool DebugWindowShowed {
             get {
                 return debugWindowShowed;
@@ -74,6 +80,5 @@ namespace IDE_UI.Helper
         }
         private bool debugWindowShowed = false;
 
-        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

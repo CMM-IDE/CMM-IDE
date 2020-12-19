@@ -3,13 +3,31 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:IDE_UI.Controls"
+             xmlns:local="clr-namespace:IDE_UI.Controls" 
+             xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+             xmlns:sci="clr-namespace:ScintillaNET;assembly=ScintillaNET" 
+             xmlns:sci1="http://scintillanet.codeplex.com"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="10"/>
         </Grid.ColumnDefinitions>
+
+        <!--<avalonEdit:TextEditor Grid.Column="0"
+                                   HorizontalScrollBarVisibility="Hidden"
+                                   ShowLineNumbers="True"
+                                   Name="textEditor"
+                                   FontFamily="Consolas"
+                                   SyntaxHighlighting="C#"
+                                   FontSize="14pt"/>-->
+        <sci1:ScintillaWPF x:Name="textEditor" 
+                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                           MinWidth="0" HScrollBar="False" UpdateUI="textEditor_UpdateUI"
+                           CharAdded="textEditor_CharAdded"
+                           />
+
+        <Grid Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Width="10"  Background="#FFFAFAFA"/>
     </Grid>
 </UserControl>
