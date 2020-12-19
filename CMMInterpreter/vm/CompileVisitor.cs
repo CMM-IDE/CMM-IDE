@@ -455,32 +455,29 @@ out(a);
             如果expression的操作结果是false，就在栈中压入0，否则压入1.
              
              */
+            int idx = codes.Count;
             IntermediateCode code0 = new IntermediateCode(0, InstructionType.push);
+            codes.Add(code0);
             // 查看expression的结果
             Visit(context.expression());
 
             // 比较expression的结果和1的关系
             // code1的目的地址等待后续回填。因为如果与0相等，说明是false，则需要跳转到codeBlock后面的位置。
             IntermediateCode code1 = new IntermediateCode(InstructionType.je);
+            codes.Add(code1);
             // addr0是codeBlock的开始地址。
             int addr0 = codes.Count;
             
             Visit(context.codeBlock());
-            IntermediateCode code2 = new IntermediateCode(0, InstructionType.push);
-
-            // 再次查看expression的结果
-            Visit(context.expression());
-
-
-            // 比较expression的结果和0的关系,不是0的话重新跳转回去addr0
-            IntermediateCode code3 = new IntermediateCode(addr0, InstructionType.jne);
+            IntermediateCode code2 = new IntermediateCode(0, InstructionType.j);
+            codes.Add(code2);
             int addr1 = codes.Count;
             // 这个时候回填地址，如果刚才的条件判断不满足，那么目的地址是codeBlock结束的地址addr1
             code1.setOperant(addr1);
-            codes.Add(code0);
-            codes.Add(code1);
-            codes.Add(code2);
-            codes.Add(code3);
+            code2.setOperant(idx);
+            
+            
+            
             
             return null;
         }
