@@ -1,4 +1,4 @@
-﻿<Metro:MetroWindow
+﻿<Window
     x:Class="IDE_UI.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,10 +8,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:cc="clr-namespace:IDE_UI.Converter"
+    xmlns:CMM="clr-namespace:IDE_UI.Controls"
+    xmlns:sci1="http://scintillanet.codeplex.com"
     Title="CMM-IDE" MinWidth="600" MinHeight="350" d:DesignHeight="800" d:DesignWidth="1000"
     Width="800" Height="600"
-    BorderThickness="0" WindowStyle="None"
+    BorderThickness="0"
     Background="White"
+    AllowsTransparency="False"
     xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
     mc:Ignorable="d">
     <!--<Metro:MetroWindow.Menu>
@@ -54,10 +57,10 @@
     <Window.Resources>
         <cc:BoolToColor x:Key="BoolToColor"/>
     </Window.Resources>
-    
+
     <DockPanel>
 
-        <Grid x:Name="menuArea" DockPanel.Dock="Top" Background="#FFFAFAFA">
+        <Grid x:Name="menuArea" DockPanel.Dock="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="400"/>
                 <ColumnDefinition/>
@@ -66,6 +69,7 @@
                 <MenuItem Header="文件">
                     <MenuItem x:Name="NewFileItem"
                         Header="新建"
+                        Click="NewFileItem_Click"
                         InputGestureText="Ctrl+N">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon Kind="FiberNew" />
@@ -177,11 +181,11 @@
                         </MenuItem.Icon>
                     </MenuItem>
                 </MenuItem>
-                
+
                 <MenuItem Header="帮助"/>
             </Menu>
             <ToolBar Style="{DynamicResource MaterialDesignToolBar}" ClipToBounds="False" Grid.Column="1" Background="Transparent">
-                <Button x:Name="NewFileButton"
+                <Button x:Name="NewFileButton" Click="NewFileItem_Click"
                     ToolTip="New..." Margin="0,0,0,0" ClipToBounds="False" Padding="5">
                     <materialDesign:PackIcon Kind="FiberNew" Padding="0" Foreground="#DDDCBD2E" />
                 </Button>
@@ -234,7 +238,7 @@
                     ToolBar.OverflowMode="AsNeeded" Padding="5">
                     <Image Source="pack://application:,,,/Asset/run-large.png" Width="20" Height="20"/>
                 </Button>
-                
+
                 <Button x:Name="btnDebug"
                     ToolTip="调试"
                     ToolBar.OverflowMode="AsNeeded" Padding="5">
@@ -246,49 +250,10 @@
                     ToolBar.OverflowMode="AsNeeded" Padding="5">
                     <Image Source="pack://application:,,,/Asset/stop-large.png" Width="20" Height="20"/>
                 </Button>
-                
-                <!--<materialDesign:PopupBox x:Name="RunPopButton"
-                    Style="{StaticResource MaterialDesignMultiFloatingActionPopupBox}"
-                    PlacementMode="BottomAndAlignCentres"
-                    UnfurlOrientation="Horizontal"
-                    ToolTip="Run..."
-                    ToolBar.OverflowMode="AsNeeded"
-                    StaysOpen="False"
-                    Margin="10,5,0,5"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center" Background="#FF32ED4E" Width="35" Height="35" HorizontalContentAlignment="Center" BorderBrush="#FF32ED4E" Foreground="#DDF6F6F6" PopupMode="MouseOver">
-                    <materialDesign:PopupBox.ToggleContent>
-                        <materialDesign:PackIcon Kind="PlaySpeed"/>
-                    </materialDesign:PopupBox.ToggleContent>
-                    <StackPanel
-                        Orientation="Vertical">
-                        <Button x:Name="RunLexerButton"
-                            ToolTip="Run Lexer" Width="30" Height="30" BorderBrush="#FFCCCAD0" Background="#FFD4F7F6" Click="RunLexerButton_Click">
-                            <materialDesign:PackIcon Kind="PlayOutline" Foreground="#DD14E00F" />
-                        </Button>
-                        <Button x:Name="RunParserButton"
-                            ToolTip="Run Parser" Width="30" Height="30" BorderBrush="#FFCCCAD0" Background="#FFD4F7F6" Click="RunParserButton_Click">
-                            <materialDesign:PackIcon Kind="Play" Foreground="#DD14E00F" />
-                        </Button>
-                        <Button x:Name="RunInterpreterButton"
-                            ToolTip="Run Interpreter" Width="30" Height="30" BorderBrush="#FFCCCAD0" Background="#FFD4F7F6" Click="RunInterpreterButton_Click">
-                            <materialDesign:PackIcon Kind="PlayCircleOutline" Foreground="#DD14E00F" />
-                        </Button>
-                        <Button x:Name="RunCodeButton"
-                                        ToolTip="Run Code" Width="30" Height="30" BorderBrush="#FFCCCAD0" Background="#FFD4F7F6" Click="RunCodeButton_Click">
-                            <materialDesign:PackIcon Kind="PlayCircleFilled" Foreground="#DD14E00F" />
-                        </Button>
-                    </StackPanel>
-                </materialDesign:PopupBox>
-                <Button x:Name="StopButton"
-                    Style="{StaticResource MaterialDesignFloatingActionButton}"
-                    ToolTip="Stop" Margin="10,0,0,0" Foreground="#FFF7487A" Width="30" Height="30" Background="#FFDDE4E5" BorderBrush="#FFC2F0F4" Click="StopButton_Click">
-                    <materialDesign:PackIcon
-                        Kind="Stop" />
-                </Button>-->
+
             </ToolBar>
         </Grid>
-        
+
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -304,52 +269,45 @@
 
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="172*"/>
+                    <ColumnDefinition Width="623*"/>
                 </Grid.ColumnDefinitions>
+                <CMM:CMMCodeEditor x:Name="textEditor" Grid.ColumnSpan="2" Margin="0,0,0,0.5"/>
 
-                <Grid Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="10"  Background="#FFFAFAFA"/>
-                <avalonEdit:TextEditor Grid.Column="0"
-                                   HorizontalScrollBarVisibility="Hidden"
-                                   ShowLineNumbers="True"
-                                   Name="textEditor"
-                                   FontFamily="Consolas"
-                                   SyntaxHighlighting="C#"
-                                   FontSize="14pt"/>
             </Grid>
 
             <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="1">
-                
+
             </Grid>
-            
-            <GridSplitter Grid.Row="1" Height="10" 
+
+            <GridSplitter Grid.Row="1" Height="10" Background="Gray"
                           ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" 
                           VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
 
             <ContentPresenter x:Name="extraWindowPresenter" Grid.Row="2">
-                
+
             </ContentPresenter>
-            <!--<TextBox Name="textBox" Grid.Row="2" TextWrapping="Wrap"
-                     TextChanged="TextChangedEventHandler" 
-                     KeyUp="textBox_KeyUp" AcceptsReturn="True"/>-->
 
             <Grid Grid.Row="3"  Background="#FFEE796D">
                 <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Top">
-                    <Button Name="btnConsole" Height="24" FontSize="10" Margin="0" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
-                            Background="{Binding State.ConsoleShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="console" Click="windowButton_Click">
+                    <Button x:Name="btnConsoleWindow" Height="24" FontSize="10" Margin="0" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                            Background="{Binding State.ConsoleShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="console" Click="extraWindowButton_Click">
                         控制台
                     </Button>
-                    
-                    <Button Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
-                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="windowButton_Click">
+                    <!--<Button x:Name="btnErrorWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="extraWindowButton_Click">
+                        错误
+                    </Button>-->
+                    <Button x:Name="btnDebugWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="extraWindowButton_Click">
                         调试
                     </Button>
                 </StackPanel>
             </Grid>
-            
+
         </Grid>
     </DockPanel>
 
-    
 
-</Metro:MetroWindow>
+
+</Window>
