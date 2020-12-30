@@ -134,8 +134,8 @@ namespace CMMInterpreter.debuger
             // 恢复原始中间指令
             IntermediateCodeInformation information = intermediateCodeInformations[breakpoint];
             int address = information.Address;
-            IntermediateCode saved = savedInstructions[breakpoint];
-            savedInstructions.Remove(breakpoint);
+            IntermediateCode saved = savedInstructions[address];
+            savedInstructions.Remove(address);
             vm.Resume(address, saved);
         }
 
