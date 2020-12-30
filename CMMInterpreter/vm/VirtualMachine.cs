@@ -256,7 +256,7 @@ namespace CMMInterpreter.vm
 
         void j(Object operant)
         {
-            pc = (int)operant;
+            pc = (int)operant-1;
 
         }
 
@@ -273,7 +273,7 @@ namespace CMMInterpreter.vm
             double op2 = Convert.ToDouble(frame.popFromOperantStack());
             if (op1.Equals(op2))
             {
-                pc = (int)operant;
+                pc = (int)operant-1;
             }
         }
 
@@ -283,7 +283,7 @@ namespace CMMInterpreter.vm
             double op2 = Convert.ToDouble(frame.popFromOperantStack());
             if (op2 > op1)
             {
-                pc = (int)operant;
+                pc = (int)operant-1;
             }
         }
 
@@ -293,7 +293,7 @@ namespace CMMInterpreter.vm
             double op2 = Convert.ToDouble(frame.popFromOperantStack());
             if (op2 < op1)
             {
-                pc = (int)operant;
+                pc = (int)operant-1;
             }
         }
         void jne(StackFrame frame, Object operant)
@@ -302,7 +302,7 @@ namespace CMMInterpreter.vm
             double op2 = Convert.ToDouble(frame.popFromOperantStack());
             if (!op2.Equals(op1))
             {
-                pc = (int)operant;
+                pc = (int)operant-1;
             }
         }
         void call(List<StackFrame> frame)

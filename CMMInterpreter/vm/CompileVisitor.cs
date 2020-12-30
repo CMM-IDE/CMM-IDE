@@ -1,7 +1,7 @@
 ﻿using Antlr4.Runtime.Misc;
 using System;
 using System.Collections.Generic;
-using System.Text;
+
 
 namespace CMMInterpreter.vm
 {
@@ -194,7 +194,7 @@ namespace CMMInterpreter.vm
                         }
                         else
                         {
-                            // 这是带参数函数调用的情况
+                            // 
                         }
                         break;
                 }
@@ -444,10 +444,10 @@ namespace CMMInterpreter.vm
         public override object VisitWhileStatement([NotNull] CMMParser.WhileStatementContext context)
         {
             /*
-             注意：这里的0是constant，需要补充！！！！！！！！！
             如果expression的操作结果是false，就在栈中压入0，否则压入1.
              
              */
+            int curSize = curLocalVariablesTable.Count;
             int idx = codes.Count;
             IntermediateCode code0 = new IntermediateCode(0, InstructionType.push);
             codes.Add(code0);
@@ -468,7 +468,7 @@ namespace CMMInterpreter.vm
             // 这个时候回填地址，如果刚才的条件判断不满足，那么目的地址是codeBlock结束的地址addr1
             code1.setOperant(addr1);
             code2.setOperant(idx);
-            
+            codes.Add(new IntermediateCode(curSize, InstructionType.delv));
             
             
             
@@ -513,7 +513,7 @@ namespace CMMInterpreter.vm
             // 这里的0是数字，不是索引，要加上范围！！
             IntermediateCode code0 = new IntermediateCode(0, InstructionType.push);
             // 如果是0的话，就直接跳转到codeBlock之后，并且释放局部变量。目的地址待回填
-            IntermediateCode code1 = new IntermediateCode(InstructionType.jne);
+            IntermediateCode code1 = new IntermediateCode(InstructionType.je);
 
             // addr0是codeBlock的起始地址
             codes.Add(code0);
