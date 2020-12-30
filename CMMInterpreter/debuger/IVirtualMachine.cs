@@ -17,10 +17,10 @@ namespace CMMInterpreter.debuger
         List<FrameInformation> GetCurrentFrame();
 
         /// <summary>
-        /// 获取刚执行完的指令
+        /// 获取刚执行完的指令信息
         /// </summary>
-        /// <returns>刚执行完的指令</returns>
-        IntermediateCode GetLastCode();
+        /// <returns>刚执行完的指令信息</returns>
+        IntermediateCodeInformation GetLastCodeInformation();
 
         /// <summary>
         /// 获取源代码-中间代码信息
