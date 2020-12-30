@@ -352,7 +352,8 @@ namespace CMMInterpreter.vm
                 {
                     throw new VariableNotFountException();
                 }
-                curLocalVariablesTable.Add(context.GetChild(0).GetText(), curLocalVariablesTable.Count);
+                curLocalVariablesTable.Add(context.GetChild(0).GetText(), curLocalVariablesTableLength);
+                curLocalVariablesTableLength++;
                 Visit(context.GetChild(2));
                 curLocalVariablesTable.TryGetValue(context.GetChild(0).GetText(), out int index);
                 IntermediateCode code = new IntermediateCode(index, InstructionType.pop);
@@ -368,8 +369,9 @@ namespace CMMInterpreter.vm
         public override object VisitParameterList([NotNull] CMMParser.ParameterListContext context)
         {
             // 把参数加入到局部变量表中。运行时在遇到call指令的时候将要将参数按照顺序加入局部变更量表。
-            curLocalVariablesTable.Add(context.GetChild(1).GetText(), curLocalVariablesTable.Count);
 
+            curLocalVariablesTable.Add(context.GetChild(1).GetText(), curLocalVariablesTableLength);
+            curLocalVariablesTableLength++;
 
             return base.VisitParameterList(context);
         }
@@ -384,7 +386,7 @@ namespace CMMInterpreter.vm
             Visit(context.leftValue());
 
             // tmp是一个虚拟的变量，用于 存储leftVal的索引 在局部变量表的位置
-            int tmp = curLocalVariablesTable.Count;
+            int tmp = curLocalVariablesTableLength;
 
             // 把leftVal的值放到局部变更量表Count位置上
             IntermediateCode code0 = new IntermediateCode(tmp, InstructionType.pop);
@@ -447,7 +449,7 @@ namespace CMMInterpreter.vm
             如果expression的操作结果是false，就在栈中压入0，否则压入1.
              
              */
-            int curSize = curLocalVariablesTable.Count;
+            int curSize = curLocalVariablesTableLength;
             int idx = codes.Count;
             IntermediateCode code0 = new IntermediateCode(0, InstructionType.push);
             codes.Add(code0);
@@ -502,7 +504,7 @@ namespace CMMInterpreter.vm
         public override object VisitForStatement([NotNull] CMMParser.ForStatementContext context)
         {
             // 当前局部变量表的大小，访问完ForStatement之后要恢复局部变量表
-            int curSize = curLocalVariablesTable.Count;
+            int curSize = curLocalVariablesTableLength;
             // 这里面可能会定义新的变量，不过没关系，直接插入局部变量表中就可以了，最后我们恢复的。
             Visit(context.forInitializer());
             // 访问expression，将执行的结果压入栈中
@@ -648,7 +650,7 @@ namespace CMMInterpreter.vm
                     else
                     {
                         Visit(context.GetChild(2));
-                        int tmp = curLocalVariablesTable.Count;
+                        int tmp = curLocalVariablesTableLength;
                         codes.Add(new IntermediateCode(tmp, InstructionType.pop));
                         code = new IntermediateCode(tmp, InstructionType.ret);
                     }
