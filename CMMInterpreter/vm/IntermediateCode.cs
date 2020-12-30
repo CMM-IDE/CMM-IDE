@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
+using CMMInterpreter.debuger;
 namespace CMMInterpreter.vm
 {
     /**
@@ -16,6 +16,8 @@ namespace CMMInterpreter.vm
         public Object operant { get; set; }
 
         public InstructionType type { get; set; }
+
+        public IntermediateCodeInformation information { get; set; }
 
         public IntermediateCode()
         {

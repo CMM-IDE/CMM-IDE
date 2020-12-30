@@ -163,11 +163,9 @@ namespace CMMInterpreter.vm
          */
 
         /*
-         
-         
-         int a = 1;
-a = a+2;
-out(a);
+         * int a = 1;
+         * a = a+2;
+         * out(a);
          */
         public override object VisitFactor([NotNull] CMMParser.FactorContext context)
         {
@@ -288,7 +286,7 @@ out(a);
             }
             else
             {
-                // 子树是term的情况
+                // 子树是term的情况 不用处理
             }
             
 
@@ -315,7 +313,7 @@ out(a);
             }
             else
             {
-                
+                // 不用处理
             }
 
             return res;
