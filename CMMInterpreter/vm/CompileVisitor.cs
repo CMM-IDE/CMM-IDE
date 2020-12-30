@@ -1,6 +1,7 @@
 ﻿using Antlr4.Runtime.Misc;
 using System;
 using System.Collections.Generic;
+using CMMInterpreter.vm.exception;
 using System.Text;
 
 namespace CMMInterpreter.vm
@@ -21,6 +22,8 @@ namespace CMMInterpreter.vm
 
         // 局部变量表大小
         int curLocalVariablesTableLength = 0;
+        // 用于编译时给表达式求值
+        Stack<Object> expStack = new Stack<Object>();
 
 
         // 指令集合
@@ -83,6 +86,7 @@ namespace CMMInterpreter.vm
         {
             // 访问子树
             Object result = VisitChildren(context);
+            Boolean op1, op2;
             if (context.ChildCount.Equals(3))
             {
                 
@@ -90,15 +94,23 @@ namespace CMMInterpreter.vm
                 {
                     case "&&":
                         codes.Add(new IntermediateCode(InstructionType.and));
+                        op1 = (Boolean)expStack.Pop();
+                        op2 = (Boolean)expStack.Pop();
+                        expStack.Push(op2 && op1 ? 1 : 0);
                         break;
                     case "||":
                         codes.Add(new IntermediateCode(InstructionType.or));
+                        op1 = (Boolean)expStack.Pop();
+                        op2 = (Boolean)expStack.Pop();
+                        expStack.Push(op2 || op1 ? 1 : 0);
                         break;
                 }
 
             }
             else if (context.ChildCount.Equals(2)) {
                 codes.Add(new IntermediateCode(InstructionType.not));
+                Double op = (Double)expStack.Pop();
+                expStack.Push(op == 1 ? 0 : 1);
             }
 
             return result;
@@ -113,6 +125,7 @@ namespace CMMInterpreter.vm
         public override object VisitBoolExpression([NotNull] CMMParser.BoolExpressionContext context)
         {
             Object res = VisitChildren(context);
+            Double op1, op2;
 
             if (context.ChildCount.Equals(3))
             {
@@ -122,21 +135,40 @@ namespace CMMInterpreter.vm
                 {
                     case "<=":
                         code.type = InstructionType.le;
+                        
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        expStack.Push(op2 <= op1 ? 1 : 0);
                         break;
                     case ">=":
                         code.type = InstructionType.ge;
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        expStack.Push(op2 >= op1 ? 1 : 0);
                         break;
                     case "==":
                         code.type = InstructionType.eq;
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        expStack.Push(op2 == op1 ? 1 : 0);
                         break;
                     case "<":
                         code.type = InstructionType.l;
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        expStack.Push(op2 < op1 ? 1 : 0);
                         break;
                     case ">":
                         code.type = InstructionType.g;
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        expStack.Push(op2 > op1 ? 1 : 0);
                         break;
                     case "<>":
                         code.type = InstructionType.ne;
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        expStack.Push(op2 != op1 ? 1 : 0);
                         break;
                     default:
                         break;
@@ -144,6 +176,9 @@ namespace CMMInterpreter.vm
                 codes.Add(code);
 
 
+            }
+            else {
+                // additiveExpression的情况不用处理 直接把值压栈
             }
 
             return res;
@@ -169,7 +204,6 @@ namespace CMMInterpreter.vm
          */
         public override object VisitFactor([NotNull] CMMParser.FactorContext context)
         {
-
             // TODO: 还没写完，有空再写
             if(context.Identifier() != null)
             {
@@ -211,26 +245,33 @@ namespace CMMInterpreter.vm
                 // 取相反数的情况 先visit factor，它的值压栈后加入neg指令
                 Visit(context.GetChild(1));
                 codes.Add(new IntermediateCode(InstructionType.neg));
+                // 直接把栈顶元素取反
+                Double num = (Double)expStack.Pop();
+                expStack.Push(-num);
             }
             if (context.IntegerLiteral() != null)
             {
                 // 整数直接压栈
                 codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push));
+                expStack.Push(Convert.ToDouble(context.IntegerLiteral().GetText()));
             }
             if (context.RealLiteral() != null)
             {
                 // 实数直接压栈
                 codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push));
+                expStack.Push(Convert.ToDouble(context.IntegerLiteral().GetText()));
             }
             if (context.True() != null)
             {
                 // true压入1
                 codes.Add(new IntermediateCode(1, InstructionType.push));
+                expStack.Push(1);
             }
             if (context.False() != null)
             {
                 // false压入0
                 codes.Add(new IntermediateCode(0, InstructionType.push));
+                expStack.Push(0);
             }
             
 
@@ -266,20 +307,28 @@ namespace CMMInterpreter.vm
         public override object VisitAdditiveExpression([NotNull] CMMParser.AdditiveExpressionContext context)
         {
             IntermediateCode code = new IntermediateCode();
+            Double op1, op2;
             // 先遍历左右子树
             VisitChildren(context);
             if (context.ChildCount.Equals(3))
             {
-                
 
                 // 左右
                 switch (context.GetChild(1).GetText())
                 {
                     case "+":
                         code.type = InstructionType.add;
+                        // 计算当前表达式的值 以便万一要给数组分配大小
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        expStack.Push(op2 + op1);
                         break;
                     case "-":
                         code.type = InstructionType.sub;
+                        // 计算当前表达式的值 以便万一要给数组分配大小
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        expStack.Push(op2 - op1);
                         break;
                 }
                 codes.Add(code);
@@ -296,6 +345,7 @@ namespace CMMInterpreter.vm
         public override object VisitTerm([NotNull] CMMParser.TermContext context)
         {
             Object res = VisitChildren(context);
+            Double op1, op2;
             if (context.ChildCount.Equals(3))
             {
                 
@@ -304,9 +354,17 @@ namespace CMMInterpreter.vm
                 {
                     case "*":
                         codes.Add(new IntermediateCode(InstructionType.mul));
+                        // 计算当前表达式的值 以便万一要给数组分配大小
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        expStack.Push(op2 * op1);
                         break;
                     case "/":
                         codes.Add(new IntermediateCode(InstructionType.div));
+                        op1 = (Double)expStack.Pop();
+                        op2 = (Double)expStack.Pop();
+                        // 计算当前表达式的值 以便万一要给数组分配大小
+                        expStack.Push(op2 / op1);
                         break;
                 }
 
@@ -357,6 +415,21 @@ namespace CMMInterpreter.vm
                 curLocalVariablesTable.TryGetValue(context.GetChild(0).GetText(), out int index);
                 IntermediateCode code = new IntermediateCode(index, InstructionType.pop);
                 codes.Add(code);
+
+            }
+            else {
+                // 定义数组
+                // 首先visit a[exp] exp的值被压到当前stack上
+                expStack.Clear();
+                Visit(context.GetChild(2));
+                Double expValue = (Double)expStack.Pop();
+                if (Math.Ceiling(expValue) != expValue) {
+                    throw new CompileException("数组元素个数必须为整数！");
+                }
+                curLocalVariablesTable.Add(context.GetChild(0).GetText(), Convert.ToInt32(expValue));
+                // 更新局部变量表大小
+                curLocalVariablesTableLength += Convert.ToInt32(expValue);
+
 
             }
             return null;

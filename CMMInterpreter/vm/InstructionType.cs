@@ -42,9 +42,11 @@ namespace CMMInterpreter.vm
         write,  // 打印操作栈栈顶元素
         delv,   // delVar <addr> 删除局部变量表中从addr开始的所有变量
         b,      // break语句，回填之后会被更换为jmp语句 
-        cnt,    //continue语句，回填之后会被更换为jmp语句
-        pushv,  // pushv <index>，将index处的变量压入栈中，
-        ret,     // 函数返回 返回后将函数返回值压到上一个函数的stack frame的操作栈中
+        cnt,    // continue语句，回填之后会被更换为jmp语句
+        pushv,  // pushv <index>，将index处的变量压入栈中
+        inc,    // 自增指令，若没有操作数栈顶元素+1 若有操作数栈顶元素+操作数
+        i,      // 调试用的中断指令
+        ret,    // 函数返回 返回后将函数返回值压到上一个函数的stack frame的操作栈中
         nop     // 空指令 什么都不做
 
     }
