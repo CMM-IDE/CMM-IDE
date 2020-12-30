@@ -211,6 +211,7 @@ namespace CMMInterpreter.vm
          */
         public override object VisitFactor([NotNull] CMMParser.FactorContext context)
         {
+            int funcAddr;
             // TODO: 还没写完，有空再写
             if(context.Identifier() != null)
             {
@@ -226,16 +227,34 @@ namespace CMMInterpreter.vm
                         break;
                     case 3:
                         // 这是不带参数函数调用的情况
+                        functionAddressTable.TryGetValue(context.GetChild(0).GetText(), out funcAddr);
+                        codes.Add(new IntermediateCode(funcAddr, InstructionType.call, context.Start.Line));
                         break;
                     case 4:
 
                         if (context.LeftParen() != null)
                         {
                             // 这是数组的情况
+                            curLocalVariablesTable.TryGetValue(context.GetChild(0).GetText(), out int arrayAddr);
+                            // 先计算表达式的值
+                            Visit(context.GetChild(2));
+                            // 此时栈顶是数组的下标 再压入数组的地址 然后相加得到该元素的地址
+                            codes.Add(new IntermediateCode(arrayAddr,InstructionType.push, context.Start.Line));
+                            codes.Add(new IntermediateCode(InstructionType.add, context.Start.Line));
+                            // pushv指令不带操作数 将当前栈顶的元素作为地址 到局部变量表中把对应地址的元素压栈
+                            codes.Add(new IntermediateCode(InstructionType.pushv, context.Start.Line));
                         }
                         else
                         {
-                            // 
+                            // 这是带参数函数调用的情况
+                            // 首先把参数压栈
+                            Visit(context.GetChild(2));
+                            // 然后把参数个数压栈
+                            int count = getLen(context.expressionList());
+                            codes.Add(new IntermediateCode(count, InstructionType.push, context.Start.Line));
+                            functionAddressTable.TryGetValue(context.Identifier().GetText(), out funcAddr);
+                            // 添加call指令
+                            codes.Add(new IntermediateCode(funcAddr, InstructionType.call, context.Start.Line));
                         }
                         break;
                 }
@@ -395,8 +414,33 @@ namespace CMMInterpreter.vm
          */
         public override object VisitFunctionDeclaration([NotNull] CMMParser.FunctionDeclarationContext context)
         {
+            // jump到函数ret的下一行代码 最后再回填
+            IntermediateCode jumpCode = new IntermediateCode(InstructionType.j, context.Start.Line);
+            codes.Add(jumpCode);
+            // 保存局部变量表和大小
+            Dictionary<string, int> storedVariableTable = curLocalVariablesTable;
+            int storedVariableTableSize = curLocalVariablesTableLength;
+            
+            curLocalVariablesTable = new Dictionary<string, int>();
+            curLocalVariablesTableLength = 0;
 
+            // 记录函数的起始地址
+            functionAddressTable.Add(context.GetChild(1).GetText(), codes.Count - 1);
+            // 访问参数列表
+            Visit(context.GetChild(2));
+            // visit code block生成当前函数的中间代码
+            Visit(context.GetChild(3));
+
+
+            // 最后要加一条ret指令
+            codes.Add(new IntermediateCode(InstructionType.ret, context.Start.Line));
+            // 回填jump指令
+            jumpCode.setOperant(codes.Count);
+            // 恢复局部变量表和大小
+            curLocalVariablesTable = storedVariableTable;
+            curLocalVariablesTableLength = storedVariableTableSize;
             return base.VisitFunctionDeclaration(context);
+
         }
 
 

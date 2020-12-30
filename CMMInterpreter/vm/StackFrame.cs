@@ -153,6 +153,11 @@ namespace CMMInterpreter.vm
             }
         }
 
+        // 获取操作栈顶元素
+        public Object peek() {
+            return operantStack.Peek();
+        }
+
 
     }
 }

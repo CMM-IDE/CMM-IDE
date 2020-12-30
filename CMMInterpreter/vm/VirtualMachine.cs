@@ -118,6 +118,8 @@ namespace CMMInterpreter.vm
                     case InstructionType.pushv:
                         pushv(currentStackFrame, code.operant);
                         break;
+                    case InstructionType.i:
+                        break;
                     case InstructionType.ret:
                         ret(stack);
                         break;
@@ -314,9 +316,11 @@ namespace CMMInterpreter.vm
 
         }
 
-        void write(List<StackFrame> frame)
+        Object write(StackFrame frame)
         {
-
+            // 打印栈顶元素
+            Console.WriteLine(frame.peek());
+            return frame.peek();
         }
 
         void delv(List<StackFrame> frame)
@@ -336,7 +340,17 @@ namespace CMMInterpreter.vm
 
         void pushv(StackFrame frame, Object o)
         {
-            frame.pushToOperantStackFromVariable((int)o);
+            // pushv <index>，将index处的变量压入栈中，有两种形式
+            // 1、形如 pushv 1 表示将局部变量表中地址为1的元素push到操作战中
+            // 2、形如 pushv 无操作数，则将栈顶元素出栈作为操作数。
+            if (o != null) {
+                frame.pushToOperantStackFromVariable((int)o);
+            }
+            else {
+                int addr = (int)frame.popFromOperantStack();
+                frame.pushToOperantStackFromVariable(addr);
+            }
+            
         }
 
         void ret(List<StackFrame> frame)
