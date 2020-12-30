@@ -369,11 +369,14 @@ namespace CMMInterpreter.vm
         public override object VisitParameterList([NotNull] CMMParser.ParameterListContext context)
         {
             // 把参数加入到局部变量表中。运行时在遇到call指令的时候将要将参数按照顺序加入局部变更量表。
-
             curLocalVariablesTable.Add(context.GetChild(1).GetText(), curLocalVariablesTableLength);
             curLocalVariablesTableLength++;
-
-            return base.VisitParameterList(context);
+            if(context.parameterList() != null)
+            {
+                Visit(context.parameterList());
+            }
+          
+            return null;
         }
 
         /*
