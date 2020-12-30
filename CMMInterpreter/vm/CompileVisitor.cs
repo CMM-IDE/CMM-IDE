@@ -173,69 +173,69 @@ out(a);
         {
 
             // TODO: 还没写完，有空再写
-            if(context.Identifier() != null && context.ChildCount == 1)
+            if(context.Identifier() != null)
             {
-                if(!curLocalVariablesTable.TryGetValue(context.Identifier().GetText(), out int addr)){
-                    throw new VariableNotFountException(context.Identifier().GetText(), context);
+
+                switch (context.ChildCount)
+                {
+                    case 1:
+                        if (!curLocalVariablesTable.TryGetValue(context.Identifier().GetText(), out int addr))
+                        {
+                            throw new VariableNotFountException(context.Identifier().GetText(), context);
+                        }
+                        codes.Add(new IntermediateCode(addr, InstructionType.pushv));
+                        break;
+                    case 3:
+                        // 这是不带参数函数调用的情况
+                        break;
+                    case 4:
+
+                        if (context.LeftParen() != null)
+                        {
+                            // 这是数组的情况
+                        }
+                        else
+                        {
+                            // 这是带参数函数调用的情况
+                        }
+                        break;
                 }
-                codes.Add(new IntermediateCode(addr, InstructionType.pushv));
+                
+                
+            }
+            if (context.LeftBracket() != null)
+            {
+                // 表达式的情况 直接遍历表达式求值
+                Visit(context.GetChild(2));
+            }
+            if (context.Sub() != null)
+            {
+                // 取相反数的情况 先visit factor，它的值压栈后加入neg指令
+                Visit(context.GetChild(1));
+                codes.Add(new IntermediateCode(InstructionType.neg));
             }
             if (context.IntegerLiteral() != null)
             {
+                // 整数直接压栈
                 codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push));
             }
             if (context.RealLiteral() != null)
             {
+                // 实数直接压栈
                 codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push));
             }
             if (context.True() != null)
             {
+                // true压入1
                 codes.Add(new IntermediateCode(1, InstructionType.push));
             }
             if (context.False() != null)
             {
+                // false压入0
                 codes.Add(new IntermediateCode(0, InstructionType.push));
             }
+            
 
-
-            /*
-            switch (context.GetChild(0).GetText())
-            {
-                case CMMParser.Identifier:
-                    // Identifier
-                    break;
-                case CMMParser.LeftBracket:
-                    // (
-                    break;
-                case CMMParser.RightBrace:
-                    // ）
-                    break;
-                case CMMParser.LeftParen:
-                    // 
-                    break;
-                case CMMParser.RightParen:
-                    break;
-                case CMMParser.IntegerLiteral:
-                    codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()),InstructionType.push));
-
-                    break;
-                case CMMParser.RealLiteral:
-                    codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push));
-
-                    break;
-                case CMMParser.True:
-                    codes.Add(new IntermediateCode(1, InstructionType.push));
-
-                    break;
-                case CMMParser.False:
-                    codes.Add(new IntermediateCode(1, InstructionType.push));
-                    break;
-                case CMMParser.Sub:
-                    break;
-                default:
-                    break;
-            }
-            */
             return base.VisitFactor(context);
         }
 
@@ -316,8 +316,6 @@ out(a);
             else
             {
                 
-                
-                // codes.Add(new IntermediateCode(context.GetChild(0).GetText(),InstructionType.push));
             }
 
             return res;
@@ -330,9 +328,6 @@ out(a);
          */
         public override object VisitFunctionDeclaration([NotNull] CMMParser.FunctionDeclarationContext context)
         {
-
-
-
 
             return base.VisitFunctionDeclaration(context);
         }
