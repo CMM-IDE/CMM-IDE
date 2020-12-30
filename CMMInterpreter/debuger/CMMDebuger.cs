@@ -201,9 +201,10 @@ namespace CMMInterpreter.debuger
                     // Step into模式
                     // 根据当前行号获取保存的中间代码
                     int line = vm.GetLastCodeInformation().Line;
-                    int address=vm.GetLastCodeInformation().Address;
-                    IntermediateCode saved = savedInstructions[address];
                     IntermediateCodeInformation information = intermediateCodeInformations[line];
+                    int address = information.Address;
+                    IntermediateCode saved = savedInstructions[address];
+                    
 
                     // 查询当前行是否为函数调用
                     if (information.IsFunctionCall)
@@ -222,26 +223,27 @@ namespace CMMInterpreter.debuger
                     // 单条执行中间代码
                     vm.InterpretSingleInstruction(saved);
 
-                    // 寻找最邻近的下一非空行
-                    int nextLine = line + 1;
-                    while (nextLine<maxLine && !intermediateCodeInformations.ContainsKey(nextLine))
+                    // 如果当前行不是最后一行
+                    if (line != maxLine)
                     {
-                        nextLine++;
+                        // 寻找最邻近的下一非空行
+                        int nextLine = line + 1;
+                        while (nextLine < maxLine && !intermediateCodeInformations.ContainsKey(nextLine))
+                        {
+                            nextLine++;
+                        }
+
+                        // 对下一行源代码对应的中间代码进行保存并替换int
+                        IntermediateCodeInformation nextLineInformation = intermediateCodeInformations[nextLine];
+                        int nextLineAddress = nextLineInformation.Address;
+                        if (!savedInstructions.ContainsKey(nextLineAddress))
+                        {
+                            IntermediateCode nextLineSaved = vm.ReplaceWithInt(nextLineAddress);
+                            savedInstructions.Add(nextLineAddress, nextLineSaved);
+                        }
                     }
 
-                    if (nextLine >= maxLine)
-                    {
-                        nextLine = maxLine;
-                    }
-
-                    // 对下一行源代码对应的中间代码进行保存并替换int
-                    IntermediateCodeInformation nextLineInformation = intermediateCodeInformations[nextLine];
-                    int nextLineAddress = nextLineInformation.Address;
-                    if (!savedInstructions.ContainsKey(nextLineAddress))
-                    {
-                        IntermediateCode nextLineSaved = vm.ReplaceWithInt(nextLineAddress);
-                        savedInstructions.Add(nextLineAddress, nextLineSaved);
-                    }
+                    
 
                     // 恢复vm线程
                     vmThread.Resume();
