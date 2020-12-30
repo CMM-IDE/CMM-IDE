@@ -17,7 +17,7 @@ namespace IDE_UI
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : Window, IOutputStream
+    public partial class MainWindow : Window, IOutputStream, VirtualMachineListener
     {
         public MainWindow()
         {
@@ -82,8 +82,8 @@ namespace IDE_UI
 
 
             VirtualMachine vm = new VirtualMachine();
-
-            Print("最终结果为：" + vm.interpret(visitor.codes).ToString());
+            vm.register(this);
+            vm.interpret(visitor.codes);
             /*
             var visitor = new RefPhase();
             this.visitor = visitor;
@@ -129,6 +129,9 @@ namespace IDE_UI
             consoleTextBox.IsReadOnly = true;
         }
 
+        public void write(Object o) {
+            Print(o.ToString());
+        }
 
     }
 }

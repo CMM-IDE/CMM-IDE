@@ -34,7 +34,7 @@ namespace CMMInterpreter.vm
             variableStack = new Object[100];
             operantStack = new Stack<object>();
             returnAddress = _returnAddress;
-            variableStackSp = 0;
+            variableStackSp = -1;
             operantStackSp = 0;
         }
 
@@ -158,6 +158,10 @@ namespace CMMInterpreter.vm
             return operantStack.Peek();
         }
 
+        public int getReturnAddress()
+        {
+            return returnAddress;
+        }
 
     }
 }

@@ -7,26 +7,30 @@ namespace CMMInterpreter.vm
     public class VirtualMachine
     {
         // 运行时栈 每个线程对应一个运行时栈
-        List<List<StackFrame>> stacks;
+        List<Stack<StackFrame>> stacks;
 
         int pc = 0;
 
+        VirtualMachineListener mainWindowListener;
         public VirtualMachine()
         {
-            stacks = new List<List<StackFrame>>();
+            stacks = new List<Stack<StackFrame>>();
         }
 
+        public void register(VirtualMachineListener listener) {
+            mainWindowListener = listener;
+        }
 
         // 解释执行代码
-        public Object interpret(List<IntermediateCode> codes)
+        public Boolean interpret(List<IntermediateCode> codes)
         {
             
             // 初始化栈
-            List<StackFrame> stack = new List<StackFrame>();
+            Stack<StackFrame> stack = new Stack<StackFrame>();
             stacks.Add(stack);
             // 当前栈帧
             StackFrame currentStackFrame = new StackFrame(0);
-            stack.Add(currentStackFrame);
+            stack.Push(currentStackFrame);
 
             IntermediateCode[] codesArray = codes.ToArray();
             for (; pc < codes.Count; pc++)
@@ -50,13 +54,13 @@ namespace CMMInterpreter.vm
                         neg(currentStackFrame);
                         break;
                     case InstructionType.and:
-                        and(stack);
+                        and(currentStackFrame);
                         break;
                     case InstructionType.or:
-                        or(stack);
+                        or(currentStackFrame);
                         break;
                     case InstructionType.not:
-                        not(stack);
+                        not(currentStackFrame);
                         break;
                     case InstructionType.push:
                         push(currentStackFrame, code.operant);
@@ -98,22 +102,37 @@ namespace CMMInterpreter.vm
                         jne(currentStackFrame, code.operant);
                         break;
                     case InstructionType.call:
-                        call(stack);
+                        // 创建新的函数栈帧 传入pc
+                        StackFrame newStackFrame = new StackFrame(pc);
+                        // 首先获取参数个数
+                        int paraNum = (int)currentStackFrame.popFromOperantStack();
+                        // 向新的栈帧中压入参数
+                        Stack<Object> tmp = new Stack<Object>();
+                        for (int i = 0; i < paraNum; i++) {
+                            tmp.Push(currentStackFrame.popFromOperantStack());
+                        }
+                        for (int i = 0; i < paraNum; i++) {
+                            newStackFrame.pushToVariableStack(tmp.Pop());
+                        }
+                        // 压入新栈
+                        stack.Push(newStackFrame);
+                        currentStackFrame = newStackFrame;
+                        pc = (int)code.operant - 1;
                         break;
                     case InstructionType.read:
-                        read(stack);
+                        read(currentStackFrame);
                         break;
                     case InstructionType.write:
-                        write(stack);
+                        write(currentStackFrame);
                         break;
                     case InstructionType.delv:
-                        delv(stack);
+                        delv(currentStackFrame);
                         break;
                     case InstructionType.b:
-                        b(stack);
+                        b(currentStackFrame);
                         break;
                     case InstructionType.cnt:
-                        cnt(stack);
+                        cnt(currentStackFrame);
                         break;
                     case InstructionType.pushv:
                         pushv(currentStackFrame, code.operant);
@@ -121,7 +140,18 @@ namespace CMMInterpreter.vm
                     case InstructionType.i:
                         break;
                     case InstructionType.ret:
-                        ret(stack);
+                        pc = currentStackFrame.getReturnAddress();
+                        int flag = (int)currentStackFrame.popFromOperantStack();
+                        
+                        Object returnValue = currentStackFrame.peek();
+                        // 函数返回 移除当前栈帧
+                        stack.Pop();
+                        if (flag == 1) {
+                            // 将函数返回值压入到调用者的栈帧中
+                            stack.Peek().pushToOperantStack(returnValue);
+                        }
+                        currentStackFrame = stack.Peek();
+
                         break;
                     default:
 
@@ -135,7 +165,7 @@ namespace CMMInterpreter.vm
             
             // 运行结束销毁
             stacks.Remove(stack);
-            return currentStackFrame.getVariable(0);
+            return true;
         }
 
         void add(StackFrame frame, int pc)
@@ -171,17 +201,22 @@ namespace CMMInterpreter.vm
             double op = (double)frame.popFromOperantStack();
             frame.pushToOperantStack(-op);
         }
-        void and(List<StackFrame> frame)
+        void and(StackFrame frame)
         {
-
+            Boolean op1 = (Boolean)frame.popFromOperantStack();
+            Boolean op2 = (Boolean)frame.popFromOperantStack();
+            frame.pushToOperantStack(op2 && op1);
         }
-        void or(List<StackFrame> frame)
+        void or(StackFrame frame)
         {
-
+            Boolean op1 = (Boolean)frame.popFromOperantStack();
+            Boolean op2 = (Boolean)frame.popFromOperantStack();
+            frame.pushToOperantStack(op2 || op1);
         }
-        void not(List<StackFrame> frame)
+        void not(StackFrame frame)
         {
-
+            Boolean op = (Boolean)frame.popFromOperantStack();
+            frame.pushToOperantStack(!op);
         }
         void push(StackFrame frame, Object operant)
         {
@@ -307,33 +342,35 @@ namespace CMMInterpreter.vm
                 pc = (int)operant-1;
             }
         }
-        void call(List<StackFrame> frame)
+        void call()
         {
 
         }
-        void read(List<StackFrame> frame)
+        void read(StackFrame frame)
         {
-
+            // 读取一个输入压到栈顶
+            // 
         }
 
         Object write(StackFrame frame)
         {
             // 打印栈顶元素
             Console.WriteLine(frame.peek());
+            mainWindowListener.write(frame.peek());
             return frame.peek();
         }
 
-        void delv(List<StackFrame> frame)
+        void delv(StackFrame frame)
         {
 
         }
 
-        void b(List<StackFrame> frame)
+        void b(StackFrame frame)
         {
 
         }
 
-        void cnt(List<StackFrame> frame)
+        void cnt(StackFrame frame)
         {
 
         }
@@ -353,9 +390,8 @@ namespace CMMInterpreter.vm
             
         }
 
-        void ret(List<StackFrame> frame)
+        void ret(StackFrame frame)
         {
-
         }
 
 

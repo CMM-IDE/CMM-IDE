@@ -15,7 +15,7 @@ namespace CMMInterpreter.vm
     public class CompileVisitor : CMMBaseVisitor<object>
     {
         // 函数地址表
-        Dictionary<string, int> functionAddressTable;
+        Dictionary<string, int> functionAddressTable = new Dictionary<string, int>();
 
         // 当前局部变量表
         Dictionary<string, int> curLocalVariablesTable = new Dictionary<string, int>();
@@ -96,15 +96,15 @@ namespace CMMInterpreter.vm
                 {
                     case "&&":
                         codes.Add(new IntermediateCode(InstructionType.and, context.Start.Line));
-                        op1 = (Boolean)expStack.Pop();
-                        op2 = (Boolean)expStack.Pop();
-                        expStack.Push(op2 && op1 ? 1 : 0);
+                        // op1 = (Boolean)expStack.Pop();
+                        // op2 = (Boolean)expStack.Pop();
+                        // expStack.Push(op2 && op1 ? 1 : 0);
                         break;
                     case "||":
                         codes.Add(new IntermediateCode(InstructionType.or, context.Start.Line));
-                        op1 = (Boolean)expStack.Pop();
-                        op2 = (Boolean)expStack.Pop();
-                        expStack.Push(op2 || op1 ? 1 : 0);
+                        // op1 = (Boolean)expStack.Pop();
+                        // op2 = (Boolean)expStack.Pop();
+                        // expStack.Push(op2 || op1 ? 1 : 0);
                         
                         break;
                     default:
@@ -143,39 +143,39 @@ namespace CMMInterpreter.vm
                     case "<=":
                         code.type = InstructionType.le;
                         
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
-                        expStack.Push(op2 <= op1 ? 1 : 0);
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
+                        // expStack.Push(op2 <= op1 ? 1 : 0);
                         break;
                     case ">=":
                         code.type = InstructionType.ge;
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
-                        expStack.Push(op2 >= op1 ? 1 : 0);
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
+                        // expStack.Push(op2 >= op1 ? 1 : 0);
                         break;
                     case "==":
                         code.type = InstructionType.eq;
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
-                        expStack.Push(op2 == op1 ? 1 : 0);
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
+                        // expStack.Push(op2 == op1 ? 1 : 0);
                         break;
                     case "<":
                         code.type = InstructionType.l;
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
-                        expStack.Push(op2 < op1 ? 1 : 0);
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
+                        // expStack.Push(op2 < op1 ? 1 : 0);
                         break;
                     case ">":
                         code.type = InstructionType.g;
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
-                        expStack.Push(op2 > op1 ? 1 : 0);
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
+                        // expStack.Push(op2 > op1 ? 1 : 0);
                         break;
                     case "<>":
                         code.type = InstructionType.ne;
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
-                        expStack.Push(op2 != op1 ? 1 : 0);
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
+                        // expStack.Push(op2 != op1 ? 1 : 0);
                         break;
                     default:
                         break;
@@ -219,11 +219,13 @@ namespace CMMInterpreter.vm
                 switch (context.ChildCount)
                 {
                     case 1:
+                        // 访问局部变量
                         if (!curLocalVariablesTable.TryGetValue(context.Identifier().GetText(), out int addr))
                         {
                             throw new VariableNotFountException(context.Identifier().GetText(), context);
                         }
                         codes.Add(new IntermediateCode(addr, InstructionType.pushv, context.Start.Line));
+                        
                         break;
                     case 3:
                         // 这是不带参数函数调用的情况
@@ -232,7 +234,7 @@ namespace CMMInterpreter.vm
                         break;
                     case 4:
 
-                        if (context.LeftParen() != null)
+                        if (context.GetChild(0).GetText() == "[")
                         {
                             // 这是数组的情况
                             curLocalVariablesTable.TryGetValue(context.GetChild(0).GetText(), out int arrayAddr);
@@ -248,7 +250,7 @@ namespace CMMInterpreter.vm
                         {
                             // 这是带参数函数调用的情况
                             // 首先把参数压栈
-                            Visit(context.GetChild(2));
+                            Visit(context.expressionList());
                             // 然后把参数个数压栈
                             int count = getLen(context.expressionList());
                             codes.Add(new IntermediateCode(count, InstructionType.push, context.Start.Line));
@@ -271,37 +273,37 @@ namespace CMMInterpreter.vm
                 // 取相反数的情况 先visit factor，它的值压栈后加入neg指令
                 Visit(context.GetChild(1));
                 // 直接把栈顶元素取反
-                Double num = (Double)expStack.Pop();
-                expStack.Push(-num);
+                // Double num = (Double)expStack.Pop();
+                // expStack.Push(-num);
                 codes.Add(new IntermediateCode(InstructionType.neg, context.Start.Line));
             }
             if (context.IntegerLiteral() != null)
             {
                 // 整数直接压栈
-                expStack.Push(Convert.ToDouble(context.IntegerLiteral().GetText()));
+                // expStack.Push(Convert.ToDouble(context.IntegerLiteral().GetText()));
                 codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push, context.Start.Line));
             }
             if (context.RealLiteral() != null)
             {
                 // 实数直接压栈
-                expStack.Push(Convert.ToDouble(context.IntegerLiteral().GetText()));
+                // expStack.Push(Convert.ToDouble(context.IntegerLiteral().GetText()));
                 codes.Add(new IntermediateCode(Convert.ToDouble(context.IntegerLiteral().GetText()), InstructionType.push, context.Start.Line));
             }
             if (context.True() != null)
             {
                 // true压入1
-                expStack.Push(1);
+                // expStack.Push(1);
                 codes.Add(new IntermediateCode(1, InstructionType.push, context.True().Symbol.Line));
             }
             if (context.False() != null)
             {
                 // false压入0
-                expStack.Push(0);
+                // expStack.Push(0);
                 codes.Add(new IntermediateCode(0, InstructionType.push, context.False().Symbol.Line));
             }
             
 
-            return base.VisitFactor(context);
+            return null;
         }
 
 
@@ -345,16 +347,16 @@ namespace CMMInterpreter.vm
                     case "+":
                         code.type = InstructionType.add;
                         // 计算当前表达式的值 以便万一要给数组分配大小
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
-                        expStack.Push(op2 + op1);
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
+                        // expStack.Push(op2 + op1);
                         break;
                     case "-":
                         code.type = InstructionType.sub;
                         // 计算当前表达式的值 以便万一要给数组分配大小
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
-                        expStack.Push(op2 - op1);
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
+                        // expStack.Push(op2 - op1);
                         break;
                 }
                 codes.Add(code);
@@ -381,16 +383,16 @@ namespace CMMInterpreter.vm
                     case "*":
                         codes.Add(new IntermediateCode(InstructionType.mul, context.Start.Line));
                         // 计算当前表达式的值 以便万一要给数组分配大小
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
-                        expStack.Push(op2 * op1);
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
+                        // expStack.Push(op2 * op1);
                         break;
                     case "/":
                         codes.Add(new IntermediateCode(InstructionType.div, context.Start.Line));
-                        op1 = (Double)expStack.Pop();
-                        op2 = (Double)expStack.Pop();
+                        // op1 = (Double)expStack.Pop();
+                        // op2 = (Double)expStack.Pop();
                         // 计算当前表达式的值 以便万一要给数组分配大小
-                        expStack.Push(op2 / op1);
+                        // expStack.Push(op2 / op1);
                         
                         break;
                     default:
@@ -425,21 +427,18 @@ namespace CMMInterpreter.vm
             curLocalVariablesTableLength = 0;
 
             // 记录函数的起始地址
-            functionAddressTable.Add(context.GetChild(1).GetText(), codes.Count - 1);
+            functionAddressTable.Add(context.GetChild(1).GetText(), codes.Count);
             // 访问参数列表
-            Visit(context.GetChild(2));
+            Visit(context.parameterClause());
             // visit code block生成当前函数的中间代码
-            Visit(context.GetChild(3));
-
-
-            // 最后要加一条ret指令
-            codes.Add(new IntermediateCode(InstructionType.ret, context.Start.Line));
+            Visit(context.codeBlock());
+            
             // 回填jump指令
             jumpCode.setOperant(codes.Count);
             // 恢复局部变量表和大小
             curLocalVariablesTable = storedVariableTable;
             curLocalVariablesTableLength = storedVariableTableSize;
-            return base.VisitFunctionDeclaration(context);
+            return null;
 
         }
 
@@ -476,15 +475,18 @@ namespace CMMInterpreter.vm
             else {
                 // 定义数组
                 // 首先visit a[exp] exp的值被压到当前stack上
-                expStack.Clear();
-                Visit(context.GetChild(2));
-                Double expValue = (Double)expStack.Pop();
-                if (Math.Ceiling(expValue) != expValue) {
-                    throw new CompileException("数组元素个数必须为整数！");
-                }
-                curLocalVariablesTable.Add(context.GetChild(0).GetText(), Convert.ToInt32(expValue));
+                // expStack.Clear();
+                // Visit(context.GetChild(2));
+                // Double expValue = (Double)expStack.Pop();
+                // if (Math.Ceiling(expValue) != expValue) {
+                //     throw new CompileException("数组元素个数必须为整数！");
+                // }
+
+                // 支支持常量定义
+                int size = Convert.ToInt32(context.GetChild(2).GetText());
+                curLocalVariablesTable.Add(context.GetChild(0).GetText(), Convert.ToInt32(size));
                 // 更新局部变量表大小
-                curLocalVariablesTableLength += Convert.ToInt32(expValue);
+                curLocalVariablesTableLength += Convert.ToInt32(size);
 
 
             }
@@ -754,6 +756,9 @@ namespace CMMInterpreter.vm
          */
         public override object VisitWriteStatement([NotNull] CMMParser.WriteStatementContext context)
         {
+            if (context.expression() != null) {
+                VisitChildren(context);
+            }
             IntermediateCode code = new IntermediateCode(InstructionType.write, context.Start.Line);
             codes.Add(code);
             return null;
@@ -776,15 +781,17 @@ namespace CMMInterpreter.vm
                     code = new IntermediateCode(InstructionType.cnt, context.Start.Line);
                     break;
                 case "return":
-                    if(context.ChildCount == 2)
-                        code = new IntermediateCode(InstructionType.ret, context.Start.Line);
+                    if(context.ChildCount == 2) {
+                        // 向操作栈压入0表示没有返回值
+                        codes.Add(new IntermediateCode(0, InstructionType.push, context.Start.Line));
+                    }
                     else
                     {
-                        Visit(context.GetChild(2));
-                        int tmp = curLocalVariablesTableLength;
-                        codes.Add(new IntermediateCode(tmp, InstructionType.pop, context.Start.Line));
-                        code = new IntermediateCode(InstructionType.ret, context.Start.Line);
+                        Visit(context.expression());
+                        // 向操作栈压入1表示有返回值
+                        codes.Add(new IntermediateCode(1, InstructionType.push, context.Start.Line));
                     }
+                    code = new IntermediateCode(InstructionType.ret, context.Start.Line);
                     break;
             }
             codes.Add(code);
