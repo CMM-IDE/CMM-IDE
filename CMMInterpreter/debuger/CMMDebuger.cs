@@ -45,6 +45,9 @@ namespace CMMInterpreter.debuger
             // 保存断点信息
             breakpoints = breakpointList;
 
+            // VM初始化
+            //vm = new VirtualMachine();
+
             // 载入中间代码
             vm.Load(codes);
 
@@ -104,7 +107,19 @@ namespace CMMInterpreter.debuger
         /// <param name="breakpoint">断点行号</param>
         public void AddBreakpoint(int breakpoint)
         {
+            // 寻找插入位置
+            int index = 0,length=breakpoints.Count;
+            while (index<length && breakpoints[index] < breakpoint)
+            {
+                index++;
+            }
+            breakpoints.Insert(index, breakpoint);
 
+            // 保存并替换中间指令为int
+            IntermediateCodeInformation information = intermediateCodeInformations[breakpoint];
+            int address = information.Address;
+            IntermediateCode saved = vm.ReplaceWithInt(address);
+            savedInstructions.Add(address, saved);
         }
 
         /// <summary>
@@ -113,7 +128,15 @@ namespace CMMInterpreter.debuger
         /// <param name="breakpoint">断点行号</param>
         public void RemoveBreakpoint(int breakpoint)
         {
+            // 移除断点
+            breakpoints.Remove(breakpoint);
 
+            // 恢复原始中间指令
+            IntermediateCodeInformation information = intermediateCodeInformations[breakpoint];
+            int address = information.Address;
+            IntermediateCode saved = savedInstructions[address];
+            savedInstructions.Remove(address);
+            vm.Resume(address, saved);
         }
 
         /// <summary>

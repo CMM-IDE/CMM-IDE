@@ -69,10 +69,11 @@ namespace IDE_UI
             try
             {
                 visitor.Visit(tree);
-                foreach (IntermediateCode code in visitor.codes)
+                for(int i = 0; i < visitor.codes.Count; i++)
                 {
-                    Print(code.toString());
+                    Print(i + ":" + visitor.codes[i].toString());
                 }
+
             }
             catch(VariableNotFountException exp)
             {

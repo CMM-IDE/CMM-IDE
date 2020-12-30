@@ -12,16 +12,16 @@ namespace CMMInterpreter.debuger
         /// <summary>
         /// 地址
         /// </summary>
-        public int address { get; set; }
+        public int Address { get; set; }
 
         /// <summary>
         /// 符号名
         /// </summary>
-        public string name { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// 值
         /// </summary>
-        public string value { get; set; }
+        public string Value { get; set; }
     }
 }
