@@ -234,7 +234,7 @@ namespace CMMInterpreter.vm
                         break;
                     case 4:
 
-                        if (context.GetChild(0).GetText() == "[")
+                        if (context.GetChild(1).GetText().Equals("["))
                         {
                             // 这是数组的情况
                             curLocalVariablesTable.TryGetValue(context.GetChild(0).GetText(), out int arrayAddr);
@@ -260,7 +260,7 @@ namespace CMMInterpreter.vm
                         }
                         break;
                 }
-                
+                return null;
                 
             }
             if (context.LeftBracket() != null)
@@ -484,11 +484,26 @@ namespace CMMInterpreter.vm
 
                 // 支支持常量定义
                 int size = Convert.ToInt32(context.GetChild(2).GetText());
-                curLocalVariablesTable.Add(context.GetChild(0).GetText(), Convert.ToInt32(size));
+                curLocalVariablesTable.Add(context.GetChild(0).GetText(), curLocalVariablesTableLength);
+                
+                int initialExpCount = context.expression().Length - 1;
+                
+                
+                for(int i = 1; i < context.expression().Length; i++) {
+                    // 求出所有子表达式的值 放在栈上
+                    Visit(context.expression()[i]);
+                    
+                }
+                for (int i = 0; i < size - initialExpCount; i++) {
+                    // 剩下的元素全部赋值为0
+                    codes.Add(new IntermediateCode(0, InstructionType.push, context.Start.Line));
+                }
+                for(int i = size - 1; i >= 0; i--) {
+                    // 从后往前给数组赋值
+                    codes.Add(new IntermediateCode(curLocalVariablesTableLength + i, InstructionType.pop, context.Start.Line));
+                }
                 // 更新局部变量表大小
-                curLocalVariablesTableLength += Convert.ToInt32(size);
-
-
+                curLocalVariablesTableLength += size;
             }
             return null;
         }
@@ -522,7 +537,7 @@ namespace CMMInterpreter.vm
             int tmp = curLocalVariablesTableLength;
 
             // 把leftVal的值放到局部变更量表Count位置上
-            IntermediateCode code0 = new IntermediateCode(tmp, InstructionType.pop, context.leftValue().Start.Line);
+            IntermediateCode code0 = new IntermediateCode(Convert.ToDouble(tmp), InstructionType.pop, context.leftValue().Start.Line);
             codes.Add(code0);
 
             // 把Expression的值压入栈中

@@ -170,8 +170,8 @@ namespace CMMInterpreter.vm
 
         void add(StackFrame frame, int pc)
         {
-            double op1 = (double)frame.popFromOperantStack();
-            double op2 = (double)frame.popFromOperantStack();
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
             frame.pushToOperantStack(op2 + op1);
         }
 
@@ -232,7 +232,7 @@ namespace CMMInterpreter.vm
             }
             else
             {
-                frame.popFromOperantStack((int)operant, false);
+                frame.popFromOperantStack(Convert.ToInt32(operant), false);
             }
         }
         void g(StackFrame frame)
@@ -381,10 +381,10 @@ namespace CMMInterpreter.vm
             // 1、形如 pushv 1 表示将局部变量表中地址为1的元素push到操作战中
             // 2、形如 pushv 无操作数，则将栈顶元素出栈作为操作数。
             if (o != null) {
-                frame.pushToOperantStackFromVariable((int)o);
+                frame.pushToOperantStackFromVariable(Convert.ToInt32(o));
             }
             else {
-                int addr = (int)frame.popFromOperantStack();
+                int addr = Convert.ToInt32(frame.popFromOperantStack());
                 frame.pushToOperantStackFromVariable(addr);
             }
             
