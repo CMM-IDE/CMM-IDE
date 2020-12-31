@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 
 namespace CMMInterpreter.vm
 {
@@ -19,11 +18,10 @@ namespace CMMInterpreter.vm
 
         Stack<StackFrame> stack;
 
-        /// <summary>
-        /// 调试器动作
-        /// </summary>
+        bool isStop;
+        
+        // 调试器动作
         public event Action NeedDebug;
-
 
         int pc = 0;
 
@@ -410,8 +408,7 @@ namespace CMMInterpreter.vm
 
         void i()
         {
-            // 挂起调试器进程等待用户操作
-            //Thread.CurrentThread.Suspend();
+            // 调用调试器处理
             NeedDebug?.Invoke();
         }
 
@@ -420,12 +417,20 @@ namespace CMMInterpreter.vm
 
         }
 
+        /// <summary>
+        /// 获取当前栈帧
+        /// </summary>
+        /// <returns>当前栈帧</returns>
         public List<FrameInformation> GetCurrentFrame()
         {
-
+            
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// 获取刚执行完的指令信息
+        /// </summary>
+        /// <returns>指令信息</returns>
         public IntermediateCodeInformation GetLastCodeInformation()
         {
             IntermediateCodeInformation lastInformation= new IntermediateCodeInformation();
@@ -602,6 +607,11 @@ namespace CMMInterpreter.vm
             }
         }
 
+        /// <summary>
+        /// 替换中间代码为int
+        /// </summary>
+        /// <param name="address">中间代码地址</param>
+        /// <returns>被替换掉的中间代码</returns>
         public IntermediateCode ReplaceWithInt(int address)
         {
             IntermediateCode saved = codesArray[address];
@@ -609,11 +619,19 @@ namespace CMMInterpreter.vm
             return saved;
         }
 
+        /// <summary>
+        /// 恢复中间代码
+        /// </summary>
+        /// <param name="address">中间代码地址</param>
+        /// <param name="code">中间代码</param>
         public void Resume(int address, IntermediateCode code)
         {
             codesArray[address] = code;
         }
 
+        /// <summary>
+        /// 开始调试
+        /// </summary>
         public void Run()
         {
             // 初始化栈
@@ -624,25 +642,33 @@ namespace CMMInterpreter.vm
             currentStackFrame = new StackFrame(0);
             stack.Push(currentStackFrame);
 
+            // 代码长度
             int length = codesArray.Count;
 
+            // 初始化程序计数器
             pc = 0;
 
-            while (pc < length)
+            isStop = false;
+
+            // 执行中间代码
+            while (pc < length && !isStop)
             {
                 IntermediateCode code = codesArray[pc];
                 InterpretSingleInstruction(code);
                 pc++;
             }
 
+            // 停止运行
             // 运行结束销毁
             stacks.Remove(stack);
         }
 
+        /// <summary>
+        /// 停止运行
+        /// </summary>
         public void Stop()
         {
-            // 运行结束销毁
-            stacks.Remove(stack);
+            isStop = true;
         }
 
         /// <summary>
@@ -654,16 +680,28 @@ namespace CMMInterpreter.vm
             this.codesArray = codes;
         }
 
+        /// <summary>
+        /// 设置调试处理器
+        /// </summary>
+        /// <param name="handler">调试处理器</param>
         void IVirtualMachine.SetDebugHandler(Action handler)
         {
             NeedDebug += handler;
         }
 
+        /// <summary>
+        /// 设置读入处理器
+        /// </summary>
+        /// <param name="handler">读入处理器</param>
         void IVirtualMachine.SetReadHandler(Action handler)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// 注册窗口监听器
+        /// </summary>
+        /// <param name="listener">监听器</param>
         public void RegisterWindowListener(VirtualMachineListener listener)
         {
             register(listener);

@@ -25,7 +25,7 @@ namespace CMMInterpreter.debuger
         public event Action NeedDebug;
 
         /// <summary>
-        /// 运行模式, 0为step into, 1为step over
+        /// 运行模式, -1为停止调试, 0为step into, 1为step over
         /// </summary>
         private int mode;
         private List<int> breakpoints;
@@ -34,7 +34,6 @@ namespace CMMInterpreter.debuger
         private int maxLine;
 
         private IVirtualMachine vm;
-        private Thread vmThread;
 
         /// <summary>
         /// 初始化调试器
@@ -85,6 +84,10 @@ namespace CMMInterpreter.debuger
             }
         }
 
+        /// <summary>
+        /// 设置窗口监听器
+        /// </summary>
+        /// <param name="listener">监听器</param>
         public void setListener(VirtualMachineListener listener)
         {
             vm.RegisterWindowListener(listener);
@@ -95,26 +98,6 @@ namespace CMMInterpreter.debuger
         /// </summary>
         public void Run()
         {
-            //vmThread = new Thread(()=>
-            //{
-            //    try
-            //    {
-
-            //    }
-            //    catch (RuntimeException e1)
-            //    {
-            //        OutputStream?.Print("Line:" + e1.line.ToString() + " " + e1.Message);
-            //    }
-            //    catch (Exception e2)
-            //    {
-            //        OutputStream?.Print(e2.Message);
-            //    }
-            //});
-            //vmThread.Name = "vm";
-
-            //vmThread.Start();
-            //vmThread.Join();
-
             vm.Run();
         }
 
@@ -123,8 +106,7 @@ namespace CMMInterpreter.debuger
         /// </summary>
         public void Stop()
         {
-            vm.Stop();
-            vmThread.Abort();
+            mode = -1;
         }
 
         /// <summary>
@@ -180,7 +162,17 @@ namespace CMMInterpreter.debuger
         /// <returns>栈帧</returns>
         public List<FrameInformation> GetCurrentFrame()
         {
-            return vm.GetCurrentFrame();
+            List<FrameInformation> informations = new List<FrameInformation>();
+            for(int i = 0; i < 5; i++)
+            {
+                FrameInformation information = new FrameInformation();
+                information.Address = i;
+                information.Name = "aaaaaaa";
+                information.Value = "addddddd";
+                informations.Add(information);
+            }
+            return informations;
+            //return vm.GetCurrentFrame();
         }
 
         /// <summary>
@@ -204,13 +196,16 @@ namespace CMMInterpreter.debuger
         /// </summary>
         private void HandleInterrupt()
         {
+            NeedDebug?.Invoke();
             // 挂起调试器进程等待用户操作
             Thread.CurrentThread.Suspend();
-            NeedDebug?.Invoke();
 
             // 根据用户输入决定调试模式
             switch (mode)
             {
+                case -1:
+                    vm.Stop();
+                    break;
                 case 0:
                     // Step into模式
                     // 根据当前行号获取保存的中间代码
@@ -257,8 +252,6 @@ namespace CMMInterpreter.debuger
                         }
                     }
 
-                    // 恢复vm线程
-                    //vmThread.Resume();
                     break;
                 case 1:
                     // Step over模式
@@ -292,7 +285,6 @@ namespace CMMInterpreter.debuger
                         }
                     }
 
-                    //vmThread.Resume();
                     break;
                 default:
                     // 其他模式
