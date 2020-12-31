@@ -221,19 +221,19 @@ namespace CMMInterpreter.vm
         }
         void and(StackFrame frame)
         {
-            Boolean op1 = (Boolean)frame.popFromOperantStack();
-            Boolean op2 = (Boolean)frame.popFromOperantStack();
+            Boolean op1 = Convert.ToBoolean(frame.popFromOperantStack());
+            Boolean op2 = Convert.ToBoolean(frame.popFromOperantStack());
             frame.pushToOperantStack(op2 && op1);
         }
         void or(StackFrame frame)
         {
-            Boolean op1 = (Boolean)frame.popFromOperantStack();
-            Boolean op2 = (Boolean)frame.popFromOperantStack();
+            Boolean op1 = Convert.ToBoolean(frame.popFromOperantStack());
+            Boolean op2 = Convert.ToBoolean(frame.popFromOperantStack());
             frame.pushToOperantStack(op2 || op1);
         }
         void not(StackFrame frame)
         {
-            Boolean op = (Boolean)frame.popFromOperantStack();
+            Boolean op = Convert.ToBoolean(frame.popFromOperantStack());
             frame.pushToOperantStack(!op);
         }
         void push(StackFrame frame, Object operant)

@@ -21,8 +21,12 @@ namespace CMMInterpreter.vm
         // 当前局部变量表
         Dictionary<string, int> curLocalVariablesTable = new Dictionary<string, int>();
 
+        // 存储函数的局部变量信息 key是函数的入口地址 value是函数的局部变量表
+        Dictionary<int, Dictionary<string, int>> functionLocalVariableTables = new Dictionary<int, Dictionary<string, int>>();
+
         // 局部变量表大小
         int curLocalVariablesTableLength = 0;
+
         // 用于编译时给表达式求值
         Stack<Object> expStack = new Stack<Object>();
 
@@ -449,7 +453,8 @@ namespace CMMInterpreter.vm
             curLocalVariablesTableLength = 0;
 
             // 记录函数的起始地址
-            functionAddressTable.Add(context.GetChild(1).GetText(), codes.Count);
+            int funcAddress = codes.Count;
+            functionAddressTable.Add(context.GetChild(1).GetText(), funcAddress);
             // 访问参数列表
             Visit(context.parameterClause());
             // visit code block生成当前函数的中间代码
@@ -457,6 +462,7 @@ namespace CMMInterpreter.vm
             
             // 回填jump指令
             jumpCode.setOperant(codes.Count);
+            functionLocalVariableTables.Add(funcAddress, curLocalVariablesTable);
             // 恢复局部变量表和大小
             curLocalVariablesTable = storedVariableTable;
             curLocalVariablesTableLength = storedVariableTableSize;
