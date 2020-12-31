@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using CMMInterpreter.vm.exception;
 using System.Text;
+using Antlr4.Runtime.Tree;
 
 namespace CMMInterpreter.vm
 {
@@ -28,6 +29,27 @@ namespace CMMInterpreter.vm
 
         // 指令集合
         public List<IntermediateCode> codes = new List<IntermediateCode>();
+
+        public List<IntermediateCode> generateCodes(IParseTree tree)
+        {
+            base.Visit(tree);
+            fillFuncAddress();
+            return codes;
+        }
+
+        public void fillFuncAddress()
+        {
+            for(int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].getType().Equals(InstructionType.call))
+                {
+                    // 先从code中取出函数名，到functionAddressTable中查找函数地址
+                    functionAddressTable.TryGetValue(Convert.ToString(codes[i].operant), out int funcAddr);
+                    // 函数地址回填
+                    codes[i].operant = funcAddr;
+                }
+            }
+        }
 
 
         /**
@@ -255,8 +277,8 @@ namespace CMMInterpreter.vm
                             int count = getLen(context.expressionList());
                             codes.Add(new IntermediateCode(count, InstructionType.push, context.Start.Line));
                             functionAddressTable.TryGetValue(context.Identifier().GetText(), out funcAddr);
-                            // 添加call指令
-                            codes.Add(new IntermediateCode(funcAddr, InstructionType.call, context.Start.Line));
+                            // 添加call指令 不能直接压入函数地址，因为此时函数可能还没定义。先压入函数名，所有代码生成结束后再回填函数地址。
+                            codes.Add(new IntermediateCode(context.Identifier().GetText(), InstructionType.call, context.Start.Line));
                         }
                         break;
                 }
@@ -537,7 +559,7 @@ namespace CMMInterpreter.vm
             int tmp = curLocalVariablesTableLength;
 
             // 把leftVal的值放到局部变更量表Count位置上
-            IntermediateCode code0 = new IntermediateCode(Convert.ToDouble(tmp), InstructionType.pop, context.leftValue().Start.Line);
+            IntermediateCode code0 = new IntermediateCode(tmp, InstructionType.pop, context.leftValue().Start.Line);
             codes.Add(code0);
 
             // 把Expression的值压入栈中
