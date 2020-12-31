@@ -68,7 +68,7 @@ namespace IDE_UI
             var visitor = new CompileVisitor();
             try
             {
-                visitor.Visit(tree);
+                visitor.generateCodes(tree);
                 for(int i = 0; i < visitor.codes.Count; i++)
                 {
                     Print(i + ":" + visitor.codes[i].toString());
