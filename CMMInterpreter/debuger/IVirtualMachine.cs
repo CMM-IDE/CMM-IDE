@@ -63,11 +63,22 @@ namespace CMMInterpreter.debuger
         /// </summary>
         void Load(List<IntermediateCode> codes);
 
-
+        /// <summary>
+        /// 设置调试处理器
+        /// </summary>
+        /// <param name="handler">调试处理器</param>
         void SetDebugHandler(Action handler);
 
+        /// <summary>
+        /// 设置读入处理器
+        /// </summary>
+        /// <param name="handler">读入处理器</param>
         void SetReadHandler(Action handler);
 
+        /// <summary>
+        /// 设置窗口监听器
+        /// </summary>
+        /// <param name="listener">监听器</param>
         void RegisterWindowListener(VirtualMachineListener listener);
     }
 }

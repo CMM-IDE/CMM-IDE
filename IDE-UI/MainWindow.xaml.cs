@@ -39,6 +39,8 @@ namespace IDE_UI
 
         private Thread debugThread;
 
+        private bool isDebug = false;
+
         public IDEState State {
             get {
                 return state;
@@ -158,10 +160,10 @@ namespace IDE_UI
             try
             {
                 visitor.Visit(tree);
-                for (int i = 0; i < visitor.codes.Count; i++)
-                {
-                    Print(i + ":" + visitor.codes[i].toString());
-                }
+                //for (int i = 0; i < visitor.codes.Count; i++)
+                //{
+                //    Print(i + ":" + visitor.codes[i].toString());
+                //}
 
             }
             catch (VariableNotFountException exp)
@@ -169,9 +171,11 @@ namespace IDE_UI
                 Print(exp.ToString());
             }
 
+            // 断点列表
             List<int> breakpoints = new List<int>();
-            breakpoints.Add(7);
+            breakpoints.Add(11);
 
+            // 初始化调试器
             cmmDebuger = new CMMDebuger(visitor.codes, breakpoints);
             cmmDebuger.setListener(this);
             cmmDebuger.OutputStream = this;
@@ -181,8 +185,10 @@ namespace IDE_UI
                 try
                 {
                     Print("\n调试模式\n");
+                    isDebug = true;
                     cmmDebuger.Run();
                     Print("\nprogram exit\n");
+                    isDebug = false;
                 }
                 catch (RuntimeException e1)
                 {
@@ -195,23 +201,54 @@ namespace IDE_UI
             });
 
             debugThread.Name = "Debug";
-
             debugThread.Start();
-
-            
         } 
 
+        /// <summary>
+        /// 处理调试
+        /// </summary>
         private void HandlerDebug()
         {
             Dispatcher.Invoke(() => {
-                consoleTextBox.Text += cmmDebuger.GetCurrentLine().ToString() + "\n";
+                // 获取行号信息
+                consoleTextBox.Text += "\nCurrentLine: "+cmmDebuger.GetCurrentLine().ToString() + "\n";
+                List<FrameInformation> informations = cmmDebuger.GetCurrentFrame();
+
+                // 获取当前栈帧
+                consoleTextBox.Text += "\n---Current Frame Stack---\nAddress\tName\tValue\n";
+                foreach (FrameInformation information in informations)
+                {
+                    consoleTextBox.Text += information.Address+"\t"+information.Name+"\t"+information.Value+"\n";
+                }
             });
+        }
+
+        private void btnStepInto_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug)
+            {
+                cmmDebuger.StepInto();
+                debugThread.Resume();
+            }
+        }
+
+        private void btnStepOver_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug)
+            {
+                cmmDebuger.StepOver();
+                debugThread.Resume();
+            }
         }
 
         private void btnStop_Click(object sender, RoutedEventArgs e)
         {
-            cmmDebuger.StepInto();
-            debugThread.Resume();
+            if (isDebug)
+            {
+                cmmDebuger.Stop();
+                debugThread.Resume();
+                isDebug = false;
+            }
         }
     }
 }
