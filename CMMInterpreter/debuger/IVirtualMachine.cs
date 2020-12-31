@@ -62,5 +62,12 @@ namespace CMMInterpreter.debuger
         /// 装载中间代码
         /// </summary>
         void Load(List<IntermediateCode> codes);
+
+
+        void SetDebugHandler(Action handler);
+
+        void SetReadHandler(Action handler);
+
+        void RegisterWindowListener(VirtualMachineListener listener);
     }
 }
