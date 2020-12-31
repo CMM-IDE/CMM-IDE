@@ -102,6 +102,16 @@ namespace CMMInterpreter.debuger
         }
 
         /// <summary>
+        /// 装载调试信息
+        /// </summary>
+        /// <param name="globalSymbolTable">全局符号表</param>
+        /// <param name="functionSymbolTable">函数符号表</param>
+        public void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable)
+        {
+            vm.LoadDebugInformation(globalSymbolTable, functionSymbolTable);
+        }
+
+        /// <summary>
         /// 停止调试
         /// </summary>
         public void Stop()
@@ -162,17 +172,7 @@ namespace CMMInterpreter.debuger
         /// <returns>栈帧</returns>
         public List<FrameInformation> GetCurrentFrame()
         {
-            List<FrameInformation> informations = new List<FrameInformation>();
-            for(int i = 0; i < 5; i++)
-            {
-                FrameInformation information = new FrameInformation();
-                information.Address = i;
-                information.Name = "aaaaaaa";
-                information.Value = "addddddd";
-                informations.Add(information);
-            }
-            return informations;
-            //return vm.GetCurrentFrame();
+            return vm.GetCurrentFrame();
         }
 
         /// <summary>

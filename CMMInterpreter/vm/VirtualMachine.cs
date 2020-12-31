@@ -16,6 +16,19 @@ namespace CMMInterpreter.vm
         // 当前栈帧
         StackFrame currentStackFrame;
 
+        // 当前符号表
+        Dictionary<string, int> currentSymbolTable;
+
+        /// <summary>
+        /// 全局符号表
+        /// </summary>
+        Dictionary<string, int> globalSymbolTable;
+
+        /// <summary>
+        /// 函数符号表
+        /// </summary>
+        Dictionary<int, Dictionary<string, int>> functionSymbolTable;
+
         Stack<StackFrame> stack;
 
         bool isStop;
@@ -423,8 +436,23 @@ namespace CMMInterpreter.vm
         /// <returns>当前栈帧</returns>
         public List<FrameInformation> GetCurrentFrame()
         {
-            
-            throw new NotImplementedException();
+            List<FrameInformation> informations = new List<FrameInformation>();
+            // 遍历符号表填充栈帧信息
+            foreach (KeyValuePair<string, int> item in currentSymbolTable)
+            {
+                string name = item.Key;
+                int address = item.Value;
+                Object value = currentStackFrame.getVariable(address);
+                if (value != null)
+                {
+                    FrameInformation information = new FrameInformation();
+                    information.Name = name;
+                    information.Address = address;
+                    information.Value = value.ToString();
+                    informations.Add(information);
+                }
+            }
+            return informations;
         }
 
         /// <summary>
@@ -562,6 +590,7 @@ namespace CMMInterpreter.vm
                     // 压入新栈
                     stack.Push(newStackFrame);
                     currentStackFrame = newStackFrame;
+                    currentSymbolTable = functionSymbolTable[(int)code.operant];
                     pc = (int)code.operant - 1;
                     break;
                 case InstructionType.read:
@@ -598,7 +627,7 @@ namespace CMMInterpreter.vm
                         stack.Peek().pushToOperantStack(returnValue);
                     }
                     currentStackFrame = stack.Peek();
-
+                    currentSymbolTable = globalSymbolTable;
                     break;
                 default:
 
@@ -642,13 +671,16 @@ namespace CMMInterpreter.vm
             currentStackFrame = new StackFrame(0);
             stack.Push(currentStackFrame);
 
-            // 代码长度
+            // 代码区长度
             int length = codesArray.Count;
 
             // 初始化程序计数器
             pc = 0;
 
             isStop = false;
+
+            // 设置当前符号表
+            currentSymbolTable = globalSymbolTable;
 
             // 执行中间代码
             while (pc < length && !isStop)
@@ -705,6 +737,17 @@ namespace CMMInterpreter.vm
         public void RegisterWindowListener(VirtualMachineListener listener)
         {
             register(listener);
+        }
+
+        /// <summary>
+        /// 装载调试信息
+        /// </summary>
+        /// <param name="globalSymbolTable">全局符号表</param>
+        /// <param name="functionSymbolTable">函数符号表</param>
+        void IVirtualMachine.LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable)
+        {
+            this.globalSymbolTable = globalSymbolTable;
+            this.functionSymbolTable = functionSymbolTable;
         }
     }
 }

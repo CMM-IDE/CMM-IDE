@@ -34,6 +34,16 @@ namespace CMMInterpreter.vm
         // 指令集合
         public List<IntermediateCode> codes = new List<IntermediateCode>();
 
+        public Dictionary<string, int> GetGlobalSymbolTable()
+        {
+            return curLocalVariablesTable;
+        }
+
+        public Dictionary<int, Dictionary<string, int>> GetFunctionSymbolTable()
+        {
+            return functionLocalVariableTables;
+        }
+
         public List<IntermediateCode> generateCodes(IParseTree tree)
         {
             base.Visit(tree);
