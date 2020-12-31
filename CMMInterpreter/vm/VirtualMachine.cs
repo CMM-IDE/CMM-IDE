@@ -1,17 +1,34 @@
-﻿using System;
+﻿using CMMInterpreter.debuger;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace CMMInterpreter.vm
 {
-    public class VirtualMachine
+    public class VirtualMachine : IVirtualMachine
     {
         // 运行时栈 每个线程对应一个运行时栈
         List<Stack<StackFrame>> stacks;
 
+        // 代码区
+        List<IntermediateCode> codesArray;
+
+        // 当前栈帧
+        StackFrame currentStackFrame;
+
+        Stack<StackFrame> stack;
+
+        /// <summary>
+        /// 调试器动作
+        /// </summary>
+        public event Action NeedDebug;
+
+
         int pc = 0;
 
         VirtualMachineListener mainWindowListener;
+
         public VirtualMachine()
         {
             stacks = new List<Stack<StackFrame>>();
@@ -32,7 +49,8 @@ namespace CMMInterpreter.vm
             StackFrame currentStackFrame = new StackFrame(0);
             stack.Push(currentStackFrame);
 
-            IntermediateCode[] codesArray = codes.ToArray();
+            codesArray = codes;
+            
             for (; pc < codes.Count; pc++)
             {
                 IntermediateCode code = codesArray[pc];
@@ -390,14 +408,265 @@ namespace CMMInterpreter.vm
             
         }
 
-        void ret(StackFrame frame)
+        void i()
         {
+            // 挂起调试器进程等待用户操作
+            //Thread.CurrentThread.Suspend();
+            NeedDebug?.Invoke();
         }
 
+        void ret(StackFrame frame)
+        {
 
+        }
 
+        public List<FrameInformation> GetCurrentFrame()
+        {
 
+            throw new NotImplementedException();
+        }
 
+        public IntermediateCodeInformation GetLastCodeInformation()
+        {
+            IntermediateCodeInformation lastInformation= new IntermediateCodeInformation();
+            lastInformation.Address = pc;
+            lastInformation.Line = codesArray[pc].lineNum;
+            return lastInformation;
+        }
 
+        public Dictionary<int, IntermediateCodeInformation> GetIntermediateCodeInformation()
+        {
+            int length = codesArray.Count;
+            Dictionary<int, IntermediateCodeInformation> informations = new Dictionary<int, IntermediateCodeInformation>();
+            // 遍历中间代码
+            for (int i = 0; i < length; i++)
+            {
+                IntermediateCode current = codesArray[i];
+                int currentLine = current.lineNum;
+                IntermediateCodeInformation currentInformation;
+
+                // 判断该中间指令对应源代码的行是否已经加入信息表中
+                if(informations.TryGetValue(currentLine, out currentInformation))
+                {
+                    // 该行含函数调用则更新函数入口地址列表
+                    if (current.type == InstructionType.call)
+                    {
+                        currentInformation.IsFunctionCall = true;
+                        currentInformation.FuncionEntryList.AddLast((int)current.operant);
+                        informations[currentLine] = currentInformation;
+                    }
+                }
+                else
+                {
+                    // 该行源代码首条中间指令
+                    currentInformation = new IntermediateCodeInformation();
+                    currentInformation.Address = i;
+                    currentInformation.Line = currentLine;
+                    currentInformation.IsFunctionCall = false;
+                    currentInformation.FuncionEntryList = new LinkedList<int>();
+                    informations.Add(currentLine, currentInformation);
+                }
+
+                
+            }
+            return informations;
+        }
+
+        public void InterpretSingleInstruction(IntermediateCode code)
+        {
+            switch (code.type)
+            {
+                case InstructionType.add:
+                    add(currentStackFrame, pc);
+                    break;
+                case InstructionType.sub:
+                    sub(currentStackFrame, pc);
+                    break;
+                case InstructionType.mul:
+                    mul(currentStackFrame);
+                    break;
+                case InstructionType.div:
+                    div(currentStackFrame);
+                    break;
+                case InstructionType.neg:
+                    neg(currentStackFrame);
+                    break;
+                case InstructionType.and:
+                    and(currentStackFrame);
+                    break;
+                case InstructionType.or:
+                    or(currentStackFrame);
+                    break;
+                case InstructionType.not:
+                    not(currentStackFrame);
+                    break;
+                case InstructionType.push:
+                    push(currentStackFrame, code.operant);
+                    break;
+                case InstructionType.pop:
+                    pop(currentStackFrame, code.operant);
+                    break;
+                case InstructionType.g:
+                    g(currentStackFrame);
+                    break;
+                case InstructionType.l:
+                    l(currentStackFrame);
+                    break;
+                case InstructionType.ge:
+                    ge(currentStackFrame);
+                    break;
+                case InstructionType.le:
+                    le(currentStackFrame);
+                    break;
+                case InstructionType.eq:
+                    eq(currentStackFrame);
+                    break;
+                case InstructionType.ne:
+                    ne(currentStackFrame);
+                    break;
+                case InstructionType.j:
+                    j(code.operant);
+                    break;
+                case InstructionType.je:
+                    je(currentStackFrame, code.operant);
+                    break;
+                case InstructionType.jg:
+                    jg(currentStackFrame, code.operant);
+                    break;
+                case InstructionType.jl:
+                    jl(currentStackFrame, code.operant);
+                    break;
+                case InstructionType.jne:
+                    jne(currentStackFrame, code.operant);
+                    break;
+                case InstructionType.call:
+                    // 创建新的函数栈帧 传入pc
+                    StackFrame newStackFrame = new StackFrame(pc);
+                    // 首先获取参数个数
+                    int paraNum = (int)currentStackFrame.popFromOperantStack();
+                    // 向新的栈帧中压入参数
+                    Stack<Object> tmp = new Stack<Object>();
+                    for (int i = 0; i < paraNum; i++)
+                    {
+                        tmp.Push(currentStackFrame.popFromOperantStack());
+                    }
+                    for (int i = 0; i < paraNum; i++)
+                    {
+                        newStackFrame.pushToVariableStack(tmp.Pop());
+                    }
+                    // 压入新栈
+                    stack.Push(newStackFrame);
+                    currentStackFrame = newStackFrame;
+                    pc = (int)code.operant - 1;
+                    break;
+                case InstructionType.read:
+                    read(currentStackFrame);
+                    break;
+                case InstructionType.write:
+                    write(currentStackFrame);
+                    break;
+                case InstructionType.delv:
+                    delv(currentStackFrame);
+                    break;
+                case InstructionType.b:
+                    b(currentStackFrame);
+                    break;
+                case InstructionType.cnt:
+                    cnt(currentStackFrame);
+                    break;
+                case InstructionType.pushv:
+                    pushv(currentStackFrame, code.operant);
+                    break;
+                case InstructionType.i:
+                    i();
+                    break;
+                case InstructionType.ret:
+                    pc = currentStackFrame.getReturnAddress();
+                    int flag = (int)currentStackFrame.popFromOperantStack();
+
+                    Object returnValue = currentStackFrame.peek();
+                    // 函数返回 移除当前栈帧
+                    stack.Pop();
+                    if (flag == 1)
+                    {
+                        // 将函数返回值压入到调用者的栈帧中
+                        stack.Peek().pushToOperantStack(returnValue);
+                    }
+                    currentStackFrame = stack.Peek();
+
+                    break;
+                default:
+
+                    break;
+
+            }
+        }
+
+        public IntermediateCode ReplaceWithInt(int address)
+        {
+            IntermediateCode saved = codesArray[address];
+            codesArray[address] = new IntermediateCode(InstructionType.i,saved.lineNum);
+            return saved;
+        }
+
+        public void Resume(int address, IntermediateCode code)
+        {
+            codesArray[address] = code;
+        }
+
+        public void Run()
+        {
+            // 初始化栈
+            stack = new Stack<StackFrame>();
+            stacks.Add(stack);
+
+            // 当前栈帧
+            currentStackFrame = new StackFrame(0);
+            stack.Push(currentStackFrame);
+
+            int length = codesArray.Count;
+
+            pc = 0;
+
+            while (pc < length)
+            {
+                IntermediateCode code = codesArray[pc];
+                InterpretSingleInstruction(code);
+                pc++;
+            }
+
+            // 运行结束销毁
+            stacks.Remove(stack);
+        }
+
+        public void Stop()
+        {
+            // 运行结束销毁
+            stacks.Remove(stack);
+        }
+
+        /// <summary>
+        /// 装载中间代码
+        /// </summary>
+        /// <param name="codes">中间代码</param>
+        public void Load(List<IntermediateCode> codes)
+        {
+            this.codesArray = codes;
+        }
+
+        void IVirtualMachine.SetDebugHandler(Action handler)
+        {
+            NeedDebug += handler;
+        }
+
+        void IVirtualMachine.SetReadHandler(Action handler)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterWindowListener(VirtualMachineListener listener)
+        {
+            register(listener);
+        }
     }
 }

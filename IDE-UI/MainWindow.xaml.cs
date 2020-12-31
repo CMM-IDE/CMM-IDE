@@ -11,6 +11,8 @@ using System.Windows.Input;
 using IDE_UI.Helper;
 using System.Threading;
 using CMMInterpreter.vm;
+using CMMInterpreter.debuger;
+using System.Collections.Generic;
 
 namespace IDE_UI
 {
@@ -32,6 +34,10 @@ namespace IDE_UI
         private bool isInputMode = false;
 
         private int inputLength = 0;
+
+        private CMMDebuger cmmDebuger;
+
+        private Thread debugThread;
 
         public IDEState State {
             get {
@@ -133,5 +139,79 @@ namespace IDE_UI
             Print(o.ToString());
         }
 
+        private void btnDebug_Click(object sender, RoutedEventArgs e)
+        {
+            if (!state.ConsoleShowed)
+            {
+                extraWindowButton_Click(btnConsoleWindow, null);
+            }
+
+            consoleTextBox.Text = "";
+            String input = textEditor.Text;
+            ICharStream stream = CharStreams.fromstring(input);
+            ITokenSource lexer = new CMMLexer(stream);
+            ITokenStream tokens = new CommonTokenStream(lexer);
+            CMMParser parser = new CMMParser(tokens);
+            parser.BuildParseTree = true;
+            IParseTree tree = parser.statements();
+            var visitor = new CompileVisitor();
+            try
+            {
+                visitor.Visit(tree);
+                for (int i = 0; i < visitor.codes.Count; i++)
+                {
+                    Print(i + ":" + visitor.codes[i].toString());
+                }
+
+            }
+            catch (VariableNotFountException exp)
+            {
+                Print(exp.ToString());
+            }
+
+            List<int> breakpoints = new List<int>();
+            breakpoints.Add(7);
+
+            cmmDebuger = new CMMDebuger(visitor.codes, breakpoints);
+            cmmDebuger.setListener(this);
+            cmmDebuger.OutputStream = this;
+            cmmDebuger.NeedDebug += HandlerDebug;
+
+            debugThread= new Thread(() => {
+                try
+                {
+                    Print("\n调试模式\n");
+                    cmmDebuger.Run();
+                    Print("\nprogram exit\n");
+                }
+                catch (RuntimeException e1)
+                {
+                    Print("Line:" + e1.line.ToString() + " " + e1.Message);
+                }
+                catch (Exception e2)
+                {
+                    Print(e2.Message);
+                }
+            });
+
+            debugThread.Name = "Debug";
+
+            debugThread.Start();
+
+            
+        } 
+
+        private void HandlerDebug()
+        {
+            Dispatcher.Invoke(() => {
+                consoleTextBox.Text += cmmDebuger.GetCurrentLine().ToString() + "\n";
+            });
+        }
+
+        private void btnStop_Click(object sender, RoutedEventArgs e)
+        {
+            cmmDebuger.StepInto();
+            debugThread.Resume();
+        }
     }
 }

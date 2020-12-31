@@ -47,13 +47,18 @@ namespace CMMInterpreter.debuger
             breakpoints = breakpointList;
 
             // VM初始化
-            //vm = new VirtualMachine();
+            vm = new VirtualMachine();
+
+            // 设置中断处理器
+            vm.SetDebugHandler(HandleInterrupt);
 
             // 载入中间代码
             vm.Load(codes);
 
             // 获取源代码-中间代码信息
             intermediateCodeInformations = vm.GetIntermediateCodeInformation();
+
+            savedInstructions = new Dictionary<int, IntermediateCode>();
 
             // 获取最大行信息
             maxLine = int.MinValue;
@@ -80,28 +85,37 @@ namespace CMMInterpreter.debuger
             }
         }
 
+        public void setListener(VirtualMachineListener listener)
+        {
+            vm.RegisterWindowListener(listener);
+        }
+
         /// <summary>
         /// 开始调试
         /// </summary>
         public void Run()
         {
-            vmThread = new Thread(()=>
-            {
-                try
-                {
-                    vm.Run();
-                }
-                catch (RuntimeException e1)
-                {
-                    OutputStream?.Print("Line:" + e1.line.ToString() + " " + e1.Message);
-                }
-                catch (Exception e2)
-                {
-                    OutputStream?.Print(e2.Message);
-                }
-            });
+            //vmThread = new Thread(()=>
+            //{
+            //    try
+            //    {
 
-            vmThread.Start();
+            //    }
+            //    catch (RuntimeException e1)
+            //    {
+            //        OutputStream?.Print("Line:" + e1.line.ToString() + " " + e1.Message);
+            //    }
+            //    catch (Exception e2)
+            //    {
+            //        OutputStream?.Print(e2.Message);
+            //    }
+            //});
+            //vmThread.Name = "vm";
+
+            //vmThread.Start();
+            //vmThread.Join();
+
+            vm.Run();
         }
 
         /// <summary>
@@ -243,10 +257,8 @@ namespace CMMInterpreter.debuger
                         }
                     }
 
-                    
-
                     // 恢复vm线程
-                    vmThread.Resume();
+                    //vmThread.Resume();
                     break;
                 case 1:
                     // Step over模式
@@ -280,7 +292,7 @@ namespace CMMInterpreter.debuger
                         }
                     }
 
-                    vmThread.Resume();
+                    //vmThread.Resume();
                     break;
                 default:
                     // 其他模式
