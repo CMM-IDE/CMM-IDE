@@ -31,12 +31,12 @@ namespace CMMInterpreter.vm
         /// <summary>
         /// 函数符号表
         /// </summary>
-        Dictionary<int, Dictionary<string, int>> functionSymbolTable;
+        Dictionary<int, Dictionary<string,int>> functionSymbolTable;
 
         /// <summary>
-        /// 函数入口表
+        /// 函数信息表
         /// </summary>
-        Dictionary<string, int> functionAddressTable;
+        Dictionary<string, FunctionInformation> functionInformationTable;
 
         Stack<StackFrame> stack;
 
@@ -468,7 +468,7 @@ namespace CMMInterpreter.vm
                 StackFrame currentStackFrame = stack.Pop();
                 frameClone.Push(currentStackFrame);
                 StackFrameInformation information = new StackFrameInformation();
-                information.Name = functionAddressTable.FirstOrDefault(q => q.Value == entry).Key;
+                information.Name = functionInformationTable.FirstOrDefault(q => q.Value.enrtyAddress == entry).Key;
                 information.Line = codesArray[entry].lineNum;
                 information.Frame = GetFrame(currentStackFrame, functionSymbolTable[entry]);
                 informations.Add(information);
@@ -791,13 +791,16 @@ namespace CMMInterpreter.vm
         /// 装载调试信息
         /// </summary>
         /// <param name="globalSymbolTable">全局符号表</param>
-        /// <param name="functionSymbolTable">函数符号表</param>
-        /// <param name="functionAddressTable">函数入口表</param>
-        public void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable, Dictionary<string,int> functionAddressTable)
+        /// <param name="functionInformationTable">函数信息表</param>
+        public void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<string, FunctionInformation> functionInformationTable)
         {
             this.globalSymbolTable = globalSymbolTable;
-            this.functionSymbolTable = functionSymbolTable;
-            this.functionAddressTable = functionAddressTable;
+            this.functionInformationTable = functionInformationTable;
+            this.functionSymbolTable = new Dictionary<int, Dictionary<string, int>>();
+            foreach(FunctionInformation information in functionInformationTable.Values)
+            {
+                functionSymbolTable.Add(information.enrtyAddress, information.localVariableTable);
+            }
         }
 
         private List<FrameInformation> GetFrame(StackFrame stackFrame, Dictionary<string, int> symbolTable)

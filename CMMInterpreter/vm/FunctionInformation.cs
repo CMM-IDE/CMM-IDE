@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CMMInterpreter.vm
 {
-    class FunctionInformation
+    public class FunctionInformation
     {
         // 函数名
         public string name { get; set; }

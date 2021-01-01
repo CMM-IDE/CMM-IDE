@@ -73,9 +73,8 @@ namespace CMMInterpreter.debuger
         /// 装载调试信息
         /// </summary>
         /// <param name="globalSymbolTable">全局符号表</param>
-        /// <param name="functionSymbolTable">函数符号表</param>
-        /// <param name="functionAddressTable">函数入口表</param>
-        void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable, Dictionary<string, int> functionAddressTable);
+        /// <param name="functionInformationTable">函数信息表</param>
+        void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<string, FunctionInformation> functionInformationTable);
 
         /// <summary>
         /// 设置调试处理器

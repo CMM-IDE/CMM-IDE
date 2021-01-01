@@ -210,7 +210,7 @@ namespace IDE_UI
 
             // 初始化调试器
             cmmDebuger = new CMMDebuger(visitor.codes, breakpoints);
-            cmmDebuger.LoadDebugInformation(visitor.GetGlobalSymbolTable(), visitor.GetFunctionSymbolTable(),visitor.GetFunctionAddressTable());
+            cmmDebuger.LoadDebugInformation(visitor.GetGlobalSymbolTable(), visitor.GetFunctionInformations());
             cmmDebuger.setListener(this);
             cmmDebuger.OutputStream = this;
             cmmDebuger.NeedDebug += HandlerDebug;
