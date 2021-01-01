@@ -19,6 +19,9 @@ namespace IDE_UI.Controls
             get => inDebugMode;
             set {
                 this.inDebugMode = value;
+                if(!value) {
+                    consolePresenter.Content = null;
+                }
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("InDebugMode"));
             }
         }

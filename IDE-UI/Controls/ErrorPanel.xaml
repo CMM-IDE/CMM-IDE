@@ -16,19 +16,29 @@
         </Style>
     </UserControl.Resources>
     
-    <Grid>
+    <Grid Background="#EEEEEE">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
 
-        <DataGrid x:Name="StackFrameGrid" ItemsSource="{Binding Errors}"
+        <!--<StackPanel Orientation="Horizontal" Margin="10 0 0 0">
+            <TextBlock VerticalAlignment="Center" Foreground="#E83333">代码中存在</TextBlock>
+            <TextBlock x:Name="errNum" VerticalAlignment="Center" Foreground="#E83333"></TextBlock>
+            <TextBlock VerticalAlignment="Center" Foreground="#E83333">处错误</TextBlock>
+
+        </StackPanel>-->
+        
+        <DataGrid x:Name="StackFrameGrid" ItemsSource="{Binding Errors}" Grid.Row="1"
                               AutoGenerateColumns="False" IsReadOnly="True" 
                               CanUserReorderColumns="False" CanUserSortColumns="False">
 
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding Line}" Width="1*"  CanUserResize="False" Header="行号" CellStyle="{StaticResource cellStyle}" />
 
-                <DataGridTextColumn Binding="{Binding CharPositionInLine}" Width="2*" CanUserResize="False" Header="列号" CellStyle="{StaticResource cellStyle}" />
+                <DataGridTextColumn Binding="{Binding CharPositionInLine}" Width="1*" CanUserResize="False" Header="列号" CellStyle="{StaticResource cellStyle}" />
 
                 <DataGridTextColumn Binding="{Binding Message}" Width="5*"  CanUserResize="False" Header="信息" CellStyle="{StaticResource cellStyle}" />
-
             </DataGrid.Columns>
 
         </DataGrid>

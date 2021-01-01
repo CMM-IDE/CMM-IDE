@@ -23,14 +23,14 @@ namespace IDE_UI
         {
             
             textEditor.Text = "int a = 10;\nwhile (a <> 0) {\n\ta = a - 1;\n\twrite(a);\n}";
+            charAdded(null, null);
         }
 
         /// <summary>
-        /// 代码编辑器中代码改变的事件
+        /// 虚拟终端文本改变
         /// </summary>
         private void TextChangedEventHandler(object sender, TextChangedEventArgs e)
         {
-            State.FileModified = true;
             if (isInputMode) {
                 foreach (var change in e.Changes) {
                     inputLength += change.AddedLength;
@@ -77,7 +77,7 @@ namespace IDE_UI
                     State.OpenedFilePath = path;
                     State.FileModified = false;
                 }
-
+                charAdded(null, null);
             }
             catch {
                 MessageBox.Show("打开文件出错，请重试。");
@@ -94,6 +94,20 @@ namespace IDE_UI
                 State.OpenedFilePath = path;
                 State.FileModified = false;
             }
+        }
+
+
+        private void codeItem_Click(object sender, RoutedEventArgs e)
+        {
+            if(String.IsNullOrEmpty(intermediateCode)) {
+                run_Click(null, null);
+            }
+            if (String.IsNullOrEmpty(intermediateCode)) {
+                return;
+            }
+            codeWindow = new CodeWindow();
+            codeWindow.Text = intermediateCode;
+            codeWindow.Show();
         }
 
         private void handleNeedInput()
@@ -123,7 +137,13 @@ namespace IDE_UI
                         State.DebugWindowShowed = false;
                         State.TreeWindowShowed = false;
                         State.ErrorWindowShowed = false;
-                        extraWindowPresenter.Content = consoleTextBox;
+
+                        if(isDebug) {
+                            extraWindowPresenter.Content = hintControl;
+                        }
+                        else {
+                            extraWindowPresenter.Content = consoleTextBox;
+                        }
                     }
                     break;
                 case "debug":
@@ -167,11 +187,16 @@ namespace IDE_UI
 
         private void NewFileItem_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("当前文件未保存，是否需要保存？", "新建文件", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes) {
-                SaveFileItem_Click(null, null);
+            if(State.FileOpened || State.FileModified) {
+                if (MessageBox.Show("当前文件未保存，是否需要保存？", "新建文件", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes) {
+                    SaveFileItem_Click(null, null);
+                }
             }
+
+            charAdded(null, null);
             textEditor.Text = "";
             consoleTextBox.Text = "";
+            
         }
 
         private void init()
@@ -231,6 +256,7 @@ namespace IDE_UI
         public void charAdded(CMMCodeEditor sender, CharAddedEventArgs e)
         {
             Debug.WriteLine("charAdded");
+            State.FileModified = true;
             idleExec.MarkActive();
         }
 
@@ -240,7 +266,11 @@ namespace IDE_UI
             String input;
             Dispatcher.Invoke(() => {
                 input = textEditor.Text;
-
+                if(String.IsNullOrEmpty(input)) {
+                    return;
+                }
+                errorPanel.Errors = null;
+                textEditor.Errors = null;
                 Task.Run(() => {
                     ICharStream stream = CharStreams.fromstring(input);
                     ITokenSource lexer = new CMMLexer(stream);
@@ -250,6 +280,8 @@ namespace IDE_UI
 
                     var listener = new CMMErrorListener();
                     parser.AddErrorListener(listener);
+                    parser.ErrorHandler = new CMMErrorStrategy();
+
                     parser.BuildParseTree = true;
                     IParseTree tree = parser.statements();
 
@@ -262,10 +294,7 @@ namespace IDE_UI
 
                     }
                 });
-
             });
-
-
         }
     }
 }

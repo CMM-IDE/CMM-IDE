@@ -24,6 +24,7 @@ namespace IDE_UI.Controls
             set {
                 graph = value;
                 graphControl.Graph = null;
+                graphControl.UpdateLayout();
                 graphControl.Graph = value;
             }
         }

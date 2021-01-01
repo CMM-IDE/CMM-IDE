@@ -55,7 +55,7 @@ namespace CMMInterpreter.vm
         
         public string toString()
         {
-            return this.type + " " + this.operant + "\n" ;
+            return this.type + "\t\t" + this.operant;
         }
 
     }

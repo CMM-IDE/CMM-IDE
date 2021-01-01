@@ -17,6 +17,10 @@ namespace IDE_UI.Helper
 
         public void MarkActive()
         {
+            if(timer != null) {
+                timer.Elapsed -= Timer_Elapsed;
+            }
+            
             timer = new Timer {
                 Enabled = true
             };

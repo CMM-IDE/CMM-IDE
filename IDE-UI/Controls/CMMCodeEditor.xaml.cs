@@ -8,6 +8,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using IDE_UI.Helper;
+using Antlr4.Runtime;
+using System.Text;
+using System.Collections.Generic;
 
 namespace IDE_UI.Controls
 {
@@ -124,7 +127,8 @@ namespace IDE_UI.Controls
         }
 
         public void clearHover() {
-            this.hoverWindow = null;
+            hoverWindow.Close();
+            hoverWindow = null;
         }
 
         public Point GetMousePositionWindowsForms()
@@ -179,7 +183,7 @@ namespace IDE_UI.Controls
                 c = err.CharPositionInLine;
                 l = err.Line;
 
-                if(l == line + 1 && (c > col - 2 && c < col + 2)) {
+                if(l == line + 1 && (c > col - 4 && c < col + 2)) {
                     return err;
                 }
             }
@@ -425,14 +429,51 @@ namespace IDE_UI.Controls
 
             var lenEntered = currentPos - wordStartPos;
             if (lenEntered > 0) {
-                if (!textEditor.AutoCActive)
-                    textEditor.AutoCShow(lenEntered, "break " + "bool int string write read" +
-                        " continue do else void" +
-                        " false for if" +
-                        " return" +
-                        " true" +
-                        " while");
+                if (true) {
+                    string tokens = getUserTokens() + " " + keyWords;
+                    Debug.WriteLine(tokens);
+                    textEditor.AutoCShow(lenEntered, tokens);
+                }
+
             }
+        }
+
+        private string keyWords =
+            "break bool int string write real read continue do else void false for if return true while test";
+        
+
+        private string getUserTokens()
+        {
+            if(string.IsNullOrEmpty(textEditor.Text)) {
+                return "";
+            }
+            ICharStream stream = CharStreams.fromstring(textEditor.Text);
+            ITokenSource lexer = new CMMLexer(stream);
+            ITokenStream tokens = new CommonTokenStream(lexer);
+
+            StringBuilder sb = new StringBuilder();
+            ISet<string> set = new HashSet<string>();
+
+            IToken token = tokens.TokenSource.NextToken();
+            while (token != null && token.Text != "<EOF>") {
+                
+                if(token.Type == 41) {
+                    set.Add(token.Text);
+                }
+                token = tokens.TokenSource.NextToken();
+            }
+
+            int count = set.Count;
+            int c = 0;
+            foreach(string s in set) {
+                
+                sb.Append(" " + s);
+                c++;
+                if(c >= count - 1) {
+                    break;
+                }
+            }
+            return sb.ToString();
         }
 
         private static bool IsBrace(int c)
