@@ -9,13 +9,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:cc="clr-namespace:IDE_UI.Converter"
     xmlns:CMM="clr-namespace:IDE_UI.Controls"
-    xmlns:sci1="http://scintillanet.codeplex.com"
+    xmlns:msagl="http://mlsagl"
     Title="CMM-IDE" MinWidth="600" MinHeight="350" d:DesignHeight="800" d:DesignWidth="1000"
     Width="800" Height="600"
     BorderThickness="0"
     Background="White"
     AllowsTransparency="False"
-    xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
     mc:Ignorable="d">
     <!--<Metro:MetroWindow.Menu>
 
@@ -280,16 +279,8 @@
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="172*"/>
-                    <ColumnDefinition Width="623*"/>
-                </Grid.ColumnDefinitions>
-                <CMM:CMMCodeEditor x:Name="textEditor" Grid.ColumnSpan="2" Margin="0,0,0,0.5"/>
-
-            </Grid>
-
-            <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="1">
-
+                <CMM:CMMCodeEditor x:Name="textEditor"/>
+                <msagl:AutomaticGraphLayoutControl x:Name="graphc"/>
             </Grid>
 
             <GridSplitter Grid.Row="1" Height="10" Background="Gray"
@@ -303,16 +294,21 @@
             <Grid Grid.Row="3"  Background="#FFEE796D">
                 <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Top">
                     <Button x:Name="btnConsoleWindow" Height="24" FontSize="10" Margin="0" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
-                            Background="{Binding State.ConsoleShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="console" Click="extraWindowButton_Click">
+                            Background="{Binding State.ConsoleShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="console" Click="extraPanelButton_Click">
                         控制台
                     </Button>
-                    <!--<Button x:Name="btnErrorWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
-                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="extraWindowButton_Click">
+                    <Button x:Name="btnErrorWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                            Background="{Binding State.ErrorWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="error" Click="extraPanelButton_Click">
                         错误
-                    </Button>-->
+                    </Button>
                     <Button x:Name="btnDebugWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
-                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="extraWindowButton_Click">
+                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="extraPanelButton_Click">
                         调试
+                    </Button>
+
+                    <Button x:Name="btnTreePanel" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                            Background="{Binding State.TreeWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="tree" Click="extraPanelButton_Click">
+                        语法树
                     </Button>
                 </StackPanel>
             </Grid>

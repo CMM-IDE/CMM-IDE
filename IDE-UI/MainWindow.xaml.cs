@@ -1,18 +1,19 @@
-﻿using AduSkin.Controls.Metro;
-using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
-using CMMInterpreter.CMMException;
+﻿using Antlr4.Runtime;
+using IDE_UI.DrawTreeGraph;
 using CMMInterpreter.inter;
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Diagnostics;
-using System.Windows.Input;
 using IDE_UI.Helper;
 using System.Threading;
 using CMMInterpreter.vm;
+
+using IDE_UI.Controls;
+using Antlr4.Runtime.Tree;
+
 using CMMInterpreter.debuger;
 using System.Collections.Generic;
+
 
 namespace IDE_UI
 {
@@ -29,11 +30,41 @@ namespace IDE_UI
             init();
         }
 
+        /// <summary>
+        /// 虚拟控制台
+        /// </summary>
         private TextBox consoleTextBox;
 
+        /// <summary>
+        /// 调试面板
+        /// </summary>
+        private DebugPanel debugPanel;
+
+        /// <summary>
+        /// 调试面板
+        /// </summary>
+        private ErrorPanel errorPanel;
+
+        /// <summary>
+        /// 画树面板
+        /// </summary>
+        private DrawTreePanel drawTreePanel;
+
+        /// <summary>
+        /// 虚拟终端是否在输入
+        /// </summary>
         private bool isInputMode = false;
 
+        /// <summary>
+        /// 虚拟终端输入的长度
+        /// </summary>
         private int inputLength = 0;
+
+
+        /// <summary>
+        /// IDE状态信息
+        /// </summary>
+        public IDEState State { get; set; } = new IDEState();
 
         private CMMDebuger cmmDebuger;
 
@@ -41,16 +72,7 @@ namespace IDE_UI
 
         private bool isDebug = false;
 
-        public IDEState State {
-            get {
-                return state;
-            }
-            set {
-                state = value;
-            }
-        }
 
-        private IDEState state = new IDEState();
 
         private Thread runnerThread = null;
 
@@ -61,8 +83,8 @@ namespace IDE_UI
         private void run_Click(object sender, RoutedEventArgs e)
         {
 
-            if(!state.ConsoleShowed) {
-                extraWindowButton_Click(btnConsoleWindow, null);
+            if(!State.ConsoleShowed) {
+                extraPanelButton_Click(btnConsoleWindow, null);
             }
             
             consoleTextBox.Text = "";
@@ -72,7 +94,16 @@ namespace IDE_UI
             ITokenStream tokens = new CommonTokenStream(lexer);
             CMMParser parser = new CMMParser(tokens);
             parser.BuildParseTree = true;
+
+            
+
             IParseTree tree = parser.statements();
+
+            IParseTreeGrapher parseTreeGrapher = new ParseTreeGrapher();
+            var graph = parseTreeGrapher.CreateGraph(tree, CMMParser.ruleNames);
+
+            drawTreePanel.Graph = graph;
+
             var visitor = new CompileVisitor();
             try
             {
@@ -87,7 +118,6 @@ namespace IDE_UI
             {
                 Print(exp.ToString());
             }
-
 
             VirtualMachine vm = new VirtualMachine();
             vm.register(this);
@@ -135,6 +165,12 @@ namespace IDE_UI
             consoleTextBox.PreviewKeyDown += ConsoleTextBox_PreviewKeyDown;
             consoleTextBox.IsReadOnlyCaretVisible = false;
             consoleTextBox.IsReadOnly = true;
+
+            debugPanel = new DebugPanel();
+
+            drawTreePanel = new DrawTreePanel();
+
+            errorPanel = new ErrorPanel();
         }
 
         public void write(Object o) {

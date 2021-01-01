@@ -1,0 +1,43 @@
+﻿<UserControl x:Class="IDE_UI.Controls.DebugPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:IDE_UI.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="400" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <StackPanel Orientation="Horizontal" Margin="10 0 0 0">
+                <Button x:Name="continue" Click="continue_Click"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ToolTip="运行" Padding="5">
+                    <Image Source="pack://application:,,,/Asset/continue.png" Width="20" Height="20"/>
+                </Button>
+                <Button x:Name="stepOver" Click="stepOver_Click"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ToolTip="运行" Padding="5">
+                    <Image Source="pack://application:,,,/Asset/debug-step-over.png" Width="20" Height="20"/>
+                </Button>
+                <Button x:Name="StepIn" Click="StepIn_Click"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ToolTip="运行" Padding="5">
+                    <Image Source="pack://application:,,,/Asset/debug-step-into.png" Width="20" Height="20"/>
+                </Button>
+                <Button x:Name="StepOut" Click="StepOut_Click"
+                        Background="Transparent"
+                        BorderThickness="0" ToolTip="运行" Padding="5">
+                    <Image Source="pack://application:,,,/Asset/debug-step-out.png" Width="20" Height="20"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

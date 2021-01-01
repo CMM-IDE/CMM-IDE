@@ -80,5 +80,27 @@ namespace IDE_UI.Helper
         }
         private bool debugWindowShowed = false;
 
+        public bool ErrorWindowShowed {
+            get {
+                return errorWindowShowed;
+            }
+            set {
+                errorWindowShowed = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ErrorWindowShowed"));
+            }
+        }
+        private bool errorWindowShowed = false;
+
+        public bool TreeWindowShowed {
+            get {
+                return treeWindowShowed;
+            }
+            set {
+                treeWindowShowed = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("TreeWindowShowed"));
+            }
+        }
+        private bool treeWindowShowed = false;
+
     }
 }
