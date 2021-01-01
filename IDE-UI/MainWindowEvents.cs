@@ -16,7 +16,9 @@ namespace IDE_UI
 
         private void loadSample_Click(object sender, System.Windows.RoutedEventArgs e)
         {
+            
             textEditor.Text = "int a = 10;\nwhile (a <> 0) {\n\ta = a - 1;\n\twrite(a);\n}";
+            textEditor.CurrentDebugLine = 2;
         }
 
         /// <summary>

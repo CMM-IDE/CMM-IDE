@@ -165,10 +165,20 @@ namespace IDE_UI
             consoleTextBox.IsReadOnly = true;
 
             debugPanel = new DebugPanel();
+            debugPanel.requireDebugAction += handleRequireDebugAction;
 
             drawTreePanel = new DrawTreePanel();
 
             errorPanel = new ErrorPanel();
+        }
+
+
+        /// <summary>
+        /// 处理调试面板的调试操作
+        /// </summary>
+        private void handleRequireDebugAction(DebugOperation obj)
+        {
+            
         }
 
         public void write(Object o)
@@ -180,7 +190,7 @@ namespace IDE_UI
         {
             if (!State.ConsoleShowed)
             {
-                //extraWindowButton_Click(btnConsoleWindow, null);
+                extraPanelButton_Click(btnConsoleWindow, null);
             }
 
             consoleTextBox.Text = "";
