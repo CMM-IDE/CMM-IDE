@@ -345,17 +345,29 @@ namespace IDE_UI.Controls
                     textEditor.SelectionStart = oldPos;
                     break;
                 case '\n':
-                    if(textEditor.Text[textEditor.SelectionStart - 3] == '{') {
-                        textEditor.Text = textEditor.Text.Insert(textEditor.SelectionStart - 2, "\r\n    ");
-                        textEditor.SelectionStart = oldPos + 4;
+                    if (textEditor.SelectionStart - 3 >= 0 && textEditor.Text[textEditor.SelectionStart - 3] == '{') {
+
+                        textEditor.Text = textEditor.Text.Insert(textEditor.SelectionStart - 2, "\r\n");
+                        textEditor.SelectionStart = oldPos;
+                        //Debug.WriteLine(textEditor.CurrentLine);
+                        var indent = textEditor.Lines[textEditor.CurrentLine].Indentation = textEditor.Lines[textEditor.CurrentLine - 1].Indentation + 4;
+                        textEditor.Lines[textEditor.CurrentLine + 1].Indentation = textEditor.Lines[textEditor.CurrentLine - 1].Indentation;
+                        textEditor.SelectionStart = oldPos + indent;
+                        //Debug.WriteLine(textEditor.CurrentLine);
+
                     }
-                    
+                    //否则，维持上一行的缩进。
+                    else {
+                        var indent = textEditor.Lines[textEditor.CurrentLine].Indentation = textEditor.Lines[textEditor.CurrentLine - 1].Indentation;
+                        textEditor.SelectionStart += indent;
+                    }
+
                     break;
                 default:
                     performAutoComplete();
                     break;
             }
-            Debug.WriteLine(textEditor.SelectionStart);
+            //Debug.WriteLine(textEditor.SelectionStart);
         }
 
         private void performAutoComplete()

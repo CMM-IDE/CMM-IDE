@@ -43,6 +43,12 @@
     <Reference Include="Antlr4.Runtime.Standard, Version=4.9.0.0, Culture=neutral, PublicKeyToken=e78b2c5abd1fcb3f, processorArchitecture=MSIL">
       <HintPath>..\packages\Antlr4.Runtime.Standard.4.9.0\lib\net35\Antlr4.Runtime.Standard.dll</HintPath>
     </Reference>
+    <Reference Include="AutomaticGraphLayout, Version=0.0.0.0, Culture=neutral, PublicKeyToken=6baa2c1345e83b6e, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutomaticGraphLayout.1.1.11\lib\netstandard2.0\AutomaticGraphLayout.dll</HintPath>
+    </Reference>
+    <Reference Include="AutomaticGraphLayout.Drawing, Version=0.0.0.0, Culture=neutral, PublicKeyToken=6baa2c1345e83b6e, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutomaticGraphLayout.Drawing.1.1.11\lib\netstandard2.0\AutomaticGraphLayout.Drawing.dll</HintPath>
+    </Reference>
     <Reference Include="MahApps.Metro, Version=1.2.4.0, Culture=neutral, PublicKeyToken=f4fb5a3c4d1e5b4f, processorArchitecture=MSIL">
       <HintPath>..\packages\MahApps.Metro.1.2.4.0\lib\net45\MahApps.Metro.dll</HintPath>
     </Reference>
@@ -54,6 +60,9 @@
     </Reference>
     <Reference Include="Microsoft.Expression.Interactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Windows.Interactivity.WPF.2.0.20525\lib\net40\Microsoft.Expression.Interactions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Msagl.WpfGraphControl, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6baa2c1345e83b6e, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutomaticGraphLayout.WpfGraphControl.1.1.11\lib\net461\Microsoft.Msagl.WpfGraphControl.dll</HintPath>
     </Reference>
     <Reference Include="ScintillaNET, Version=3.6.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\jacobslusser.ScintillaNET.3.6.3\lib\net40\ScintillaNET.dll</HintPath>
@@ -111,6 +120,18 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\DebugPanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\DrawTreePanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ErrorPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -131,7 +152,19 @@
     <Compile Include="Controls\CMMConsole.xaml.cs">
       <DependentUpon>CMMConsole.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\DebugPanel.xaml.cs">
+      <DependentUpon>DebugPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\DebugWindowEvents.cs" />
+    <Compile Include="Controls\DrawTreePanel.xaml.cs">
+      <DependentUpon>DrawTreePanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ErrorPanel.xaml.cs">
+      <DependentUpon>ErrorPanel.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converter\BoolToColor.cs" />
+    <Compile Include="DrawTreeGraph\IParseTreeGrapher.cs" />
+    <Compile Include="DrawTreeGraph\ParseTreeGrapher.cs" />
     <Compile Include="Helper\IDEState.cs" />
     <Compile Include="Helper\FileHelper.cs" />
     <Compile Include="MainWindow.xaml.cs">

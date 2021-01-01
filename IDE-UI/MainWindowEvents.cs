@@ -24,7 +24,7 @@ namespace IDE_UI
         /// </summary>
         private void TextChangedEventHandler(object sender, TextChangedEventArgs e)
         {
-            state.FileModified = true;
+            State.FileModified = true;
             if (isInputMode) {
                 foreach (var change in e.Changes) {
                     inputLength += change.AddedLength;
@@ -68,9 +68,9 @@ namespace IDE_UI
                 var path = FileHelper.PickFileAsync();
                 if (path != null) {
                     textEditor.Text = await FileHelper.ReadStringFromFileAsync(path);
-                    state.FileOpened = true;
-                    state.OpenedFilePath = path;
-                    state.FileModified = false;
+                    State.FileOpened = true;
+                    State.OpenedFilePath = path;
+                    State.FileModified = false;
                 }
 
             }
@@ -82,12 +82,12 @@ namespace IDE_UI
 
         private async void SaveFileItem_Click(object sender, RoutedEventArgs e)
         {
-            var path = state.FileOpened ? state.OpenedFilePath : FileHelper.SaveFileAsync();
+            var path = State.FileOpened ? State.OpenedFilePath : FileHelper.SaveFileAsync();
             bool succeed = await FileHelper.WriteFileAsync(path, textEditor.Text);
             if (succeed) {
-                state.FileOpened = true;
-                state.OpenedFilePath = path;
-                state.FileModified = false;
+                State.FileOpened = true;
+                State.OpenedFilePath = path;
+                State.FileModified = false;
             }
         }
 
@@ -100,31 +100,59 @@ namespace IDE_UI
             });
         }
 
-        private void extraWindowButton_Click(object sender, RoutedEventArgs e)
+        private GridLength rememberedHeight = new GridLength(0);
+
+        private void extraPanelButton_Click(object sender, RoutedEventArgs e)
         {
             var btn = sender as Button;
             var tag = btn.Tag as string;
 
+            if (extraWindowRow.Height.Value != 0) {
+                rememberedHeight = extraWindowRow.Height;
+            }
+
             switch (tag) {
                 case "console":
-                    state.ConsoleShowed = !state.ConsoleShowed;
-                    if (state.ConsoleShowed) {
-                        state.DebugWindowShowed = false;
+                    State.ConsoleShowed = !State.ConsoleShowed;
+                    if (State.ConsoleShowed) {
+                        State.DebugWindowShowed = false;
+                        State.TreeWindowShowed = false;
+                        State.ErrorWindowShowed = false;
                         extraWindowPresenter.Content = consoleTextBox;
                     }
                     break;
                 case "debug":
-                    state.DebugWindowShowed = !state.DebugWindowShowed;
-                    if (state.DebugWindowShowed) {
-                        state.ConsoleShowed = false;
-                        extraWindowPresenter.Content = null;
+                    State.DebugWindowShowed = !State.DebugWindowShowed;
+                    if (State.DebugWindowShowed) {
+                        State.ConsoleShowed = false;
+                        State.ErrorWindowShowed = false;
+                        State.TreeWindowShowed = false;
+                        extraWindowPresenter.Content = debugPanel;
+                    }
+                    break;
+                case "error":
+                    State.ErrorWindowShowed = !State.ErrorWindowShowed;
+                    if (State.ErrorWindowShowed) {
+                        State.ConsoleShowed = false;
+                        State.TreeWindowShowed = false;
+                        State.DebugWindowShowed = false;
+                        extraWindowPresenter.Content = errorPanel;
+                    }
+                    break;
+                case "tree":
+                    State.TreeWindowShowed = !State.TreeWindowShowed;
+                    if (State.TreeWindowShowed) {
+                        State.ConsoleShowed = false;
+                        State.DebugWindowShowed = false;
+                        State.ErrorWindowShowed = false;
+                        extraWindowPresenter.Content = drawTreePanel;
                     }
                     break;
             }
 
-            if (state.DebugWindowShowed || state.ConsoleShowed) {
+            if (State.DebugWindowShowed || State.ConsoleShowed || State.TreeWindowShowed || State.ErrorWindowShowed) {
                 splitterRow.Height = new GridLength(10);
-                extraWindowRow.Height = new GridLength(Height * 0.3);
+                extraWindowRow.Height = rememberedHeight.Value == 0 ? new GridLength(Height * 0.3) : rememberedHeight;
             }
             else {
                 splitterRow.Height = new GridLength(0);
