@@ -7,6 +7,23 @@ namespace IDE_UI.Controls
 {
     public partial class CMMCodeEditor
     {
+
+        private void InitIndicator(ScintillaWPF ScintillaNet)
+        {
+            const int NUM = 8;
+
+            // Remove all uses of our indicator
+            textEditor.IndicatorCurrent = NUM;
+            textEditor.IndicatorClearRange(0, textEditor.TextLength);
+
+            // Update indicator appearance
+            textEditor.Indicators[NUM].Style = IndicatorStyle.FullBox;
+            textEditor.Indicators[NUM].Under = false;
+            textEditor.Indicators[NUM].ForeColor = System.Drawing.Color.Red;
+            textEditor.Indicators[NUM].OutlineAlpha = 100;
+            textEditor.Indicators[NUM].Alpha = 100;
+        }
+
         private void InitBookmarkMargin(ScintillaWPF ScintillaNet)
         {
             //TextArea.SetFoldMarginColor(true, IntToColor(BACK_COLOR));

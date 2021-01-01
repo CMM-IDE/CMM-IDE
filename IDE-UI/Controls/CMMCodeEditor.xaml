@@ -22,12 +22,12 @@
                                    FontFamily="Consolas"
                                    SyntaxHighlighting="C#"
                                    FontSize="14pt"/>-->
-        <sci1:ScintillaWPF x:Name="textEditor" 
+        <sci1:ScintillaWPF x:Name="textEditor" Grid.Column="0"
                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                            MinWidth="0" HScrollBar="False" UpdateUI="textEditor_UpdateUI"
                            CharAdded="textEditor_CharAdded"
                            />
 
-        <Grid Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Width="10"  Background="#FFFAFAFA"/>
+        <Grid x:Name="indicatorGrid" Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Width="10"  Background="#FFFAFAFA"/>
     </Grid>
 </UserControl>

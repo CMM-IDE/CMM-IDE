@@ -1,4 +1,5 @@
-﻿using ScintillaNET;
+﻿using CMMInterpreter.CMMException;
+using ScintillaNET;
 using ScintillaNET.WPF;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using IDE_UI.Helper;
 
 namespace IDE_UI.Controls
 {
@@ -15,6 +17,8 @@ namespace IDE_UI.Controls
         void breakPointChanged(CMMCodeEditor sender, List<int> points);
 
         void didAddOrRemoveBreakPoint(CMMCodeEditor sender, bool addOrRemove, int breakPoint);
+
+        void charAdded(CMMCodeEditor sender, CharAddedEventArgs e);
     }
 
     public partial class CMMCodeEditor : UserControl
@@ -83,6 +87,18 @@ namespace IDE_UI.Controls
 
         public ICMMCodeEditorDelegate editorDelegate;
 
+        public List<ErrorInfo> Errors {
+            get => errors;
+            set {
+                errors = value;
+                drawErrorMarker();
+            }
+        }
+        private List<ErrorInfo> errors;
+
+        private ErrorHoverWindow hoverWindow = new ErrorHoverWindow();
+
+
         private int currentDebugLine = -1;
 
         public int CurrentDebugLine {
@@ -95,12 +111,164 @@ namespace IDE_UI.Controls
             }
         }
 
+        /// <summary>
+        /// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>初始化
+        /// </summary>
         public CMMCodeEditor()
         {
             InitializeComponent();
             SetScintillaToCurrentOptions();
+            textEditor.DwellStart += TextEditor_DwellStart;
+            textEditor.DwellEnd += TextEditor_DwellEnd;
+            textEditor.MouseDwellTime = 200;
         }
 
+        public void clearHover() {
+            this.hoverWindow = null;
+        }
+
+        public Point GetMousePositionWindowsForms()
+        {
+            System.Drawing.Point point = System.Windows.Forms.Control.MousePosition;
+            return new Point(point.X, point.Y);
+        }
+
+        public void indicatorTest()
+        {
+            return;
+            textEditor.IndicatorCurrent = 8;
+            textEditor.IndicatorClearRange(0, textEditor.TextLength);
+
+            textEditor.Indicators[8].Style = IndicatorStyle.Squiggle;
+            textEditor.Indicators[8].ForeColor = System.Drawing.Color.Red;
+
+            // Fill ranges
+            textEditor.IndicatorFillRange(2, 5);
+
+            textEditor.Lines[0].AnnotationStyle = 0;
+            textEditor.Lines[0].AnnotationText = "ddddddd";
+            textEditor.AnnotationVisible = Annotation.Boxed;
+
+        }
+
+        private void TextEditor_DwellEnd(object sender, DwellEventArgs e)
+        {
+            hoverWindow.Hide();
+        }
+
+        private void TextEditor_DwellStart(object sender, DwellEventArgs e)
+        {
+            int line = textEditor.LineFromPosition(e.Position);
+            int col = textEditor.GetColumn(e.Position);
+            Debug.WriteLine("editor" + line + "    " + col);
+            ErrorInfo info = getErrorAtCurrentPos(line, col);
+            if(info == null) {
+                return;
+            }
+            Debug.WriteLine("info" + info.Line + "    " + info.CharPositionInLine);
+            showWindow(info);
+      
+        }
+
+        private ErrorInfo getErrorAtCurrentPos(int line, int col)
+        {
+            if(errors == null) { return null; }
+            int c;
+            int l;
+            foreach (ErrorInfo err in Errors) {
+                c = err.CharPositionInLine;
+                l = err.Line;
+
+                if(l == line + 1 && (c > col - 2 && c < col + 2)) {
+                    return err;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 绘制错误标记
+        /// </summary>
+        private void drawErrorMarker()
+        {
+            textEditor.IndicatorClearRange(0, textEditor.TextLength);
+            if(errors == null || errors.Count == 0) {
+                return;
+            }
+
+            int length = textEditor.Text.Length;
+            foreach(ErrorInfo err in Errors) {
+                var line = textEditor.Lines[err.Line - 1];
+                int pos;
+                if(err.CharPositionInLine >= line.Length) {
+                    pos = line.Position + line.Length - 1;
+                }
+                else {
+                    pos = line.Position + err.CharPositionInLine;
+                }
+                int l = 1;
+                textEditor.IndicatorFillRange(pos, l);
+            }
+        }
+
+        private void showWindow(ErrorInfo info)
+        {
+            hoverWindow.ErrorInfo = info;
+            Point mouseLocation = GetMousePositionWindowsForms();
+            hoverWindow.Left = mouseLocation.X / ScreenHelper.ScalingRatio;
+            hoverWindow.Top = mouseLocation.Y / ScreenHelper.ScalingRatio + 20;
+            hoverWindow.Show();
+            
+        }
+
+        private void SetScintillaToCurrentOptions()
+        {
+
+            InitIndicator(textEditor);
+
+            textEditor.TextInput += (a, b) => {
+                Debug.WriteLine("TextInput!!!");
+            };
+
+            textEditor.KeyUp += (a, b) => {
+                editorDelegate?.charAdded(this, null);
+            };
+
+            // INITIAL VIEW CONFIG
+            textEditor.WrapMode = WrapMode.None;
+            textEditor.IndentationGuides = IndentView.LookBoth;
+
+            // STYLING
+            InitColors(textEditor);
+            InitSyntaxColoring(textEditor);
+
+            // NUMBER MARGIN
+            InitNumberMargin(textEditor);
+
+            // BOOKMARK MARGIN
+            InitBookmarkMargin(textEditor);
+
+            // CODE FOLDING MARGIN
+            InitCodeFolding(textEditor);
+
+            // DRAG DROP
+            // TODO - Enable InitDragDropFile
+            //InitDragDropFile();
+
+            // INIT HOTKEYS
+            // TODO - Enable InitHotkeys
+            //InitHotkeys(ScintillaNet);
+
+            // Show EOL?
+            textEditor.ViewEol = false;
+
+            // Set the zoom
+            textEditor.Zoom = _zoomLevel;
+        }
+
+        /// <summary>
+        /// 代码文本
+        /// </summary>
         public string Text {
             get {
                 return textEditor.Text;
@@ -110,7 +278,9 @@ namespace IDE_UI.Controls
             }
         }
 
-        #region Bookmarks // 调试标记
+
+
+        #region 调试标记
 
         public void ClearDebugMarker()
         {
@@ -153,75 +323,8 @@ namespace IDE_UI.Controls
             }
         }
 
-        private void previousBookmarkMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            int lineNumber = textEditor.Lines[textEditor.CurrentLine - 1].MarkerPrevious(1 << DEBUG_MARKER);
-            if (lineNumber != -1)
-                textEditor.Lines[lineNumber].Goto();
-        }
+        #endregion
 
-        private void nextBookmarkMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            int lineNumber = textEditor.Lines[textEditor.CurrentLine + 1].MarkerNext(1 << DEBUG_MARKER);
-            if (lineNumber != -1)
-                textEditor.Lines[lineNumber].Goto();
-        }
-
-        private void clearBookmarksMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            textEditor.MarkerDeleteAll(DEBUG_MARKER);
-        }
-
-        #endregion Bookmarks
-
-
-        private void MyFindReplace_KeyPressed(object sender, System.Windows.Forms.KeyEventArgs e)
-        {
-            ScintillaNet_KeyDown(sender, e);
-        }
-
-
-        private void SetScintillaToCurrentOptions()
-        {
-            ScintillaWPF ScintillaNet = textEditor;
-            ScintillaNet.KeyDown += ScintillaNet_KeyDown;
-
-            // INITIAL VIEW CONFIG
-            ScintillaNet.WrapMode = WrapMode.None;
-            ScintillaNet.IndentationGuides = IndentView.LookBoth;
-
-            // STYLING
-            InitColors(ScintillaNet);
-            InitSyntaxColoring(ScintillaNet);
-
-            // NUMBER MARGIN
-            InitNumberMargin(ScintillaNet);
-
-            // BOOKMARK MARGIN
-            InitBookmarkMargin(ScintillaNet);
-
-            // CODE FOLDING MARGIN
-            InitCodeFolding(ScintillaNet);
-
-            // DRAG DROP
-            // TODO - Enable InitDragDropFile
-            //InitDragDropFile();
-
-            // INIT HOTKEYS
-            // TODO - Enable InitHotkeys
-            //InitHotkeys(ScintillaNet);
-
-            // Show EOL?
-            ScintillaNet.ViewEol = false;
-
-            // Set the zoom
-            ScintillaNet.Zoom = _zoomLevel;
-        }
-
-        private void ScintillaNet_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
-        {
-
-        }
 
         /// <summary>
         /// 点击边栏时。目前主要用来加断点。
@@ -231,7 +334,7 @@ namespace IDE_UI.Controls
             const uint mask = (1 << BREAKPOINT_MARKER);
 
             //
-            if (e.Margin == BREAKPOINT_MARGIN) {
+            if (e.Margin == BREAKPOINT_MARGIN || e.Margin == NUMBER_MARGIN) {
                 
                 var line = textEditor.Lines[textEditor.LineFromPosition(e.Position)];
                 if ((line.MarkerGet() & mask) > 0) {
@@ -261,6 +364,11 @@ namespace IDE_UI.Controls
                 }
             }
             return points;
+        }
+
+        private void CharAdded()
+        {
+            
         }
 
         #region 自动补全
@@ -306,7 +414,8 @@ namespace IDE_UI.Controls
                     performAutoComplete();
                     break;
             }
-            //Debug.WriteLine(textEditor.SelectionStart);
+            CharAdded();
+            editorDelegate?.charAdded(this, e);
         }
 
         private void performAutoComplete()
@@ -454,5 +563,7 @@ namespace IDE_UI.Controls
                     break;
             }
         }
+
+
     }
 }

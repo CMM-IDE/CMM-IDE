@@ -1,4 +1,5 @@
-﻿using CMMInterpreter.CMMException;
+﻿
+using CMMInterpreter.CMMException;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,29 +13,31 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace IDE_UI.Controls
 {
-    public partial class ErrorPanel : UserControl, INotifyPropertyChanged
+    /// <summary>
+    /// ErrorHoverWindow.xaml 的交互逻辑
+    /// </summary>
+    public partial class ErrorHoverWindow : Window, INotifyPropertyChanged
     {
-        public ErrorPanel()
+        public ErrorHoverWindow()
         {
             InitializeComponent();
-            this.DataContext = this;
         }
 
-        public List<ErrorInfo> Errors {
-            get {
-                return errors;
-            }
+        public ErrorInfo ErrorInfo {
+            get => ErrorInfo;
             set {
-                errors = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Errors"));
+                errorInfo = value;
+                lineNumBlock.Text = value.Line.ToString();
+                msgBlock.Text = value.Message;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ErrorInfo"));
             }
         }
-        private List<ErrorInfo> errors;
+
+        private ErrorInfo errorInfo;
 
         public event PropertyChangedEventHandler PropertyChanged;
     }

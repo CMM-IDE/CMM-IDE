@@ -72,73 +72,77 @@ namespace IDE_UI
 
         private bool isDebug = false;
 
-
-
         private Thread runnerThread = null;
 
-        private RefPhase visitor = null;
+        private IdleExec idleExec = new IdleExec(2);
 
 
-
-        private void run_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// 准备运行代码
+        /// </summary>
+        private IParseTree prepareForRunning()
         {
-
-            if (!State.ConsoleShowed)
-            {
-                extraPanelButton_Click(btnConsoleWindow, null);
-            }
-
-            consoleTextBox.Text = "";
             String input = textEditor.Text;
             ICharStream stream = CharStreams.fromstring(input);
             ITokenSource lexer = new CMMLexer(stream);
             ITokenStream tokens = new CommonTokenStream(lexer);
             CMMParser parser = new CMMParser(tokens);
+            parser.RemoveErrorListeners();
+
+
+            var listener = new CMMErrorListener();
+            parser.AddErrorListener(listener);
             parser.BuildParseTree = true;
-
-
             IParseTree tree = parser.statements();
+
+            if(listener.errors.Count != 0) {
+
+                if (!State.ErrorWindowShowed) {
+                    errorPanel.Errors = listener.errors;
+                    extraPanelButton_Click(btnErrorWindow, null);
+                }
+
+                textEditor.Errors = listener.errors;
+                return null;
+            }
+            return tree;
+        }
+
+        /// <summary>
+        /// 运行代码
+        /// </summary>
+        private void run_Click(object sender, RoutedEventArgs e)
+        {
+            IParseTree tree = prepareForRunning();
+            if (tree == null) {
+                return;
+            }
+
+            if (!State.ConsoleShowed) {
+                extraPanelButton_Click(btnConsoleWindow, null);
+            }
+
+            consoleTextBox.Text = "";
 
             var graph = new ParseTreeGrapher().CreateGraph(tree, CMMParser.ruleNames);
             drawTreePanel.Graph = graph;
 
             var visitor = new CompileVisitor();
-            try
-            {
+            try {
                 visitor.generateCodes(tree);
-                for (int i = 0; i < visitor.codes.Count; i++)
-                {
+                for (int i = 0; i < visitor.codes.Count; i++) {
                     Print(i + ":" + visitor.codes[i].toString());
                 }
 
             }
-            catch (VariableNotFountException exp)
-            {
+            catch (VariableNotFountException exp) {
                 Print(exp.ToString());
             }
 
             VirtualMachine vm = new VirtualMachine();
             vm.register(this);
             vm.interpret(visitor.codes);
-            /*
-            var visitor = new RefPhase();
-            this.visitor = visitor;
-            visitor.outputStream = this;
-            visitor.NeedInput += handleNeedInput;
-            runnerThread = new Thread(() => {
-                try {
-                    visitor.Visit(tree);
-                    Print("\nprogram exit\n");
-                }
-                catch (RuntimeException e1) {
-                    Print("Line:" + e1.line.ToString() + " " + e1.Message);
-                }
-                catch (Exception e2) {
-                    Print(e2.Message);
-                }
-            });
-            runnerThread.Start();
-            */
+
         }
 
         public void Print(string s)
@@ -149,33 +153,14 @@ namespace IDE_UI
             });
         }
 
-        private void init()
-        {
-            consoleTextBox = new TextBox();
-            consoleTextBox.FontSize = 14;
-            consoleTextBox.AcceptsReturn = true;
-            consoleTextBox.TextWrapping = TextWrapping.Wrap;
-            consoleTextBox.TextChanged += TextChangedEventHandler;
-            consoleTextBox.KeyUp += consoleTextBox_KeyUp;
-            consoleTextBox.KeyDown += ConsoleTextBox_KeyDown;
-            consoleTextBox.PreviewKeyDown += ConsoleTextBox_PreviewKeyDown;
-            consoleTextBox.IsReadOnlyCaretVisible = false;
-            consoleTextBox.IsReadOnly = true;
-
-            debugPanel = new DebugPanel();
-            debugPanel.requireDebugAction += handleRequireDebugAction;
-
-            drawTreePanel = new DrawTreePanel();
-
-            errorPanel = new ErrorPanel();
-        }
-
-
         public void write(Object o)
         {
-            Print(o.ToString());
+            Print(o.ToString() + "\n");
         }
 
+        /// <summary>
+        /// 调试代码
+        /// </summary>
         private void btnDebug_Click(object sender, RoutedEventArgs e)
         {
             if (!State.DebugWindowShowed)
@@ -214,6 +199,7 @@ namespace IDE_UI
             cmmDebuger.setListener(this);
             cmmDebuger.OutputStream = this;
             cmmDebuger.NeedDebug += HandlerDebug;
+            cmmDebuger.DebugFinish += CmmDebugerDebugFinish;
 
             debugThread = new Thread(() => {
                 try
@@ -298,43 +284,60 @@ namespace IDE_UI
             debugThread.Resume();
         }
 
-        private void btnStepInto_Click(object sender, RoutedEventArgs e)
-        {
-            if (isDebug)
-            {
-                cmmDebuger.StepInto();
-                debugThread.Resume();
-            }
-        }
+        //private void btnStepInto_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (isDebug)
+        //    {
+        //        cmmDebuger.StepInto();
+        //        debugThread.Resume();
+        //    }
+        //}
 
-        private void btnStepOver_Click(object sender, RoutedEventArgs e)
-        {
-            if (isDebug)
-            {
-                cmmDebuger.StepOver();
-                debugThread.Resume();
-            }
-        }
+        //private void btnStepOver_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (isDebug)
+        //    {
+        //        cmmDebuger.StepOver();
+        //        debugThread.Resume();
+        //    }
+        //}
 
-        private void btnContinue_Click(object sender, RoutedEventArgs e)
-        {
-            if (isDebug)
-            {
-                cmmDebuger.Continue();
-                debugThread.Resume();
-            }
-        }
+        //private void btnContinue_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (isDebug)
+        //    {
+        //        cmmDebuger.Continue();
+        //        debugThread.Resume();
+        //    }
+        //}
 
-        private void btnStop_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// 处理调试结束
+        /// </summary>
+        private void CmmDebugerDebugFinish()
         {
-            if (isDebug)
-            {
-                cmmDebuger.Stop();
-                debugThread.Resume();
+            Dispatcher.Invoke(() => {
                 isDebug = false;
                 debugPanel.InDebugMode = false;
                 textEditor.ClearDebugMarker();
+                cmmDebuger = null;
+            });
+        }
+
+
+        private void btnStop_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug) {
+                cmmDebuger.Stop();
+                debugThread.Resume();
+                CmmDebugerDebugFinish();
             }
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            textEditor.clearHover();
+            Application.Current.Shutdown();
         }
     }
 }

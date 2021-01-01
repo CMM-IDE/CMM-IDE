@@ -6,7 +6,31 @@
              xmlns:local="clr-namespace:IDE_UI.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <!--<cc:BoolToVisibility x:Key="BoolToVisibility"/>
+        <cc:BoolToVisibilityReverse x:Key="BoolToVisibilityReverse"/>-->
+
+        <Style x:Key="cellStyle" TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </UserControl.Resources>
+    
     <Grid>
-        <TextBlock>error panel</TextBlock>
+
+        <DataGrid x:Name="StackFrameGrid" ItemsSource="{Binding Errors}"
+                              AutoGenerateColumns="False" IsReadOnly="True" 
+                              CanUserReorderColumns="False" CanUserSortColumns="False">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Line}" Width="1*"  CanUserResize="False" Header="行号" CellStyle="{StaticResource cellStyle}" />
+
+                <DataGridTextColumn Binding="{Binding CharPositionInLine}" Width="2*" CanUserResize="False" Header="列号" CellStyle="{StaticResource cellStyle}" />
+
+                <DataGridTextColumn Binding="{Binding Message}" Width="5*"  CanUserResize="False" Header="信息" CellStyle="{StaticResource cellStyle}" />
+
+            </DataGrid.Columns>
+
+        </DataGrid>
     </Grid>
 </UserControl>
