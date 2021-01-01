@@ -1,6 +1,7 @@
 ﻿using CMMInterpreter.debuger;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace CMMInterpreter.vm
@@ -16,6 +17,9 @@ namespace CMMInterpreter.vm
         // 当前栈帧
         StackFrame currentStackFrame;
 
+        // 全局栈帧
+        StackFrame globalStackFrame;
+
         // 当前符号表
         Dictionary<string, int> currentSymbolTable;
 
@@ -29,7 +33,14 @@ namespace CMMInterpreter.vm
         /// </summary>
         Dictionary<int, Dictionary<string, int>> functionSymbolTable;
 
+        /// <summary>
+        /// 函数入口表
+        /// </summary>
+        Dictionary<string, int> functionAddressTable;
+
         Stack<StackFrame> stack;
+
+        Stack<int> entryStacks;
 
         bool isStop;
         
@@ -204,7 +215,6 @@ namespace CMMInterpreter.vm
             frame.pushToOperantStack(op2 + op1);
         }
 
-
         void sub(StackFrame frame, int pc)
         {
             double op1 = (double)frame.popFromOperantStack();
@@ -225,6 +235,7 @@ namespace CMMInterpreter.vm
             double op2 = (double)frame.popFromOperantStack();
             frame.pushToOperantStack(op2 / op1);
         }
+
         void neg(StackFrame frame)
         {
             double op = (double)frame.popFromOperantStack();
@@ -318,7 +329,6 @@ namespace CMMInterpreter.vm
             else
                 frame.pushToOperantStack(0.0);
         }
-
 
         void j(Object operant)
         {
@@ -436,21 +446,42 @@ namespace CMMInterpreter.vm
         /// <returns>当前栈帧</returns>
         public List<FrameInformation> GetCurrentFrame()
         {
-            List<FrameInformation> informations = new List<FrameInformation>();
-            // 遍历符号表填充栈帧信息
-            foreach (KeyValuePair<string, int> item in currentSymbolTable)
+            return GetFrame(currentStackFrame,currentSymbolTable);
+        }
+
+        /// <summary>
+        /// 获取调用栈信息
+        /// </summary>
+        /// <returns>调用栈信息</returns>
+        public List<StackFrameInformation> GetStackFrames()
+        {
+            List<StackFrameInformation> informations = new List<StackFrameInformation>();
+            // 临时变量保存调用栈
+            Stack<StackFrame> frameClone= new Stack<StackFrame>();
+
+            // 遍历调用栈
+            foreach (int entry in entryStacks)
             {
-                string name = item.Key;
-                int address = item.Value;
-                Object value = currentStackFrame.getVariable(address);
-                if (value != null)
-                {
-                    FrameInformation information = new FrameInformation();
-                    information.Name = name;
-                    information.Address = address;
-                    information.Value = value.ToString();
-                    informations.Add(information);
-                }
+                StackFrame currentStackFrame = stack.Pop();
+                frameClone.Push(currentStackFrame);
+                StackFrameInformation information = new StackFrameInformation();
+                information.Name = functionAddressTable.FirstOrDefault(q => q.Value == entry).Key;
+                information.Line = codesArray[entry].lineNum;
+                information.Frame = GetFrame(currentStackFrame, functionSymbolTable[entry]);
+                informations.Add(information);
+            }
+
+            // 全局栈帧信息
+            StackFrameInformation informationGlobal = new StackFrameInformation();
+            informationGlobal.Name = "global";
+            informationGlobal.Line = 0;
+            informationGlobal.Frame = GetFrame(globalStackFrame, globalSymbolTable);
+            informations.Add(informationGlobal);
+
+            // 恢复调用栈
+            foreach (StackFrame frame in frameClone)
+            {
+                stack.Push(frame);
             }
             return informations;
         }
@@ -589,6 +620,7 @@ namespace CMMInterpreter.vm
                     }
                     // 压入新栈
                     stack.Push(newStackFrame);
+                    entryStacks.Push((int)code.operant);
                     currentStackFrame = newStackFrame;
                     currentSymbolTable = functionSymbolTable[(int)code.operant];
                     pc = (int)code.operant - 1;
@@ -621,6 +653,7 @@ namespace CMMInterpreter.vm
                     Object returnValue = currentStackFrame.peek();
                     // 函数返回 移除当前栈帧
                     stack.Pop();
+                    entryStacks.Pop();
                     if (flag == 1)
                     {
                         // 将函数返回值压入到调用者的栈帧中
@@ -665,10 +698,12 @@ namespace CMMInterpreter.vm
         {
             // 初始化栈
             stack = new Stack<StackFrame>();
+            entryStacks = new Stack<int>();
             stacks.Add(stack);
 
             // 当前栈帧
             currentStackFrame = new StackFrame(0);
+            globalStackFrame = currentStackFrame;
             stack.Push(currentStackFrame);
 
             // 代码区长度
@@ -744,10 +779,33 @@ namespace CMMInterpreter.vm
         /// </summary>
         /// <param name="globalSymbolTable">全局符号表</param>
         /// <param name="functionSymbolTable">函数符号表</param>
-        void IVirtualMachine.LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable)
+        /// <param name="functionAddressTable">函数入口表</param>
+        public void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable, Dictionary<string,int> functionAddressTable)
         {
             this.globalSymbolTable = globalSymbolTable;
             this.functionSymbolTable = functionSymbolTable;
+            this.functionAddressTable = functionAddressTable;
+        }
+
+        private List<FrameInformation> GetFrame(StackFrame stackFrame, Dictionary<string, int> symbolTable)
+        {
+            List<FrameInformation> informations = new List<FrameInformation>();
+            // 遍历符号表填充栈帧信息
+            foreach (KeyValuePair<string, int> item in symbolTable)
+            {
+                string name = item.Key;
+                int address = item.Value;
+                Object value = stackFrame.getVariable(address);
+                if (value != null)
+                {
+                    FrameInformation information = new FrameInformation();
+                    information.Name = name;
+                    information.Address = address;
+                    information.Value = value.ToString();
+                    informations.Add(information);
+                }
+            }
+            return informations;
         }
     }
 }

@@ -13,7 +13,7 @@ using Antlr4.Runtime.Tree;
 
 using CMMInterpreter.debuger;
 using System.Collections.Generic;
-
+using CMMInterpreter.CMMException;
 
 namespace IDE_UI
 {
@@ -83,10 +83,11 @@ namespace IDE_UI
         private void run_Click(object sender, RoutedEventArgs e)
         {
 
-            if(!State.ConsoleShowed) {
+            if (!State.ConsoleShowed)
+            {
                 extraPanelButton_Click(btnConsoleWindow, null);
             }
-            
+
             consoleTextBox.Text = "";
             String input = textEditor.Text;
             ICharStream stream = CharStreams.fromstring(input);
@@ -95,7 +96,7 @@ namespace IDE_UI
             CMMParser parser = new CMMParser(tokens);
             parser.BuildParseTree = true;
 
-            
+
 
             IParseTree tree = parser.statements();
 
@@ -108,13 +109,13 @@ namespace IDE_UI
             try
             {
                 visitor.generateCodes(tree);
-                for(int i = 0; i < visitor.codes.Count; i++)
+                for (int i = 0; i < visitor.codes.Count; i++)
                 {
                     Print(i + ":" + visitor.codes[i].toString());
                 }
 
             }
-            catch(VariableNotFountException exp)
+            catch (VariableNotFountException exp)
             {
                 Print(exp.ToString());
             }
@@ -127,9 +128,7 @@ namespace IDE_UI
             this.visitor = visitor;
             visitor.outputStream = this;
             visitor.NeedInput += handleNeedInput;
-
             runnerThread = new Thread(() => {
-
                 try {
                     visitor.Visit(tree);
                     Print("\nprogram exit\n");
@@ -141,7 +140,6 @@ namespace IDE_UI
                     Print(e2.Message);
                 }
             });
-
             runnerThread.Start();
             */
         }
@@ -173,15 +171,16 @@ namespace IDE_UI
             errorPanel = new ErrorPanel();
         }
 
-        public void write(Object o) {
+        public void write(Object o)
+        {
             Print(o.ToString());
         }
 
         private void btnDebug_Click(object sender, RoutedEventArgs e)
         {
-            if (!state.ConsoleShowed)
+            if (!State.ConsoleShowed)
             {
-                extraWindowButton_Click(btnConsoleWindow, null);
+                //extraWindowButton_Click(btnConsoleWindow, null);
             }
 
             consoleTextBox.Text = "";
@@ -213,12 +212,12 @@ namespace IDE_UI
 
             // 初始化调试器
             cmmDebuger = new CMMDebuger(visitor.codes, breakpoints);
-            cmmDebuger.LoadDebugInformation(visitor.GetGlobalSymbolTable(), visitor.GetFunctionSymbolTable());
+            cmmDebuger.LoadDebugInformation(visitor.GetGlobalSymbolTable(), visitor.GetFunctionSymbolTable(),visitor.GetFunctionAddressTable());
             cmmDebuger.setListener(this);
             cmmDebuger.OutputStream = this;
             cmmDebuger.NeedDebug += HandlerDebug;
 
-            debugThread= new Thread(() => {
+            debugThread = new Thread(() => {
                 try
                 {
                     Print("\n调试模式\n");
@@ -239,7 +238,7 @@ namespace IDE_UI
 
             debugThread.Name = "Debug";
             debugThread.Start();
-        } 
+        }
 
         /// <summary>
         /// 处理调试
@@ -248,14 +247,26 @@ namespace IDE_UI
         {
             Dispatcher.Invoke(() => {
                 // 获取行号信息
-                consoleTextBox.Text += "\nCurrentLine: "+cmmDebuger.GetCurrentLine().ToString() + "\n";
+                consoleTextBox.Text += "\nCurrentLine: " + cmmDebuger.GetCurrentLine().ToString() + "\n";
                 List<FrameInformation> informations = cmmDebuger.GetCurrentFrame();
+                List<StackFrameInformation> stackFrames = cmmDebuger.GetStackFrames();
 
                 // 获取当前栈帧
                 consoleTextBox.Text += "\n---Current Frame Stack---\nAddress\tName\tValue\n";
                 foreach (FrameInformation information in informations)
                 {
-                    consoleTextBox.Text += information.Address+"\t"+information.Name+"\t"+information.Value+"\n";
+                    consoleTextBox.Text += information.Address + "\t" + information.Name + "\t" + information.Value + "\n";
+                }
+
+                // 获取调用栈
+                consoleTextBox.Text += "\n---Call Frame Stack---\n";
+                foreach (StackFrameInformation information in stackFrames)
+                {
+                    consoleTextBox.Text += information.Name + "\t" + information.Line + "\nAddress\tName\tValue\n";
+                    foreach (FrameInformation frame in information.Frame)
+                    {
+                        consoleTextBox.Text += frame.Address + "\t" + frame.Name + "\t" + frame.Value + "\n";
+                    }
                 }
             });
         }
@@ -274,6 +285,15 @@ namespace IDE_UI
             if (isDebug)
             {
                 cmmDebuger.StepOver();
+                debugThread.Resume();
+            }
+        }
+
+        private void btnContinue_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug)
+            {
+                cmmDebuger.Continue();
                 debugThread.Resume();
             }
         }

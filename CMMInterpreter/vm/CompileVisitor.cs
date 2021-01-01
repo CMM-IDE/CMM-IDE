@@ -44,6 +44,11 @@ namespace CMMInterpreter.vm
             return functionLocalVariableTables;
         }
 
+        public Dictionary<string, int> GetFunctionAddressTable()
+        {
+            return functionAddressTable;
+        }
+
         public List<IntermediateCode> generateCodes(IParseTree tree)
         {
             base.Visit(tree);

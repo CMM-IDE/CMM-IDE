@@ -17,6 +17,12 @@ namespace CMMInterpreter.debuger
         List<FrameInformation> GetCurrentFrame();
 
         /// <summary>
+        /// 获取调用栈信息
+        /// </summary>
+        /// <returns>调用栈信息</returns>
+        List<StackFrameInformation> GetStackFrames();
+
+        /// <summary>
         /// 获取刚执行完的指令信息
         /// </summary>
         /// <returns>刚执行完的指令信息</returns>
@@ -68,7 +74,8 @@ namespace CMMInterpreter.debuger
         /// </summary>
         /// <param name="globalSymbolTable">全局符号表</param>
         /// <param name="functionSymbolTable">函数符号表</param>
-        void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable);
+        /// <param name="functionAddressTable">函数入口表</param>
+        void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable, Dictionary<string, int> functionAddressTable);
 
         /// <summary>
         /// 设置调试处理器
