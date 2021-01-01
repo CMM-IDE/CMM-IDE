@@ -18,9 +18,9 @@ namespace CMMInterpreter.CMMException
         }
         public void StaticError(String input)
         {
-            try{
+            try {
                 ICharStream stream = CharStreams.fromstring(input);
-                ITokenSource lexer = new ExceptionLexer(stream,outputStream,error);
+                ITokenSource lexer = new ExceptionLexer(stream, outputStream, error);
                 ITokenStream tokens = new CommonTokenStream(lexer);
                 CMMParser parser = new CMMParser(tokens);
                 parser.BuildParseTree = true;
@@ -32,12 +32,11 @@ namespace CMMInterpreter.CMMException
                 CMMErrorStrategy errorStrategy = new CMMErrorStrategy();
                 parser.ErrorHandler = errorStrategy;
                 parser.statements();
-                }
-                catch (Exception e1)
-                {
+            }
+            catch (Exception e1) {
                 outputStream?.Print(e1.Message);
-                }
-            
+            }
+
         }
     }
 }

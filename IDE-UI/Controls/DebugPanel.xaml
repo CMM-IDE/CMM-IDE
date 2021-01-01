@@ -25,45 +25,11 @@
         </Grid>
         <Grid x:Name="contentGrid" Grid.Row="0" Visibility="{Binding InDebugMode, Converter={StaticResource BoolToVisibility}}">
             <Grid.RowDefinitions>
-                <RowDefinition Height="30"/>
+                <RowDefinition Height="0"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Background="#EEEEEE">
-                <StackPanel Orientation="Horizontal" Margin="10 0 0 0">
-                    <Button x:Name="continue" Click="continue_Click"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Margin="0 0 5 0"
-                        ToolTip="继续运行" Padding="5">
-                        <Image Source="pack://application:,,,/Asset/continue.png" Width="18" Height="18"/>
-                    </Button>
 
-                    <Button x:Name="stepOver" Click="stepOver_Click"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Margin="0 0 5 0"
-                        ToolTip="逐过程" Padding="5">
-                        <Image Source="pack://application:,,,/Asset/debug-step-over.png" Width="18" Height="18"/>
-                    </Button>
-
-                    <Button x:Name="StepIn" Click="StepIn_Click"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Margin="0 0 5 0"
-                        ToolTip="逐语句" Padding="5">
-                        <Image Source="pack://application:,,,/Asset/debug-step-into.png" Width="18" Height="18"/>
-                    </Button>
-
-                    <!--<Button x:Name="StepOut" Click="StepOut_Click"
-                        Background="Transparent"
-                        Margin="0 0 5 0"
-                        BorderThickness="0" ToolTip="运行" Padding="5">
-                        <Image Source="pack://application:,,,/Asset/debug-step-out.png" Width="18" Height="18"/>
-                    </Button>-->
-
-                </StackPanel>
-            </Grid>
 
             <Grid Grid.Row="1" Background='White'>
                 <Grid.ColumnDefinitions>
@@ -73,7 +39,48 @@
                 </Grid.ColumnDefinitions>
 
                 <Grid x:Name="col1">
-                    <DataGrid x:Name="StackFrameGrid" ItemsSource="{Binding StackFrameSymbols}" SelectedItem="{Binding CurrentFrame}" SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="38"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Background="#EEEEEE">
+                        <StackPanel Orientation="Horizontal" Margin="10 0 0 0">
+                            <Button x:Name="continue" Click="continue_Click"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Margin="0 0 5 0"
+                        ToolTip="继续运行" Padding="5">
+                                <Image Source="pack://application:,,,/Asset/continue.png" Width="18" Height="18"/>
+                            </Button>
+
+                            <Button x:Name="stepOver" Click="stepOver_Click"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Margin="0 0 5 0"
+                        ToolTip="逐过程" Padding="5">
+                                <Image Source="pack://application:,,,/Asset/debug-step-over.png" Width="18" Height="18"/>
+                            </Button>
+
+                            <Button x:Name="StepIn" Click="StepIn_Click"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Margin="0 0 5 0"
+                        ToolTip="逐语句" Padding="5">
+                                <Image Source="pack://application:,,,/Asset/debug-step-into.png" Width="18" Height="18"/>
+                            </Button>
+
+                            <!--<Button x:Name="StepOut" Click="StepOut_Click"
+                        Background="Transparent"
+                        Margin="0 0 5 0"
+                        BorderThickness="0" ToolTip="运行" Padding="5">
+                        <Image Source="pack://application:,,,/Asset/debug-step-out.png" Width="18" Height="18"/>
+                    </Button>-->
+
+                        </StackPanel>
+                    </Grid>
+
+                    <DataGrid Grid.Row="1" x:Name="StackFrameGrid" ItemsSource="{Binding StackFrameSymbols}" SelectedItem="{Binding CurrentFrame}" SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
                               AutoGenerateColumns="False" IsReadOnly="True" 
                               CanUserReorderColumns="False" CanUserSortColumns="False">
 
@@ -87,7 +94,7 @@
                         </DataGrid.Columns>
 
                     </DataGrid>
-                    <Rectangle Width="4" HorizontalAlignment="Right" VerticalAlignment="Stretch" Fill="#BBBBBB"></Rectangle>
+                    <Rectangle Grid.RowSpan="2" Width="4" HorizontalAlignment="Right" VerticalAlignment="Stretch" Fill="#BBBBBB"></Rectangle>
                 </Grid>
 
                 <Grid x:Name="varCol" Grid.Column="1">
@@ -109,7 +116,22 @@
                     <Rectangle Width="4" HorizontalAlignment="Right" VerticalAlignment="Stretch" Fill="#BBBBBB"></Rectangle>
                 </Grid>
 
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="38"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Background="#eeeeee">
+                        <TextBlock VerticalAlignment="Center" Margin="10 0 0 0">控制台</TextBlock>
+                    </Grid>
+                    
+                    <ContentPresenter Grid.Row="1" x:Name="consolePresenter"/>
+                </Grid>
+                
+
             </Grid>
+            
         </Grid>
 
     </Grid>

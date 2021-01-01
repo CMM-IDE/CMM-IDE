@@ -120,6 +120,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\CodeWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\DebugPanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -133,6 +137,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ErrorPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\HintControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -152,6 +160,9 @@
     <Compile Include="Controls\CMMConsole.xaml.cs">
       <DependentUpon>CMMConsole.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CodeWindow.xaml.cs">
+      <DependentUpon>CodeWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\DebugPanel.xaml.cs">
       <DependentUpon>DebugPanel.xaml</DependentUpon>
     </Compile>
@@ -164,6 +175,9 @@
     </Compile>
     <Compile Include="Controls\ErrorPanel.xaml.cs">
       <DependentUpon>ErrorPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\HintControl.xaml.cs">
+      <DependentUpon>HintControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converter\BoolToColor.cs" />
     <Compile Include="Converter\BoolToVisibility.cs" />
@@ -191,6 +205,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MainWindowCommand.cs" />
     <Compile Include="MainWindowEvents.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
