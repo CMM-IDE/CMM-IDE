@@ -237,11 +237,11 @@ namespace IDE_UI.Controls
                 if ((line.MarkerGet() & mask) > 0) {
                     Debug.WriteLine(line.MarkerGet());
                     line.MarkerDelete(BREAKPOINT_MARKER);
-                    editorDelegate?.didAddOrRemoveBreakPoint(this, false, line.Index);
+                    editorDelegate?.didAddOrRemoveBreakPoint(this, false, line.Index + 1);
                 }
                 else {
                     line.MarkerAdd(BREAKPOINT_MARKER);
-                    editorDelegate?.didAddOrRemoveBreakPoint(this, true, line.Index);
+                    editorDelegate?.didAddOrRemoveBreakPoint(this, true, line.Index + 1);
                 }
                 editorDelegate?.breakPointChanged(this, GetBreakPoints());
             }
@@ -257,7 +257,7 @@ namespace IDE_UI.Controls
             List<int> points = new List<int>();
             foreach (Line l in textEditor.Lines) {
                 if ((l.MarkerGet() & mask) > 0) {
-                    points.Add(l.Index);
+                    points.Add(l.Index + 1);
                 }
             }
             return points;

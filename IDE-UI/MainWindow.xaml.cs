@@ -97,12 +97,9 @@ namespace IDE_UI
             parser.BuildParseTree = true;
 
 
-
             IParseTree tree = parser.statements();
 
-            IParseTreeGrapher parseTreeGrapher = new ParseTreeGrapher();
-            var graph = parseTreeGrapher.CreateGraph(tree, CMMParser.ruleNames);
-
+            var graph = new ParseTreeGrapher().CreateGraph(tree, CMMParser.ruleNames);
             drawTreePanel.Graph = graph;
 
             var visitor = new CompileVisitor();
@@ -148,6 +145,7 @@ namespace IDE_UI
         {
             Dispatcher.Invoke(() => {
                 consoleTextBox.Text += s;
+                consoleTextBox.ScrollToEnd();
             });
         }
 
@@ -173,14 +171,6 @@ namespace IDE_UI
         }
 
 
-        /// <summary>
-        /// 处理调试面板的调试操作
-        /// </summary>
-        private void handleRequireDebugAction(DebugOperation obj)
-        {
-            
-        }
-
         public void write(Object o)
         {
             Print(o.ToString());
@@ -188,9 +178,9 @@ namespace IDE_UI
 
         private void btnDebug_Click(object sender, RoutedEventArgs e)
         {
-            if (!State.ConsoleShowed)
+            if (!State.DebugWindowShowed)
             {
-                extraPanelButton_Click(btnConsoleWindow, null);
+                extraPanelButton_Click(btnDebugWindow, null);
             }
 
             consoleTextBox.Text = "";
@@ -201,15 +191,14 @@ namespace IDE_UI
             CMMParser parser = new CMMParser(tokens);
             parser.BuildParseTree = true;
             IParseTree tree = parser.statements();
+
+            var graph = new ParseTreeGrapher().CreateGraph(tree, CMMParser.ruleNames);
+            drawTreePanel.Graph = graph;
+
             var visitor = new CompileVisitor();
             try
             {
                 visitor.generateCodes(tree);
-                //for (int i = 0; i < visitor.codes.Count; i++)
-                //{
-                //    Print(i + ":" + visitor.codes[i].toString());
-                //}
-
             }
             catch (VariableNotFountException exp)
             {
@@ -217,8 +206,7 @@ namespace IDE_UI
             }
 
             // 断点列表
-            List<int> breakpoints = new List<int>();
-            breakpoints.Add(11);
+            List<int> breakpoints = textEditor.GetBreakPoints();
 
             // 初始化调试器
             cmmDebuger = new CMMDebuger(visitor.codes, breakpoints);
@@ -258,8 +246,13 @@ namespace IDE_UI
             Dispatcher.Invoke(() => {
                 // 获取行号信息
                 consoleTextBox.Text += "\nCurrentLine: " + cmmDebuger.GetCurrentLine().ToString() + "\n";
+                
                 List<FrameInformation> informations = cmmDebuger.GetCurrentFrame();
                 List<StackFrameInformation> stackFrames = cmmDebuger.GetStackFrames();
+
+                debugPanel.InDebugMode = true;
+                debugPanel.StackFrameSymbols = stackFrames;
+                textEditor.CurrentDebugLine = cmmDebuger.GetCurrentLine() - 1;
 
                 // 获取当前栈帧
                 consoleTextBox.Text += "\n---Current Frame Stack---\nAddress\tName\tValue\n";
@@ -279,6 +272,30 @@ namespace IDE_UI
                     }
                 }
             });
+        }
+
+        /// <summary>
+        /// 处理调试面板的调试操作
+        /// </summary>
+        private void handleRequireDebugAction(DebugOperation oper)
+        {
+            if (!isDebug) {
+                return;
+            }
+            switch (oper) {
+                case DebugOperation.Continue:
+                    cmmDebuger.Continue();
+                    break;
+                case DebugOperation.StepOver:
+                    cmmDebuger.StepOver();
+                    break;
+                case DebugOperation.StepInto:
+                    cmmDebuger.StepInto();
+                    break;
+                case DebugOperation.StepOut:
+                    break;
+            }
+            debugThread.Resume();
         }
 
         private void btnStepInto_Click(object sender, RoutedEventArgs e)
@@ -315,6 +332,8 @@ namespace IDE_UI
                 cmmDebuger.Stop();
                 debugThread.Resume();
                 isDebug = false;
+                debugPanel.InDebugMode = false;
+                textEditor.ClearDebugMarker();
             }
         }
     }

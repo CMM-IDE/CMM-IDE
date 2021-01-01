@@ -18,31 +18,77 @@ namespace IDE_UI.Controls
 
         public event Action<DebugOperation> requireDebugAction;
 
-        public bool InDebugMode { get; set; } = true;
+        public bool InDebugMode {
+            get => inDebugMode;
+            set {
+                this.inDebugMode = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("InDebugMode"));
+            }
+        }
+        private bool inDebugMode = false;
+
+        private int preIndex = 0;
+
+        public int SelectedIndex {
+            get => selectedIndex;
+            set {
+                preIndex = selectedIndex;
+                selectedIndex = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SelectedIndex"));
+            }
+        }
+        private int selectedIndex = 0;
 
 
-        public ObservableCollection<StackFrameSymbol> StackFrameSymbols {
+        /// <summary>
+        /// 一群栈帧
+        /// </summary>
+        public List<StackFrameInformation> StackFrameSymbols {
             get {
                 return stackFrameSymbols;
             }
             set {
                 stackFrameSymbols = value;
+                
+                Debug.WriteLine("StackFrameSymbols setted");
+                if (value != null && value.Count > 0) {
+                    //CurrentFrame = value[0];
+                }
+                else {
+                    //currentFrame = null;
+                }
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StackFrameSymbols"));
+                if (preIndex < value.Count - 1) {
+                    SelectedIndex = preIndex;
+                }
+                else {
+                    SelectedIndex = value.Count - 1;
+                }
             }
         }
-        private ObservableCollection<StackFrameSymbol> stackFrameSymbols;
+        private List<StackFrameInformation> stackFrameSymbols;
 
-        public StackFrameSymbol CurrentFrame {
+        /// <summary>
+        /// 当前栈帧
+        /// </summary>
+        public StackFrameInformation CurrentFrame {
             get {
                 return currentFrame;
             }
             set {
                 currentFrame = value;
-                CurrentFrameVariables = value.CurrentFrame;
+                if(value == null) {
+                    currentFrameVariables = null;
+                    return;
+                }
+                CurrentFrameVariables = value.Frame;
             }
         }
-        private StackFrameSymbol currentFrame;
+        private StackFrameInformation currentFrame;
 
+        /// <summary>
+        /// 当前栈帧的变量
+        /// </summary>
         public List<FrameInformation> CurrentFrameVariables {
             get => currentFrameVariables;
             set {
@@ -58,29 +104,8 @@ namespace IDE_UI.Controls
         {
             InitializeComponent();
             this.DataContext = this;
-
-            stackFrameSymbols = new ObservableCollection<StackFrameSymbol>();
-
-            List<FrameInformation> CurrentFrame = new List<FrameInformation> {
-                new FrameInformation {
-                    Name="aaa",
-                    Value="bbb",
-                    Address=11
-                },
-            };
-            List<FrameInformation> CurrentFrame1 = new List<FrameInformation> {
-                new FrameInformation {
-                    Name="xxxxxxxx",
-                    Value="yyyyyyy",
-                    Address=12
-                },
-            };
-
-
-            stackFrameSymbols.Add(new StackFrameSymbol("test", 5, CurrentFrame));
-            stackFrameSymbols.Add(new StackFrameSymbol("main", 1, CurrentFrame1));
-
         }
+
     }
 
     public enum DebugOperation
