@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
+using CMMInterpreter.debuger;
 namespace CMMInterpreter.vm
 {
     /**
@@ -15,21 +15,31 @@ namespace CMMInterpreter.vm
 
         public Object operant { get; set; }
 
+        public int lineNum { get; set; }
+
         public InstructionType type { get; set; }
 
-        public IntermediateCode()
+        public IntermediateCodeInformation information { get; set; }
+
+        public IntermediateCode(int line)
         {
+            information = new IntermediateCodeInformation();
+            lineNum = line;
         }
 
-        public IntermediateCode(InstructionType _type)
+        public IntermediateCode(InstructionType _type, int line)
         {
             type = _type;
+            information = new IntermediateCodeInformation();
+            lineNum = line;
         }
 
-        public IntermediateCode(Object _operant, InstructionType _type)
+        public IntermediateCode(Object _operant, InstructionType _type, int line)
         {
             operant = _operant;
             type = _type;
+            lineNum = line;
+            information = new IntermediateCodeInformation();
         }
 
 

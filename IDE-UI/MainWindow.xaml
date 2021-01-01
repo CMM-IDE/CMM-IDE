@@ -240,13 +240,25 @@
 
                 <Button x:Name="btnDebug"
                     ToolTip="调试"
-                    ToolBar.OverflowMode="AsNeeded" Padding="5">
-                    <Image Source="pack://application:,,,/Asset/debug-large.png" Width="20" Height="20"/>
+                    ToolBar.OverflowMode="AsNeeded" Padding="5" Click="btnDebug_Click">
+                    <Image Source="pack://application:,,,/Asset/debug-large.png" Width="20" Height="20" RenderTransformOrigin="0.5,0.52"/>
                 </Button>
 
                 <Button x:Name="btnStop"
                     ToolTip="停止"
-                    ToolBar.OverflowMode="AsNeeded" Padding="5">
+                    ToolBar.OverflowMode="AsNeeded" Padding="5" Click="btnStop_Click">
+                    <Image Source="pack://application:,,,/Asset/stop-large.png" Width="20" Height="20"/>
+                </Button>
+
+                <Button x:Name="btnStepInto"
+                    ToolTip="逐语句"
+                    ToolBar.OverflowMode="AsNeeded" Padding="5" Click="btnStepInto_Click">
+                    <Image Source="pack://application:,,,/Asset/stop-large.png" Width="20" Height="20"/>
+                </Button>
+
+                <Button x:Name="btnStepOver"
+                    ToolTip="逐过程"
+                    ToolBar.OverflowMode="AsNeeded" Padding="5" Click="btnStepOver_Click">
                     <Image Source="pack://application:,,,/Asset/stop-large.png" Width="20" Height="20"/>
                 </Button>
 

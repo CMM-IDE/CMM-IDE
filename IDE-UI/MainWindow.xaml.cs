@@ -7,15 +7,20 @@ using System.Windows.Controls;
 using IDE_UI.Helper;
 using System.Threading;
 using CMMInterpreter.vm;
+
 using IDE_UI.Controls;
 using Antlr4.Runtime.Tree;
+
+using CMMInterpreter.debuger;
+using System.Collections.Generic;
+
 
 namespace IDE_UI
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : Window, IOutputStream
+    public partial class MainWindow : Window, IOutputStream, VirtualMachineListener
     {
         public MainWindow()
         {
@@ -55,10 +60,19 @@ namespace IDE_UI
         /// </summary>
         private int inputLength = 0;
 
+
         /// <summary>
         /// IDE状态信息
         /// </summary>
         public IDEState State { get; set; } = new IDEState();
+
+        private CMMDebuger cmmDebuger;
+
+        private Thread debugThread;
+
+        private bool isDebug = false;
+
+
 
         private Thread runnerThread = null;
 
@@ -93,11 +107,12 @@ namespace IDE_UI
             var visitor = new CompileVisitor();
             try
             {
-                visitor.Visit(tree);
-                foreach (IntermediateCode code in visitor.codes)
+                visitor.generateCodes(tree);
+                for(int i = 0; i < visitor.codes.Count; i++)
                 {
-                    Print(code.toString());
+                    Print(i + ":" + visitor.codes[i].toString());
                 }
+
             }
             catch(VariableNotFountException exp)
             {
@@ -105,8 +120,8 @@ namespace IDE_UI
             }
 
             VirtualMachine vm = new VirtualMachine();
-
-            Print("最终结果为：" + vm.interpret(visitor.codes).ToString());
+            vm.register(this);
+            vm.interpret(visitor.codes);
             /*
             var visitor = new RefPhase();
             this.visitor = visitor;
@@ -158,6 +173,119 @@ namespace IDE_UI
             errorPanel = new ErrorPanel();
         }
 
+        public void write(Object o) {
+            Print(o.ToString());
+        }
 
+        private void btnDebug_Click(object sender, RoutedEventArgs e)
+        {
+            if (!state.ConsoleShowed)
+            {
+                extraWindowButton_Click(btnConsoleWindow, null);
+            }
+
+            consoleTextBox.Text = "";
+            String input = textEditor.Text;
+            ICharStream stream = CharStreams.fromstring(input);
+            ITokenSource lexer = new CMMLexer(stream);
+            ITokenStream tokens = new CommonTokenStream(lexer);
+            CMMParser parser = new CMMParser(tokens);
+            parser.BuildParseTree = true;
+            IParseTree tree = parser.statements();
+            var visitor = new CompileVisitor();
+            try
+            {
+                visitor.generateCodes(tree);
+                //for (int i = 0; i < visitor.codes.Count; i++)
+                //{
+                //    Print(i + ":" + visitor.codes[i].toString());
+                //}
+
+            }
+            catch (VariableNotFountException exp)
+            {
+                Print(exp.ToString());
+            }
+
+            // 断点列表
+            List<int> breakpoints = new List<int>();
+            breakpoints.Add(11);
+
+            // 初始化调试器
+            cmmDebuger = new CMMDebuger(visitor.codes, breakpoints);
+            cmmDebuger.LoadDebugInformation(visitor.GetGlobalSymbolTable(), visitor.GetFunctionSymbolTable());
+            cmmDebuger.setListener(this);
+            cmmDebuger.OutputStream = this;
+            cmmDebuger.NeedDebug += HandlerDebug;
+
+            debugThread= new Thread(() => {
+                try
+                {
+                    Print("\n调试模式\n");
+                    isDebug = true;
+                    cmmDebuger.Run();
+                    Print("\nprogram exit\n");
+                    isDebug = false;
+                }
+                catch (RuntimeException e1)
+                {
+                    Print("Line:" + e1.line.ToString() + " " + e1.Message);
+                }
+                catch (Exception e2)
+                {
+                    Print(e2.Message);
+                }
+            });
+
+            debugThread.Name = "Debug";
+            debugThread.Start();
+        } 
+
+        /// <summary>
+        /// 处理调试
+        /// </summary>
+        private void HandlerDebug()
+        {
+            Dispatcher.Invoke(() => {
+                // 获取行号信息
+                consoleTextBox.Text += "\nCurrentLine: "+cmmDebuger.GetCurrentLine().ToString() + "\n";
+                List<FrameInformation> informations = cmmDebuger.GetCurrentFrame();
+
+                // 获取当前栈帧
+                consoleTextBox.Text += "\n---Current Frame Stack---\nAddress\tName\tValue\n";
+                foreach (FrameInformation information in informations)
+                {
+                    consoleTextBox.Text += information.Address+"\t"+information.Name+"\t"+information.Value+"\n";
+                }
+            });
+        }
+
+        private void btnStepInto_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug)
+            {
+                cmmDebuger.StepInto();
+                debugThread.Resume();
+            }
+        }
+
+        private void btnStepOver_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug)
+            {
+                cmmDebuger.StepOver();
+                debugThread.Resume();
+            }
+        }
+
+        private void btnStop_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug)
+            {
+                cmmDebuger.Stop();
+                debugThread.Resume();
+                isDebug = false;
+            }
+        }
     }
 }
