@@ -35,7 +35,7 @@
                         Background="Transparent"
                         BorderThickness="0"
                         Margin="0 0 5 0"
-                        ToolTip="运行" Padding="5">
+                        ToolTip="继续运行" Padding="5">
                         <Image Source="pack://application:,,,/Asset/continue.png" Width="18" Height="18"/>
                     </Button>
 
@@ -43,7 +43,7 @@
                         Background="Transparent"
                         BorderThickness="0"
                         Margin="0 0 5 0"
-                        ToolTip="运行" Padding="5">
+                        ToolTip="逐过程" Padding="5">
                         <Image Source="pack://application:,,,/Asset/debug-step-over.png" Width="18" Height="18"/>
                     </Button>
 
@@ -51,16 +51,16 @@
                         Background="Transparent"
                         BorderThickness="0"
                         Margin="0 0 5 0"
-                        ToolTip="运行" Padding="5">
+                        ToolTip="逐语句" Padding="5">
                         <Image Source="pack://application:,,,/Asset/debug-step-into.png" Width="18" Height="18"/>
                     </Button>
 
-                    <Button x:Name="StepOut" Click="StepOut_Click"
+                    <!--<Button x:Name="StepOut" Click="StepOut_Click"
                         Background="Transparent"
                         Margin="0 0 5 0"
                         BorderThickness="0" ToolTip="运行" Padding="5">
                         <Image Source="pack://application:,,,/Asset/debug-step-out.png" Width="18" Height="18"/>
-                    </Button>
+                    </Button>-->
 
                 </StackPanel>
             </Grid>
@@ -73,15 +73,15 @@
                 </Grid.ColumnDefinitions>
 
                 <Grid x:Name="col1">
-                    <DataGrid x:Name="StackFrameGrid" ItemsSource="{Binding StackFrameSymbols}" SelectedItem="{Binding CurrentFrame}"
+                    <DataGrid x:Name="StackFrameGrid" ItemsSource="{Binding StackFrameSymbols}" SelectedItem="{Binding CurrentFrame}" SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
                               AutoGenerateColumns="False" IsReadOnly="True" 
                               CanUserReorderColumns="False" CanUserSortColumns="False">
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Binding="{Binding FunctionName}" Width="5*"  CanUserResize="False" Header="函数名" CellStyle="{StaticResource cellStyle}" />
+                            <DataGridTextColumn Binding="{Binding Name}" Width="5*"  CanUserResize="False" Header="函数名" CellStyle="{StaticResource cellStyle}" />
 
 
-                            <DataGridTextColumn Binding="{Binding lineNum}" Width="3*" CanUserResize="False" Header="行号" CellStyle="{StaticResource cellStyle}" >
+                            <DataGridTextColumn Binding="{Binding Line}" Width="3*" CanUserResize="False" Header="行号" CellStyle="{StaticResource cellStyle}" >
                             </DataGridTextColumn>
                             
                         </DataGrid.Columns>

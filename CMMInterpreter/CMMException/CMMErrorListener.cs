@@ -11,11 +11,16 @@ using System.Text;
 namespace CMMInterpreter.CMMException
 {
     //错误监听器
-  public  class CMMErrorListener : BaseErrorListener, IAntlrErrorListener<int>
+  public class CMMErrorListener : BaseErrorListener, IAntlrErrorListener<int>
     {
         public IOutputStream outputStream = null;
+
         public IErrorShow errorShow = null;
+
+        public List<ErrorInfo> errors = new List<ErrorInfo>();
+
         public CMMErrorListener() : base() { }
+
         public CMMErrorListener(IOutputStream output,IErrorShow errorShow):base()
         {
             this.outputStream = output;
@@ -24,13 +29,13 @@ namespace CMMInterpreter.CMMException
 
         public override void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
-            IList<String> stack = ((Parser)recognizer).GetRuleInvocationStack();
-            stack.Reverse();
             StringBuilder errorMsg = new StringBuilder();
-           // errorMsg.Append("syntax error:\n");
-            errorMsg.Append("line" + line + ":" + charPositionInLine + ": " + msg+"\n");
+
+            var error = new ErrorInfo(line, charPositionInLine, msg);
+            errors.Add(error);
+            errorMsg.Append(error.ToString() + '\n');
             outputStream?.Print(errorMsg.ToString());
-            errorShow.ShowErrorPositionUI(line, charPositionInLine);
+            errorShow?.ShowErrorPositionUI(line, charPositionInLine);
            // throw new ErrorInfo(msg,line,charPositionInLine);
         }
 
@@ -40,7 +45,7 @@ namespace CMMInterpreter.CMMException
             // errorMsg.Append("syntax error:\n");
             errorMsg.Append("line" + line + ":" + charPositionInLine + ": " + msg + "\n");
             outputStream?.Print(errorMsg.ToString());
-            errorShow.ShowErrorPositionUI(line, charPositionInLine);
+            errorShow?.ShowErrorPositionUI(line, charPositionInLine);
         }
     }
 }
