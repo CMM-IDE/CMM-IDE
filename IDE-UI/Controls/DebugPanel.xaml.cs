@@ -4,14 +4,11 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Controls;
 using CMMInterpreter.debuger;
-using IDE_UI.Model;
 using System.ComponentModel;
 
 namespace IDE_UI.Controls
 {
-    /// <summary>
-    /// DebugPanel.xaml 的交互逻辑
-    /// </summary>
+
     public partial class DebugPanel : UserControl, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -50,13 +47,6 @@ namespace IDE_UI.Controls
             set {
                 stackFrameSymbols = value;
                 
-                Debug.WriteLine("StackFrameSymbols setted");
-                if (value != null && value.Count > 0) {
-                    //CurrentFrame = value[0];
-                }
-                else {
-                    //currentFrame = null;
-                }
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StackFrameSymbols"));
                 if (preIndex < value.Count - 1) {
                     SelectedIndex = preIndex;

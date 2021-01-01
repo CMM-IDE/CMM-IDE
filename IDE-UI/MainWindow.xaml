@@ -15,6 +15,7 @@
     BorderThickness="0"
     Background="White"
     AllowsTransparency="False"
+    Closed="Window_Closed"
     mc:Ignorable="d">
     <!--<Metro:MetroWindow.Menu>
 

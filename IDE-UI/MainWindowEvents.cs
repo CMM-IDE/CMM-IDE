@@ -8,10 +8,15 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Diagnostics;
+using IDE_UI.Controls;
+using ScintillaNET;
+using Antlr4.Runtime;
+using CMMInterpreter.CMMException;
+using Antlr4.Runtime.Tree;
 
 namespace IDE_UI
 {
-    public partial class MainWindow
+    public partial class MainWindow: ICMMCodeEditorDelegate
     {
 
         private void loadSample_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -40,7 +45,6 @@ namespace IDE_UI
                 var text = consoleTextBox.Text.Substring(consoleTextBox.Text.Length - inputLength - 1, inputLength - 1);
                 isInputMode = false;
                 inputLength = 0;
-                visitor.buffer = text;
                 runnerThread.Resume();
                 consoleTextBox.IsReadOnly = true;
             }
@@ -168,6 +172,100 @@ namespace IDE_UI
             }
             textEditor.Text = "";
             consoleTextBox.Text = "";
+        }
+
+        private void init()
+        {
+            consoleTextBox = new TextBox();
+            consoleTextBox.FontSize = 14;
+            consoleTextBox.AcceptsReturn = true;
+            consoleTextBox.TextWrapping = TextWrapping.Wrap;
+            consoleTextBox.TextChanged += TextChangedEventHandler;
+            consoleTextBox.KeyUp += consoleTextBox_KeyUp;
+            consoleTextBox.KeyDown += ConsoleTextBox_KeyDown;
+            consoleTextBox.PreviewKeyDown += ConsoleTextBox_PreviewKeyDown;
+            consoleTextBox.IsReadOnlyCaretVisible = false;
+            consoleTextBox.IsReadOnly = true;
+
+            debugPanel = new DebugPanel();
+            debugPanel.requireDebugAction += handleRequireDebugAction;
+
+            drawTreePanel = new DrawTreePanel();
+
+            errorPanel = new ErrorPanel();
+
+            textEditor.editorDelegate = this;
+
+            idleExec.timeOutAction += IdleExec_timeOutAction;
+        }
+
+        private void IdleExec_timeOutAction()
+        {
+            Dispatcher.Invoke(() => {
+
+            });
+            performCheck();
+        }
+
+        public void breakPointChanged(CMMCodeEditor sender, List<int> points)
+        {
+            if(!isDebug || cmmDebuger == null) {
+                return;
+            }
+            
+        }
+
+        public void didAddOrRemoveBreakPoint(CMMCodeEditor sender, bool addOrRemove, int breakPoint)
+        {
+            if (!isDebug || cmmDebuger == null) {
+                return;
+            }
+            if(addOrRemove) {
+                cmmDebuger.AddBreakpoint(breakPoint);
+            }
+            else {
+                cmmDebuger.RemoveBreakpoint(breakPoint);
+            }
+        }
+
+        public void charAdded(CMMCodeEditor sender, CharAddedEventArgs e)
+        {
+            Debug.WriteLine("charAdded");
+            idleExec.MarkActive();
+        }
+
+        private void performCheck()
+        {
+            Debug.WriteLine("perform check");
+            String input;
+            Dispatcher.Invoke(() => {
+                input = textEditor.Text;
+
+                Task.Run(() => {
+                    ICharStream stream = CharStreams.fromstring(input);
+                    ITokenSource lexer = new CMMLexer(stream);
+                    ITokenStream tokens = new CommonTokenStream(lexer);
+                    CMMParser parser = new CMMParser(tokens);
+                    parser.RemoveErrorListeners();
+
+                    var listener = new CMMErrorListener();
+                    parser.AddErrorListener(listener);
+                    parser.BuildParseTree = true;
+                    IParseTree tree = parser.statements();
+
+                    if (listener.errors.Count != 0) {
+
+                        Dispatcher.Invoke(() => {
+                            errorPanel.Errors = listener.errors;
+                            textEditor.Errors = listener.errors;
+                        });
+
+                    }
+                });
+
+            });
+
+
         }
     }
 }

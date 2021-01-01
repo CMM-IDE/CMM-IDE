@@ -33,18 +33,20 @@ namespace CMMInterpreter.CMMException
 
             var error = new ErrorInfo(line, charPositionInLine, msg);
             errors.Add(error);
-            errorMsg.Append(error.ToString() + '\n');
-            outputStream?.Print(errorMsg.ToString());
+            errorMsg.Append(error.ToString() + "\n");
+            //outputStream?.Print(errorMsg.ToString());
             errorShow?.ShowErrorPositionUI(line, charPositionInLine);
-           // throw new ErrorInfo(msg,line,charPositionInLine);
         }
 
         public void SyntaxError(TextWriter output, IRecognizer recognizer, int offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
             StringBuilder errorMsg = new StringBuilder();
+
+            var error = new ErrorInfo(line, charPositionInLine, msg);
+            errors.Add(error);
             // errorMsg.Append("syntax error:\n");
-            errorMsg.Append("line" + line + ":" + charPositionInLine + ": " + msg + "\n");
-            outputStream?.Print(errorMsg.ToString());
+            errorMsg.Append(error.ToString() + "\n");
+            //outputStream?.Print(errorMsg.ToString());
             errorShow?.ShowErrorPositionUI(line, charPositionInLine);
         }
     }
