@@ -21,8 +21,8 @@ namespace CMMInterpreter.vm
         // 当前局部变量表
         Dictionary<string, int> curLocalVariablesTable = new Dictionary<string, int>();
 
-        // 存储函数的局部变量信息 key是函数的入口地址 value是函数的局部变量表
-        Dictionary<int, Dictionary<string, int>> functionLocalVariableTables = new Dictionary<int, Dictionary<string, int>>();
+        // 存储函数的信息 key是函数名 value是存储函数信息的类
+        Dictionary<string, FunctionInformation> functionInformations = new Dictionary<string, FunctionInformation>();
 
         // 局部变量表大小
         int curLocalVariablesTableLength = 0;
@@ -39,9 +39,9 @@ namespace CMMInterpreter.vm
             return curLocalVariablesTable;
         }
 
-        public Dictionary<int, Dictionary<string, int>> GetFunctionSymbolTable()
+        public Dictionary<string, FunctionInformation> GetFunctionInformations()
         {
-            return functionLocalVariableTables;
+            return functionInformations;
         }
 
         public Dictionary<string, int> GetFunctionAddressTable()
@@ -457,6 +457,7 @@ namespace CMMInterpreter.vm
          */
         public override object VisitFunctionDeclaration([NotNull] CMMParser.FunctionDeclarationContext context)
         {
+            string funcName = context.GetChild(1).GetText();
             // jump到函数ret的下一行代码 最后再回填
             IntermediateCode jumpCode = new IntermediateCode(InstructionType.j, context.Start.Line);
             codes.Add(jumpCode);
@@ -467,17 +468,27 @@ namespace CMMInterpreter.vm
             curLocalVariablesTable = new Dictionary<string, int>();
             curLocalVariablesTableLength = 0;
 
+            // 用于记录该函数的各种信息
+            FunctionInformation funcInfo = new FunctionInformation(funcName);
+
             // 记录函数的起始地址
             int funcAddress = codes.Count;
-            functionAddressTable.Add(context.GetChild(1).GetText(), funcAddress);
+            functionAddressTable.Add(funcName, funcAddress);
+            funcInfo.enrtyAddress = funcAddress;
+
             // 访问参数列表
             Visit(context.parameterClause());
             // visit code block生成当前函数的中间代码
             Visit(context.codeBlock());
-            
+
+            // 填入函数的出口地址
+            funcInfo.outAddress = codes.Count - 1;
             // 回填jump指令
             jumpCode.setOperant(codes.Count);
-            functionLocalVariableTables.Add(funcAddress, curLocalVariablesTable);
+            funcInfo.localVariableTable = curLocalVariablesTable;
+            // 将函数信息保存到函数信息表中
+            functionInformations.Add(funcName, funcInfo);
+
             // 恢复局部变量表和大小
             curLocalVariablesTable = storedVariableTable;
             curLocalVariablesTableLength = storedVariableTableSize;
