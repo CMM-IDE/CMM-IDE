@@ -55,6 +55,20 @@
 
     <Window.Resources>
         <cc:BoolToColor x:Key="BoolToColor"/>
+
+        <ControlTemplate TargetType="{x:Type Button}" x:Key="extraPanelBtnTemplate">
+            <Border BorderBrush="{TemplateBinding Control.BorderBrush}" 
+                    BorderThickness="0" Name="PART_Background" 
+                    Background="{TemplateBinding Background}"
+                    Padding="10 0 10 0"
+                    >
+                
+                <ContentPresenter Content="{TemplateBinding ContentControl.Content}" 
+                                  HorizontalAlignment="Center" 
+                                  VerticalAlignment="Center" />
+            </Border>
+        </ControlTemplate>
+        
     </Window.Resources>
 
     <DockPanel>
@@ -166,7 +180,33 @@
                 </MenuItem>
                 <MenuItem Header="调试">
 
+                    <MenuItem x:Name="startRunning"
+                              Header="开始执行"
+                              >
+                    </MenuItem>
+
+                    <MenuItem x:Name="startDebug"
+                              Header="开始调试"
+                              >
+                    </MenuItem>
+
+                    <MenuItem x:Name="continueRuning"
+                              Header="继续运行"
+                              >
+                    </MenuItem>
+
+                    <MenuItem x:Name="stepOver"
+                              Header="逐过程"
+                              >
+                    </MenuItem>
+
+                    <MenuItem x:Name="stepInto"
+                              Header="逐语句"
+                              >
+                    </MenuItem>
+
                 </MenuItem>
+                
                 <MenuItem Header="视图">
 
                 </MenuItem>
@@ -197,25 +237,7 @@
                         ToolTip="Save" Padding="5">
                     <materialDesign:PackIcon Kind="ContentSave" Foreground="#DD9B79C3" />
                 </Button>
-                <!--<Separator />
-                <Button x:Name="CutButton"
-                          Command="Cut"
-                          ToolTip="Cut"
-                          ToolBar.OverflowMode="AsNeeded" Padding="5">
-                    <materialDesign:PackIcon Kind="ContentCut" Foreground="#DD544F5A" />
-                </Button>
-                <Button x:Name="CopyButton"
-                          Command="Copy"
-                          ToolTip="Copy that stuff"
-                          ToolBar.OverflowMode="AsNeeded" Padding="5" Foreground="#DD329399">
-                    <materialDesign:PackIcon Kind="ContentCopy" />
-                </Button>
-                <Button x:Name="PasteButton"
-                          Command="Paste"
-                          ToolTip="Paste some stuff"
-                          ToolBar.OverflowMode="AsNeeded" Padding="5">
-                    <materialDesign:PackIcon Kind="ContentPaste" Foreground="#DD5F320F" />
-                </Button>-->
+
                 <Separator />
                 <Button x:Name="UndoButton"
                     Command="Undo"
@@ -293,20 +315,20 @@
 
             <Grid Grid.Row="3"  Background="#FFEE796D">
                 <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Top">
-                    <Button x:Name="btnConsoleWindow" Height="24" FontSize="10" Margin="0" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                    <Button x:Name="btnConsoleWindow" Height="24" FontSize="10" Margin="0" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" Template="{StaticResource extraPanelBtnTemplate}"
                             Background="{Binding State.ConsoleShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="console" Click="extraPanelButton_Click">
                         控制台
                     </Button>
-                    <Button x:Name="btnErrorWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                    <Button x:Name="btnErrorWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" Template="{StaticResource extraPanelBtnTemplate}"
                             Background="{Binding State.ErrorWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="error" Click="extraPanelButton_Click">
                         错误
                     </Button>
-                    <Button x:Name="btnDebugWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                    <Button x:Name="btnDebugWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" Template="{StaticResource extraPanelBtnTemplate}"
                             Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="extraPanelButton_Click">
                         调试
                     </Button>
 
-                    <Button x:Name="btnTreePanel" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
+                    <Button x:Name="btnTreePanel" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" Template="{StaticResource extraPanelBtnTemplate}"
                             Background="{Binding State.TreeWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="tree" Click="extraPanelButton_Click">
                         语法树
                     </Button>
