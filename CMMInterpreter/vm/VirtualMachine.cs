@@ -47,6 +47,9 @@ namespace CMMInterpreter.vm
         // 调试器动作
         public event Action NeedDebug;
 
+        // 运行结束
+        public event Action RunFinish;
+
         int pc = 0;
 
         VirtualMachineListener mainWindowListener;
@@ -728,6 +731,7 @@ namespace CMMInterpreter.vm
             // 停止运行
             // 运行结束销毁
             stacks.Remove(stack);
+            RunFinish?.Invoke();
         }
 
         /// <summary>
@@ -763,6 +767,15 @@ namespace CMMInterpreter.vm
         void IVirtualMachine.SetReadHandler(Action handler)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 设置结束处理器
+        /// </summary>
+        /// <param name="handler">结束处理器</param>
+        public void SetFinishHandler(Action handler)
+        {
+            this.RunFinish += handler;
         }
 
         /// <summary>

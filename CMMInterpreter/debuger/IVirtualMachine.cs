@@ -90,6 +90,12 @@ namespace CMMInterpreter.debuger
         void SetReadHandler(Action handler);
 
         /// <summary>
+        /// 设置结束处理器
+        /// </summary>
+        /// <param name="handler">结束处理器</param>
+        void SetFinishHandler(Action handler);
+
+        /// <summary>
         /// 设置窗口监听器
         /// </summary>
         /// <param name="listener">监听器</param>

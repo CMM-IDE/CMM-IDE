@@ -20,9 +20,14 @@ namespace CMMInterpreter.debuger
         public string Buffer { get; set; }
 
         /// <summary>
-        /// 用户调试操作动作
+        /// 用户调试操作事件
         /// </summary>
         public event Action NeedDebug;
+
+        /// <summary>
+        /// 调试结束事件
+        /// </summary>
+        public event Action DebugFinish;
 
         /// <summary>
         /// 运行模式, -1为停止调试, 0为step into, 1为step over, 2为continue
@@ -50,6 +55,9 @@ namespace CMMInterpreter.debuger
 
             // 设置中断处理器
             vm.SetDebugHandler(HandleInterrupt);
+
+            // 设置结束处理器
+            vm.SetFinishHandler(HandlerFinish);
 
             // 载入中间代码
             vm.Load(codes);
@@ -326,6 +334,11 @@ namespace CMMInterpreter.debuger
         private void HandleRead()
         {
 
+        }
+
+        private void HandlerFinish()
+        {
+            DebugFinish?.Invoke();
         }
     }
 }
