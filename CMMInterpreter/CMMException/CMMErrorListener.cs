@@ -10,18 +10,37 @@ using System.Text;
 
 namespace CMMInterpreter.CMMException
 {
-  public  class CMMErrorListener : BaseErrorListener
+    //错误监听器
+  public  class CMMErrorListener : BaseErrorListener, IAntlrErrorListener<int>
     {
         public IOutputStream outputStream = null;
+        public IErrorShow errorShow = null;
+        public CMMErrorListener() : base() { }
+        public CMMErrorListener(IOutputStream output,IErrorShow errorShow):base()
+        {
+            this.outputStream = output;
+            this.errorShow = errorShow;
+        }
+
         public override void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
         {
             IList<String> stack = ((Parser)recognizer).GetRuleInvocationStack();
             stack.Reverse();
             StringBuilder errorMsg = new StringBuilder();
-            errorMsg.Append("syntax error:\n");
+           // errorMsg.Append("syntax error:\n");
             errorMsg.Append("line" + line + ":" + charPositionInLine + ": " + msg+"\n");
             outputStream?.Print(errorMsg.ToString());
-            throw new ErrorInfo(msg, line, charPositionInLine);
+            errorShow.ShowErrorPositionUI(line, charPositionInLine);
+           // throw new ErrorInfo(msg,line,charPositionInLine);
+        }
+
+        public void SyntaxError(TextWriter output, IRecognizer recognizer, int offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
+        {
+            StringBuilder errorMsg = new StringBuilder();
+            // errorMsg.Append("syntax error:\n");
+            errorMsg.Append("line" + line + ":" + charPositionInLine + ": " + msg + "\n");
+            outputStream?.Print(errorMsg.ToString());
+            errorShow.ShowErrorPositionUI(line, charPositionInLine);
         }
     }
 }

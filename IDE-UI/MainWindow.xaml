@@ -284,6 +284,12 @@
                     <Image Source="pack://application:,,,/Asset/stop-large.png" Width="20" Height="20"/>
                 </Button>
 
+                <Button x:Name="btnContinue"
+                    ToolTip="继续"
+                    ToolBar.OverflowMode="AsNeeded" Padding="5" Click="btnContinue_Click">
+                    <Image Source="pack://application:,,,/Asset/stop-large.png" Width="20" Height="20"/>
+                </Button>
+
             </ToolBar>
         </Grid>
 

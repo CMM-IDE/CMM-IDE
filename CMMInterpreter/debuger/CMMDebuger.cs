@@ -25,7 +25,7 @@ namespace CMMInterpreter.debuger
         public event Action NeedDebug;
 
         /// <summary>
-        /// 运行模式, -1为停止调试, 0为step into, 1为step over
+        /// 运行模式, -1为停止调试, 0为step into, 1为step over, 2为continue
         /// </summary>
         private int mode;
         private List<int> breakpoints;
@@ -106,9 +106,9 @@ namespace CMMInterpreter.debuger
         /// </summary>
         /// <param name="globalSymbolTable">全局符号表</param>
         /// <param name="functionSymbolTable">函数符号表</param>
-        public void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable)
+        public void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<int, Dictionary<string, int>> functionSymbolTable, Dictionary<string, int> functionAddressTable)
         {
-            vm.LoadDebugInformation(globalSymbolTable, functionSymbolTable);
+            vm.LoadDebugInformation(globalSymbolTable, functionSymbolTable,functionAddressTable);
         }
 
         /// <summary>
@@ -176,6 +176,15 @@ namespace CMMInterpreter.debuger
         }
 
         /// <summary>
+        /// 获取调用栈信息
+        /// </summary>
+        /// <returns>调用栈</returns>
+        public List<StackFrameInformation> GetStackFrames()
+        {
+            return vm.GetStackFrames();
+        }
+
+        /// <summary>
         /// 逐行运行
         /// </summary>
         public void StepInto()
@@ -189,6 +198,14 @@ namespace CMMInterpreter.debuger
         public void StepOver()
         {
             mode = 1;
+        }
+
+        /// <summary>
+        /// 继续运行直到下一个断点
+        /// </summary>
+        public void Continue()
+        {
+            mode = 2;
         }
 
         /// <summary>
@@ -255,7 +272,6 @@ namespace CMMInterpreter.debuger
                     break;
                 case 1:
                     // Step over模式
-                    // TODO
                     // 根据当前行号获取保存的中间代码
                     int line1 = vm.GetLastCodeInformation().Line;
                     IntermediateCodeInformation information1 = intermediateCodeInformations[line1];
@@ -284,6 +300,18 @@ namespace CMMInterpreter.debuger
                             savedInstructions.Add(nextLineAddress, nextLineSaved);
                         }
                     }
+
+                    break;
+                case 2:
+                    // Continue模式
+                    // 根据当前行号获取保存的中间代码
+                    int line2 = vm.GetLastCodeInformation().Line;
+                    IntermediateCodeInformation information2 = intermediateCodeInformations[line2];
+                    int address2 = information2.Address;
+                    IntermediateCode saved2 = savedInstructions[address2];
+
+                    // 单条执行中间代码
+                    vm.InterpretSingleInstruction(saved2);
 
                     break;
                 default:
