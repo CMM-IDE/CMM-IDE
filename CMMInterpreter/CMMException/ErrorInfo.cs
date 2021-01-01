@@ -4,6 +4,7 @@ using System.Text;
 
 namespace CMMInterpreter.CMMException
 {
+    //暂时没用
     public class ErrorInfo:Exception
     {
         public int line;

@@ -1556,7 +1556,7 @@ namespace CMMInterpreter.inter
                 Symbol symbol = currentScope.resolve(leftValueContext.Identifier().GetText());
                 if (symbol == null || !(symbol is VariableSymbol))
                 {
-                    throw new RuntimeException(symbol.getName() + "不存在或者是不是symbol！", leftValueContext.Identifier().Symbol.Line);
+                    throw new RuntimeException(symbol.getName() + "不存在或者不是symbol！", leftValueContext.Identifier().Symbol.Line);
                 }
                 if (leftValueContext.ChildCount == 1)
                 {
