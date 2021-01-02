@@ -23,6 +23,9 @@ namespace IDE_UI
         {
             
             textEditor.Text = "int a = 10;\nwhile (a <> 0) {\n\ta = a - 1;\n\twrite(a);\n}";
+            if(isDebug) {
+                btnStop_Click(null, null);
+            }
             charAdded(null, null);
         }
 
@@ -76,6 +79,9 @@ namespace IDE_UI
                     State.FileOpened = true;
                     State.OpenedFilePath = path;
                     State.FileModified = false;
+                }
+                if (isDebug) {
+                    btnStop_Click(null, null);
                 }
                 charAdded(null, null);
             }
@@ -192,10 +198,11 @@ namespace IDE_UI
                     SaveFileItem_Click(null, null);
                 }
             }
-
+            if (isDebug) {
+                btnStop_Click(null, null);
+            }
             charAdded(null, null);
             textEditor.Text = "";
-            consoleTextBox.Text = "";
             
         }
 
