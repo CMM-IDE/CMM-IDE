@@ -1,4 +1,4 @@
-﻿int add(int a, int b){
+int add(int a, int b){
     return a + b;
 }
 
@@ -10,13 +10,7 @@ for(i = 0; i < 2; i = i + 1){
 /* 
 * Expected Debug:
 * i = 0, sum = 0
-* i = 0, sum = 0
-* i = 0, sum = 0
-* i = 0, sum = 0
-* i = 1, sum = 0
-* i = 1, sum = 1
-* i = 1, sum = 1
-* i = 2, sum = 1
+* i = 0, sum = 1
 * i = 2, sum = 1
 * Expected Output:
 * program exit

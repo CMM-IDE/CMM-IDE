@@ -17,6 +17,12 @@ namespace CMMInterpreter.debuger
         List<FrameInformation> GetCurrentFrame();
 
         /// <summary>
+        /// 获取调用栈信息
+        /// </summary>
+        /// <returns>调用栈信息</returns>
+        List<StackFrameInformation> GetStackFrames();
+
+        /// <summary>
         /// 获取刚执行完的指令信息
         /// </summary>
         /// <returns>刚执行完的指令信息</returns>
@@ -62,5 +68,36 @@ namespace CMMInterpreter.debuger
         /// 装载中间代码
         /// </summary>
         void Load(List<IntermediateCode> codes);
+
+        /// <summary>
+        /// 装载调试信息
+        /// </summary>
+        /// <param name="globalSymbolTable">全局符号表</param>
+        /// <param name="functionInformationTable">函数信息表</param>
+        void LoadDebugInformation(Dictionary<string, int> globalSymbolTable, Dictionary<string, FunctionInformation> functionInformationTable);
+
+        /// <summary>
+        /// 设置调试处理器
+        /// </summary>
+        /// <param name="handler">调试处理器</param>
+        void SetDebugHandler(Action handler);
+
+        /// <summary>
+        /// 设置读入处理器
+        /// </summary>
+        /// <param name="handler">读入处理器</param>
+        void SetReadHandler(Action handler);
+
+        /// <summary>
+        /// 设置结束处理器
+        /// </summary>
+        /// <param name="handler">结束处理器</param>
+        void SetFinishHandler(Action handler);
+
+        /// <summary>
+        /// 设置窗口监听器
+        /// </summary>
+        /// <param name="listener">监听器</param>
+        void RegisterWindowListener(VirtualMachineListener listener);
     }
 }

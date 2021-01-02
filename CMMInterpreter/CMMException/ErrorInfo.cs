@@ -4,14 +4,25 @@ using System.Text;
 
 namespace CMMInterpreter.CMMException
 {
-    public class ErrorInfo:Exception
+    //暂时没用
+    public class ErrorInfo
     {
-        public int line;
-        public int charPositionInLine;
-        public ErrorInfo(String msg,int line,int positionInLine):base(msg)
+        public int Line { get; set; }
+
+        public int CharPositionInLine { get; set; }
+
+        public string Message { get; set; }
+
+        public ErrorInfo(int line,int positionInLine, string message)
         {
-            this.line = line;
-            this.charPositionInLine = positionInLine;
+            this.Line = line;
+            this.CharPositionInLine = positionInLine;
+            this.Message = message;
+        }
+
+        public override string ToString()
+        {
+            return "line" + Line + ":" + CharPositionInLine + ": " + Message;
         }
     }
 }

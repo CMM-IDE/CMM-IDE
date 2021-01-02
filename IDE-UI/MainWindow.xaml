@@ -2,60 +2,97 @@
     x:Class="IDE_UI.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Metro="clr-namespace:AduSkin.Controls.Metro;assembly=AduSkin"
-    xmlns:AduOpenLink="clr-namespace:AduSkin.Interactivity;assembly=AduSkin"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:cc="clr-namespace:IDE_UI.Converter"
     xmlns:CMM="clr-namespace:IDE_UI.Controls"
-    xmlns:sci1="http://scintillanet.codeplex.com"
+    xmlns:my="clr-namespace:IDE_UI"
+    xmlns:msagl="http://mlsagl"
     Title="CMM-IDE" MinWidth="600" MinHeight="350" d:DesignHeight="800" d:DesignWidth="1000"
     Width="800" Height="600"
     BorderThickness="0"
     Background="White"
     AllowsTransparency="False"
-    xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+    Closing="Window_Closing"
+    
     mc:Ignorable="d">
-    <!--<Metro:MetroWindow.Menu>
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static my:MainWindow.NewFileCommand}" Executed="NewFileItem_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.OpenFileCommand}" Executed="OpenFileItem_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.SaveFileCommand}" Executed="SaveFileItem_Click" />
 
-        <Metro:MetroTitleMenu Height="40" HorizontalAlignment="Left">
-            <Metro:MetroTitleMenuItem Header="文件">
-                <Metro:MetroMenuItem Header="新建"/>
-                <Metro:MetroMenuItem Header="打开"/>
-                <Metro:MetroMenuItem Header="保存"/>
-                <Metro:MetroMenuItem Header="退出"/>
-            </Metro:MetroTitleMenuItem>
+        <CommandBinding Command="{x:Static my:MainWindow.UndoCommand}" Executed="UndoItem_Click"/>
+        <CommandBinding Command="{x:Static my:MainWindow.RedoCommand}" Executed="RedoItem_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.CutCommand}" Executed="CutItem_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.CopyCommand}" Executed="CopyItem_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.PasteCommand}" Executed="PasteItem_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.SelectAllCommand}" Executed="SelectAllItem_Click" />
 
-            <Metro:MetroTitleMenuItem Header="分析" >
-                <Metro:MetroMenuItem Header="GitHub" Command="AduOpenLink:ControlCommands.OpenLink" CommandParameter="https://github.com/aduskin"/>
-                <Metro:MetroMenuItem Header="码云" Command="AduOpenLink:ControlCommands.OpenLink" CommandParameter="https://gitee.com/aduskin"/>
-                <Metro:MetroMenuItem Header="项目案例" Command="{Binding OpenClick}" CommandParameter="AduSkinDemo"/>
-            </Metro:MetroTitleMenuItem>
+        <CommandBinding Command="{x:Static my:MainWindow.runCommand}" Executed="run_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.debugCommand}" Executed="btnDebug_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.stopCommand}" Executed="btnStop_Click" />
 
-            <Metro:MetroTitleMenuItem Header="编译" >
-                <Metro:MetroMenuItem Header="GitHub" Command="AduOpenLink:ControlCommands.OpenLink" CommandParameter="https://github.com/aduskin"/>
-                <Metro:MetroMenuItem Header="码云" Command="AduOpenLink:ControlCommands.OpenLink" CommandParameter="https://gitee.com/aduskin"/>
-                <Metro:MetroMenuItem Header="项目案例" Command="{Binding OpenClick}" CommandParameter="AduSkinDemo"/>
-            </Metro:MetroTitleMenuItem>
-            <Metro:MetroTitleMenuItem Header="关于">
-                <Metro:MetroMenuItem Header="Nuget" Command="AduOpenLink:ControlCommands.OpenLink" CommandParameter="https://www.nuget.org/packages/aduskin"/>
-                <Metro:MetroMenuItem Header="微博" Command="AduOpenLink:ControlCommands.OpenLink" CommandParameter="https://weibo.com/sentiment562520"/>
-                <Metro:MetroMenuItem Header="博客园" Command="AduOpenLink:ControlCommands.OpenLink" CommandParameter="https://www.cnblogs.com/aduskin"/>
-                <MenuItem Style="{StaticResource MenuItem_NonStyle}" Height="30" >
-                    <MenuItem.Header>
-                        <Grid>
-                            <TextBlock Text="主题色" Margin="33,0" VerticalAlignment="Center"/>
-                            <Metro:MetroColorPicker x:Name="Theme" Width="20" Height="20" Background="{StaticResource DefaultBrush}" DefaultColor="{StaticResource DefaultBrush}" />
-                        </Grid>
-                    </MenuItem.Header>
-                </MenuItem>
-            </Metro:MetroTitleMenuItem>
-        </Metro:MetroTitleMenu>
-    </Metro:MetroWindow.Menu>-->
 
+        <CommandBinding Command="{x:Static my:MainWindow.continueCommand}" Executed="continueRuning_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.stepOverCommand}" Executed="stepOver_Click" />
+        <CommandBinding Command="{x:Static my:MainWindow.stepIntoCommand}" Executed="stepInto_Click" />
+
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Key="N"
+                    Command="{x:Static my:MainWindow.NewFileCommand}"
+                    Modifiers="Ctrl" />
+        
+        <KeyBinding Key="O"
+                    Command="{x:Static my:MainWindow.OpenFileCommand}"
+                    Modifiers="Ctrl" />
+        
+        <KeyBinding Key="S"
+                    Command="{x:Static my:MainWindow.SaveFileCommand}"
+                    Modifiers="Ctrl" />
+        
+        <KeyBinding Key="Z"
+                    Command="{x:Static my:MainWindow.UndoCommand}"
+                    Modifiers="Ctrl" />
+        
+        <KeyBinding Key="Y"
+                    Command="{x:Static my:MainWindow.RedoCommand}"
+                    Modifiers="Ctrl" />
+        
+        <KeyBinding Key="X"
+                    Command="{x:Static my:MainWindow.CutCommand}"
+                    Modifiers="Ctrl" />
+        
+        <KeyBinding Key="C"
+                    Command="{x:Static my:MainWindow.CopyCommand}"
+                    Modifiers="Ctrl" />
+        
+        <KeyBinding Key="V"
+                    Command="{x:Static my:MainWindow.PasteCommand}"
+                    Modifiers="Ctrl" />
+        
+        <KeyBinding Key="A"
+                    Command="{x:Static my:MainWindow.SelectAllCommand}"
+                    Modifiers="Ctrl" />
+
+    </Window.InputBindings>
     <Window.Resources>
         <cc:BoolToColor x:Key="BoolToColor"/>
+
+        <ControlTemplate TargetType="{x:Type Button}" x:Key="extraPanelBtnTemplate">
+            <Border BorderBrush="{TemplateBinding Control.BorderBrush}" 
+                    BorderThickness="0" Name="PART_Background" 
+                    Background="{TemplateBinding Background}"
+                    Padding="10 0 10 0"
+                    >
+                
+                <ContentPresenter Content="{TemplateBinding ContentControl.Content}" 
+                                  HorizontalAlignment="Center" 
+                                  VerticalAlignment="Center" />
+            </Border>
+        </ControlTemplate>
+        
     </Window.Resources>
 
     <DockPanel>
@@ -69,7 +106,7 @@
                 <MenuItem Header="文件">
                     <MenuItem x:Name="NewFileItem"
                         Header="新建"
-                        Click="NewFileItem_Click"
+                        Command="{x:Static my:MainWindow.NewFileCommand}"
                         InputGestureText="Ctrl+N">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon Kind="FiberNew" />
@@ -78,7 +115,7 @@
 
                     <MenuItem x:Name="OpenFileItem"
                         Header="打开"
-                        Click="OpenFileItem_Click"
+                        Command="{x:Static my:MainWindow.OpenFileCommand}"
                         InputGestureText="Ctrl+O">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon Kind="File" />
@@ -86,96 +123,128 @@
                     </MenuItem>
                     <MenuItem x:Name="SaveFileItem"
                         Header="保存"
-                        Click="SaveFileItem_Click"
+                        Command="{x:Static my:MainWindow.SaveFileCommand}"
                     InputGestureText="Ctrl+S">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon
                             Kind="ContentSave" />
                         </MenuItem.Icon>
                     </MenuItem>
-                    <MenuItem x:Name="ExitItem"
+                    <!--<MenuItem x:Name="ExitItem"
                     Header="退出"
                     InputGestureText="Ctrl+E">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon
                             Kind="ExitToApp" />
                         </MenuItem.Icon>
-                    </MenuItem>
+                    </MenuItem>-->
                 </MenuItem>
                 <MenuItem Header="编辑">
                     <MenuItem x:Name="SelectAllItem"
                         Header="全选"
-                        Command="SelectAll">
+                        Command="{x:Static my:MainWindow.SelectAllCommand}">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon Kind="SelectAll" />
                         </MenuItem.Icon>
                     </MenuItem>
+                    
                     <MenuItem x:Name="CutItem"
                     Header="剪切"
-                    Command="Cut">
+                    Command="{x:Static my:MainWindow.CutCommand}">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon
                             Kind="ContentCut" />
                         </MenuItem.Icon>
                     </MenuItem>
+                    
                     <MenuItem x:Name="CopyItem"
                     Header="复制"
-                    Command="Copy">
+                    Command="{x:Static my:MainWindow.CopyCommand}">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon
                             Kind="ContentCopy" />
                         </MenuItem.Icon>
                     </MenuItem>
+                    
                     <MenuItem x:Name="PasteItem"
                     Header="粘贴"
-                    Command="Paste">
+                    Command="{x:Static my:MainWindow.PasteCommand}">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon
                             Kind="ContentPaste" />
                         </MenuItem.Icon>
                     </MenuItem>
+                    
                     <MenuItem x:Name="UndoItem"
                               Header="撤销"
-                              Command="Undo">
+                              Command="{x:Static my:MainWindow.UndoCommand}">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon Kind="Undo" />
                         </MenuItem.Icon>
                     </MenuItem>
+                    
                     <MenuItem x:Name="RedoItem"
                               Header="重做"
-                              Command="Redo">
+                              Command="{x:Static my:MainWindow.RedoCommand}">
                         <MenuItem.Icon>
                             <materialDesign:PackIcon Kind="Redo" />
                         </MenuItem.Icon>
                     </MenuItem>
 
                     <Separator />
-
-                    <MenuItem x:Name="IncreaseFontSizeItem"
-                              Header="增大字体">
-                        <MenuItem.Icon>
-                            <materialDesign:PackIcon Kind="Redo" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-
-                    <MenuItem x:Name="DccreaseFontSizeItem"
-                              Header="减小字体">
-                        <MenuItem.Icon>
-                            <materialDesign:PackIcon Kind="Redo" />
-                        </MenuItem.Icon>
-                    </MenuItem>
                 </MenuItem>
+                
                 <MenuItem Header="调试">
 
-                </MenuItem>
-                <MenuItem Header="视图">
+                    <MenuItem x:Name="startRunning"
+                              Command="{x:Static my:MainWindow.runCommand}"
+                              Header="开始执行"
+                              >
+                    </MenuItem>
+
+                    <MenuItem x:Name="startDebug"
+                              Command="{x:Static my:MainWindow.debugCommand}"
+                              Header="开始调试"
+                              >
+                    </MenuItem>
+
+                    <MenuItem x:Name="continueRuning"
+                              Command="{x:Static my:MainWindow.continueCommand}"
+                              Click="continueRuning_Click"
+                              Header="继续运行"
+                              >
+                    </MenuItem>
+
+                    <MenuItem x:Name="stepOver"
+                              Command="{x:Static my:MainWindow.stepOverCommand}"
+                              Click="stepOver_Click"
+                              Header="逐过程"
+                              >
+                    </MenuItem>
+
+                    <MenuItem x:Name="stepInto"
+                              Click="stepInto_Click"
+                              Command="{x:Static my:MainWindow.stepIntoCommand}"
+                              Header="逐语句"
+                              >
+                    </MenuItem>
 
                 </MenuItem>
+                
+                <MenuItem Header="视图">
+                    
+                    <MenuItem x:Name="codeItem"
+                              Click="codeItem_Click"
+                              Header="查看虚拟机代码">
+                    </MenuItem>
+                    
+                </MenuItem>
+                
                 <MenuItem Header="示例">
                     <MenuItem x:Name="loadSampleMenuItem"
                           Header="加载示例"
                               Click="loadSample_Click"
-                          InputGestureText="Ctrl+Shift+O">
+                         >
                         <MenuItem.Icon>
                             <materialDesign:PackIcon Kind="FolderOpen" />
                         </MenuItem.Icon>
@@ -185,48 +254,30 @@
                 <MenuItem Header="帮助"/>
             </Menu>
             <ToolBar Style="{DynamicResource MaterialDesignToolBar}" ClipToBounds="False" Grid.Column="1" Background="Transparent">
-                <Button x:Name="NewFileButton" Click="NewFileItem_Click"
+                <Button x:Name="NewFileButton" Command="{x:Static my:MainWindow.NewFileCommand}"
                     ToolTip="New..." Margin="0,0,0,0" ClipToBounds="False" Padding="5">
                     <materialDesign:PackIcon Kind="FiberNew" Padding="0" Foreground="#DDDCBD2E" />
                 </Button>
 
-                <Button x:Name="OpenFileButton"
-                        ToolTip="Open File..." Margin="0,0,0,0" ClipToBounds="False" Padding="5" Click="OpenFileItem_Click">
+                <Button x:Name="OpenFileButton" Command="{x:Static my:MainWindow.OpenFileCommand}"
+                        ToolTip="Open File..." Margin="0,0,0,0" ClipToBounds="False" Padding="5" >
                     <materialDesign:PackIcon Kind="File" Padding="0" Foreground="#DD77E743" />
                 </Button>
-                <Button x:Name="SaveButton" Click="SaveFileItem_Click"
+                <Button x:Name="SaveButton" Command="{x:Static my:MainWindow.SaveFileCommand}"
                         ToolTip="Save" Padding="5">
                     <materialDesign:PackIcon Kind="ContentSave" Foreground="#DD9B79C3" />
                 </Button>
-                <!--<Separator />
-                <Button x:Name="CutButton"
-                          Command="Cut"
-                          ToolTip="Cut"
-                          ToolBar.OverflowMode="AsNeeded" Padding="5">
-                    <materialDesign:PackIcon Kind="ContentCut" Foreground="#DD544F5A" />
-                </Button>
-                <Button x:Name="CopyButton"
-                          Command="Copy"
-                          ToolTip="Copy that stuff"
-                          ToolBar.OverflowMode="AsNeeded" Padding="5" Foreground="#DD329399">
-                    <materialDesign:PackIcon Kind="ContentCopy" />
-                </Button>
-                <Button x:Name="PasteButton"
-                          Command="Paste"
-                          ToolTip="Paste some stuff"
-                          ToolBar.OverflowMode="AsNeeded" Padding="5">
-                    <materialDesign:PackIcon Kind="ContentPaste" Foreground="#DD5F320F" />
-                </Button>-->
+
                 <Separator />
                 <Button x:Name="UndoButton"
-                    Command="Undo"
+                    Command="{x:Static my:MainWindow.UndoCommand}"
                     ToolTip="Undo"
                     ToolBar.OverflowMode="AsNeeded" Padding="5">
                     <materialDesign:PackIcon
                         Kind="UndoVariant" Foreground="#DD4D70D1" />
                 </Button>
                 <Button x:Name="RedoButton"
-                    Command="Redo"
+                    Command="{x:Static my:MainWindow.RedoCommand}"
                     ToolTip="Redo"
                     ToolBar.OverflowMode="AsNeeded" Padding="5">
                     <materialDesign:PackIcon
@@ -241,13 +292,13 @@
 
                 <Button x:Name="btnDebug"
                     ToolTip="调试"
-                    ToolBar.OverflowMode="AsNeeded" Padding="5">
-                    <Image Source="pack://application:,,,/Asset/debug-large.png" Width="20" Height="20"/>
+                    ToolBar.OverflowMode="AsNeeded" Padding="5" Click="btnDebug_Click">
+                    <Image Source="pack://application:,,,/Asset/debug-large.png" Width="20" Height="20" RenderTransformOrigin="0.5,0.52"/>
                 </Button>
 
                 <Button x:Name="btnStop"
                     ToolTip="停止"
-                    ToolBar.OverflowMode="AsNeeded" Padding="5">
+                    ToolBar.OverflowMode="AsNeeded" Padding="5" Click="btnStop_Click">
                     <Image Source="pack://application:,,,/Asset/stop-large.png" Width="20" Height="20"/>
                 </Button>
 
@@ -268,16 +319,8 @@
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="172*"/>
-                    <ColumnDefinition Width="623*"/>
-                </Grid.ColumnDefinitions>
-                <CMM:CMMCodeEditor x:Name="textEditor" Grid.ColumnSpan="2" Margin="0,0,0,0.5"/>
-
-            </Grid>
-
-            <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="1">
-
+                <CMM:CMMCodeEditor x:Name="textEditor"/>
+                <msagl:AutomaticGraphLayoutControl x:Name="graphc"/>
             </Grid>
 
             <GridSplitter Grid.Row="1" Height="10" Background="Gray"
@@ -290,17 +333,22 @@
 
             <Grid Grid.Row="3"  Background="#FFEE796D">
                 <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Top">
-                    <Button x:Name="btnConsoleWindow" Height="24" FontSize="10" Margin="0" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
-                            Background="{Binding State.ConsoleShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="console" Click="extraWindowButton_Click">
+                    <Button x:Name="btnConsoleWindow" Height="24" FontSize="10" Margin="0" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" Template="{StaticResource extraPanelBtnTemplate}"
+                            Background="{Binding State.ConsoleShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="console" Click="extraPanelButton_Click">
                         控制台
                     </Button>
-                    <!--<Button x:Name="btnErrorWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
-                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="extraWindowButton_Click">
+                    <Button x:Name="btnErrorWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" Template="{StaticResource extraPanelBtnTemplate}"
+                            Background="{Binding State.ErrorWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="error" Click="extraPanelButton_Click">
                         错误
-                    </Button>-->
-                    <Button x:Name="btnDebugWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" 
-                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="extraWindowButton_Click">
+                    </Button>
+                    <Button x:Name="btnDebugWindow" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" Template="{StaticResource extraPanelBtnTemplate}"
+                            Background="{Binding State.DebugWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="debug" Click="extraPanelButton_Click">
                         调试
+                    </Button>
+
+                    <Button x:Name="btnTreePanel" Height="24" FontSize="10" Style="{StaticResource MaterialDesignFlatButton}" Foreground="Black" Template="{StaticResource extraPanelBtnTemplate}"
+                            Background="{Binding State.TreeWindowShowed, Converter={StaticResource BoolToColor}, Mode=OneWay}" Tag="tree" Click="extraPanelButton_Click">
+                        语法树
                     </Button>
                 </StackPanel>
             </Grid>

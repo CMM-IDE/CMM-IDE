@@ -43,6 +43,12 @@
     <Reference Include="Antlr4.Runtime.Standard, Version=4.9.0.0, Culture=neutral, PublicKeyToken=e78b2c5abd1fcb3f, processorArchitecture=MSIL">
       <HintPath>..\packages\Antlr4.Runtime.Standard.4.9.0\lib\net35\Antlr4.Runtime.Standard.dll</HintPath>
     </Reference>
+    <Reference Include="AutomaticGraphLayout, Version=0.0.0.0, Culture=neutral, PublicKeyToken=6baa2c1345e83b6e, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutomaticGraphLayout.1.1.11\lib\netstandard2.0\AutomaticGraphLayout.dll</HintPath>
+    </Reference>
+    <Reference Include="AutomaticGraphLayout.Drawing, Version=0.0.0.0, Culture=neutral, PublicKeyToken=6baa2c1345e83b6e, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutomaticGraphLayout.Drawing.1.1.11\lib\netstandard2.0\AutomaticGraphLayout.Drawing.dll</HintPath>
+    </Reference>
     <Reference Include="MahApps.Metro, Version=1.2.4.0, Culture=neutral, PublicKeyToken=f4fb5a3c4d1e5b4f, processorArchitecture=MSIL">
       <HintPath>..\packages\MahApps.Metro.1.2.4.0\lib\net45\MahApps.Metro.dll</HintPath>
     </Reference>
@@ -54,6 +60,9 @@
     </Reference>
     <Reference Include="Microsoft.Expression.Interactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Windows.Interactivity.WPF.2.0.20525\lib\net40\Microsoft.Expression.Interactions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Msagl.WpfGraphControl, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6baa2c1345e83b6e, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutomaticGraphLayout.WpfGraphControl.1.1.11\lib\net461\Microsoft.Msagl.WpfGraphControl.dll</HintPath>
     </Reference>
     <Reference Include="ScintillaNET, Version=3.6.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\jacobslusser.ScintillaNET.3.6.3\lib\net40\ScintillaNET.dll</HintPath>
@@ -111,6 +120,30 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\CodeWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\DebugPanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\DrawTreePanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ErrorHoverWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ErrorPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\HintControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -119,39 +152,60 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CMMM\outputStreamDelegate.cs" />
-    <Compile Include="CMMM\Visitor\TestVisitor.cs" />
-    <Compile Include="CMMM\Visitor\CMMMBaseVisitor.cs" />
-    <Compile Include="CMMM\CMMMLexer.cs" />
-    <Compile Include="CMMM\Parser\CMMMParser.cs" />
-    <Compile Include="CMMM\Visitor\CMMMVisitor.cs" />
     <Compile Include="Controls\CMMCodeEditor.xaml.cs">
       <DependentUpon>CMMCodeEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CMMCodeEditorInit.cs" />
+    <Compile Include="Controls\CMMCodeEditorHelper.cs" />
     <Compile Include="Controls\CMMConsole.xaml.cs">
       <DependentUpon>CMMConsole.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CodeWindow.xaml.cs">
+      <DependentUpon>CodeWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\DebugPanel.xaml.cs">
+      <DependentUpon>DebugPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\DebugWindowEvents.cs" />
+    <Compile Include="Controls\DrawTreePanel.xaml.cs">
+      <DependentUpon>DrawTreePanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ErrorHoverWindow.xaml.cs">
+      <DependentUpon>ErrorHoverWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ErrorPanel.xaml.cs">
+      <DependentUpon>ErrorPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\HintControl.xaml.cs">
+      <DependentUpon>HintControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converter\BoolToColor.cs" />
+    <Compile Include="Converter\BoolToVisibility.cs" />
+    <Compile Include="DrawTreeGraph\IParseTreeGrapher.cs" />
+    <Compile Include="DrawTreeGraph\ParseTreeGrapher.cs" />
     <Compile Include="Helper\IDEState.cs" />
     <Compile Include="Helper\FileHelper.cs" />
+    <Compile Include="Helper\IdleExecutor.cs" />
+    <Compile Include="Helper\ScreenHelper.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Style\BaseStyle.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+      <Generator>XamlIntelliSenseFileGenerator</Generator>
     </Page>
     <Page Include="Style\Converter.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+      <Generator>XamlIntelliSenseFileGenerator</Generator>
     </Page>
     <Page Include="Style\ShowControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+      <Generator>XamlIntelliSenseFileGenerator</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MainWindowCommand.cs" />
     <Compile Include="MainWindowEvents.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -170,29 +224,21 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="CMMM\CMMM.g4" />
-    <None Include="CMMM\CMMM.interp" />
-    <None Include="CMMM\CMMM.tokens" />
-    <None Include="CMMM\CMMMLexer.interp" />
-    <None Include="CMMM\CMMMLexer.tokens" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="test\ArrayOperation.cmm" />
+    <None Include="test\Debug%28Continue%29.cmm" />
+    <None Include="test\Debug.cmm" />
     <None Include="test\Break.cmm" />
     <None Include="test\Debug%28step into%29.cmm" />
     <None Include="test\debug%28step over%29.cmm" />
     <None Include="test\DoWhile.cmm" />
     <None Include="test\For.cmm" />
-    <None Include="test\ForBlank.cmm" />
     <None Include="test\Function.cmm" />
-    <None Include="test\IfElse.cmm" />
     <None Include="test\LexicalError.cmm" />
     <None Include="test\OpenFile.cmm" />
-    <None Include="test\ReadAndWrite.cmm" />
-    <None Include="test\SemanticError.cmm" />
     <None Include="test\SyntaxError.cmm" />
     <None Include="test\While.cmm" />
   </ItemGroup>
@@ -204,15 +250,20 @@
       <Project>{c5ce6cdd-4ab5-4f6e-b41d-d327ecbaa725}</Project>
       <Name>CMMInterpreter</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ICSharpCode.AvalonEdit\ICSharpCode.AvalonEdit.csproj">
-      <Project>{f43f64a4-03fb-4ff5-870d-a8d9a5307237}</Project>
-      <Name>ICSharpCode.AvalonEdit</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Asset\debug-large.png" />
     <Resource Include="Asset\run-large.png" />
     <Resource Include="Asset\stop-large.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Asset\continue.png" />
+    <Resource Include="Asset\debug-step-into.png" />
+    <Resource Include="Asset\debug-step-out.png" />
+    <Resource Include="Asset\debug-step-over.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Model\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\MaterialDesignThemes.3.2.0\build\MaterialDesignThemes.targets" Condition="Exists('..\packages\MaterialDesignThemes.3.2.0\build\MaterialDesignThemes.targets')" />

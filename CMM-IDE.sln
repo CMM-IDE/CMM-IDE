@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IDE-UI", "IDE-UI\IDE-UI.csproj", "{98D4308F-7723-4201-9CF9-667372A5D820}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ICSharpCode.AvalonEdit", "ICSharpCode.AvalonEdit\ICSharpCode.AvalonEdit.csproj", "{F43F64A4-03FB-4FF5-870D-A8D9A5307237}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMMInterpreter", "CMMInterpreter\CMMInterpreter.csproj", "{06769CC8-3328-4DC2-AACF-9588B21D6D38}"
 EndProject
 Global
@@ -19,10 +17,6 @@ Global
 		{98D4308F-7723-4201-9CF9-667372A5D820}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98D4308F-7723-4201-9CF9-667372A5D820}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98D4308F-7723-4201-9CF9-667372A5D820}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F43F64A4-03FB-4FF5-870D-A8D9A5307237}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F43F64A4-03FB-4FF5-870D-A8D9A5307237}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F43F64A4-03FB-4FF5-870D-A8D9A5307237}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F43F64A4-03FB-4FF5-870D-A8D9A5307237}.Release|Any CPU.Build.0 = Release|Any CPU
 		{06769CC8-3328-4DC2-AACF-9588B21D6D38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{06769CC8-3328-4DC2-AACF-9588B21D6D38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{06769CC8-3328-4DC2-AACF-9588B21D6D38}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -1,19 +1,33 @@
-﻿using ScintillaNET;
+﻿using CMMInterpreter.CMMException;
+using ScintillaNET;
 using ScintillaNET.WPF;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using IDE_UI.Helper;
+using Antlr4.Runtime;
+using System.Text;
 
 namespace IDE_UI.Controls
 {
-    /// <summary>
-    /// CMMCodeEditor.xaml 的交互逻辑
-    /// </summary>
+
+    public interface ICMMCodeEditorDelegate
+    {
+        void breakPointChanged(CMMCodeEditor sender, List<int> points);
+
+        void didAddOrRemoveBreakPoint(CMMCodeEditor sender, bool addOrRemove, int breakPoint);
+
+        void charAdded(CMMCodeEditor sender, CharAddedEventArgs e);
+    }
+
     public partial class CMMCodeEditor : UserControl
     {
-        #region Fields
+
+        
+        #region 其它属性
 
         private int _zoomLevel = 0;
 
@@ -37,9 +51,11 @@ namespace IDE_UI.Controls
         /// <summary>
         /// change this to whatever margin you want the bookmarks/breakpoints to show in
         /// </summary>
-        private const int BOOKMARK_MARGIN = 2;
+        private const int BREAKPOINT_MARGIN = 2;
 
-        private const int BOOKMARK_MARKER = 2;
+        private const int DEBUG_MARKER = 2;
+
+        private const int BREAKPOINT_MARKER = 4;
 
         /// <summary>
         /// change this to whatever margin you want the code folding tree (+/-) to show in
@@ -71,12 +87,155 @@ namespace IDE_UI.Controls
 
         #endregion Fields
 
+        public ICMMCodeEditorDelegate editorDelegate;
+
+        public List<ErrorInfo> Errors {
+            get => errors;
+            set {
+                errors = value;
+                drawErrorMarker();
+            }
+        }
+        private List<ErrorInfo> errors;
+
+        private ErrorHoverWindow hoverWindow = new ErrorHoverWindow();
+
+
+        private int currentDebugLine = -1;
+
+        public int CurrentDebugLine {
+            get {
+                return currentDebugLine;
+            }
+            set {
+                setDebugMarker(currentDebugLine, value);
+                currentDebugLine = value;
+            }
+        }
+
+        /// <summary>
+        /// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>初始化
+        /// </summary>
         public CMMCodeEditor()
         {
             InitializeComponent();
             SetScintillaToCurrentOptions();
+            textEditor.DwellStart += TextEditor_DwellStart;
+            textEditor.DwellEnd += TextEditor_DwellEnd;
+            textEditor.MouseDwellTime = 200;
         }
 
+        public void clearHover() {
+            hoverWindow.Close();
+            hoverWindow = null;
+        }
+
+        public Point GetMousePositionWindowsForms()
+        {
+            System.Drawing.Point point = System.Windows.Forms.Control.MousePosition;
+            return new Point(point.X, point.Y);
+        }
+
+        private void TextEditor_DwellEnd(object sender, DwellEventArgs e)
+        {
+            hoverWindow.Hide();
+        }
+
+        private void TextEditor_DwellStart(object sender, DwellEventArgs e)
+        {
+            int line = textEditor.LineFromPosition(e.Position);
+            int col = textEditor.GetColumn(e.Position);
+            //Debug.WriteLine("editor" + line + "    " + col);
+            ErrorInfo info = getErrorAtCurrentPos(line, col);
+            if(info == null) {
+                return;
+            }
+            //Debug.WriteLine("info" + info.Line + "    " + info.CharPositionInLine);
+            showWindow(info);
+      
+        }
+
+        private ErrorInfo getErrorAtCurrentPos(int line, int col)
+        {
+            if(errors == null) { return null; }
+            int errCol;
+            int errLine;
+            foreach (ErrorInfo err in Errors) {
+                errCol = err.CharPositionInLine;
+                errLine = err.Line;
+
+                if(errLine == line + 1 && (errCol > col - 4 && errCol < col + 2)) {
+                    return err;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 绘制错误标记
+        /// </summary>
+        private void drawErrorMarker()
+        {
+            textEditor.IndicatorClearRange(0, textEditor.TextLength);
+            if(errors == null || errors.Count == 0) {
+                return;
+            }
+
+            foreach(ErrorInfo err in Errors) {
+                var line = textEditor.Lines[err.Line - 1];
+                int pos;
+                if(err.CharPositionInLine >= line.Length) {
+                    pos = line.Position + line.Length - 1;
+                }
+                else {
+                    pos = line.Position + err.CharPositionInLine;
+                }
+                int l = 1;
+                textEditor.IndicatorFillRange(pos, l);
+            }
+        }
+
+        private void showWindow(ErrorInfo info)
+        {
+            hoverWindow.ErrorInfo = info;
+            Point mouseLocation = GetMousePositionWindowsForms();
+            hoverWindow.Left = mouseLocation.X / ScreenHelper.ScalingRatio;
+            hoverWindow.Top = mouseLocation.Y / ScreenHelper.ScalingRatio + 20;
+            hoverWindow.Show();
+            
+        }
+
+        private void SetScintillaToCurrentOptions()
+        {
+
+            InitIndicator(textEditor);
+
+            textEditor.KeyUp += (a, b) => {
+                editorDelegate?.charAdded(this, null);
+            };
+
+            textEditor.WrapMode = WrapMode.None;
+
+            textEditor.IndentationGuides = IndentView.LookBoth;
+
+            InitColors(textEditor);
+
+            InitSyntaxColoring(textEditor);
+
+            InitNumberMargin(textEditor);
+
+            InitBookmarkMargin(textEditor);
+
+            InitCodeFolding(textEditor);
+
+            textEditor.ViewEol = false;
+
+            textEditor.Zoom = _zoomLevel;
+        }
+
+        /// <summary>
+        /// 代码文本
+        /// </summary>
         public string Text {
             get {
                 return textEditor.Text;
@@ -86,249 +245,88 @@ namespace IDE_UI.Controls
             }
         }
 
-        #region Bookmarks
 
-        private void toggleBookmarkMenuItem_Click(object sender, RoutedEventArgs e)
+
+        #region 调试标记
+
+        public void ClearDebugMarker()
         {
-            Line currentLine = textEditor.Lines[textEditor.CurrentLine];
-            const uint mask = (1 << BOOKMARK_MARKER);
-            uint markers = currentLine.MarkerGet();
-            if ((markers & mask) > 0) {
-                currentLine.MarkerDelete(BOOKMARK_MARKER);
+            CurrentDebugLine = -1;
+        }
+
+        private void setDebugMarker(int oldLine, int newLine)
+        {
+            const uint mask = (1 << DEBUG_MARKER);
+            if (oldLine >= 0) {
+                Line currentLine = textEditor.Lines[oldLine];
+                
+                uint oldMarkers = currentLine.MarkerGet();
+                if ((oldMarkers & mask) > 0) {
+                    currentLine.MarkerDelete(DEBUG_MARKER);
+                }
             }
-            else {
-                currentLine.MarkerAdd(BOOKMARK_MARKER);
+            if(newLine < 0) {
+                return;
+            }
+            
+            Line newL = textEditor.Lines[newLine];
+            uint newMarkers = newL.MarkerGet();
+            if ((newMarkers & mask) == 0) {
+                newL.MarkerAdd(DEBUG_MARKER);
             }
         }
+        
 
-        private void previousBookmarkMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            int lineNumber = textEditor.Lines[textEditor.CurrentLine - 1].MarkerPrevious(1 << BOOKMARK_MARKER);
-            if (lineNumber != -1)
-                textEditor.Lines[lineNumber].Goto();
-        }
+        #endregion
 
-        private void nextBookmarkMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            int lineNumber = textEditor.Lines[textEditor.CurrentLine + 1].MarkerNext(1 << BOOKMARK_MARKER);
-            if (lineNumber != -1)
-                textEditor.Lines[lineNumber].Goto();
-        }
-
-        private void clearBookmarksMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            textEditor.MarkerDeleteAll(BOOKMARK_MARKER);
-        }
-
-        #endregion Bookmarks
-
-        private void InitBookmarkMargin(ScintillaWPF ScintillaNet)
-        {
-            //TextArea.SetFoldMarginColor(true, IntToColor(BACK_COLOR));
-
-            var margin = ScintillaNet.Margins[BOOKMARK_MARGIN];
-            margin.Width = 20;
-            margin.Sensitive = true;
-            margin.Type = MarginType.Symbol;
-            margin.Mask = (1 << BOOKMARK_MARKER);
-            //margin.Cursor = MarginCursor.Arrow;
-
-            var marker = ScintillaNet.Markers[BOOKMARK_MARKER];
-            marker.Symbol = MarkerSymbol.Circle;
-            marker.SetBackColor(IntToColor(0xFF003B));
-            marker.SetForeColor(IntToColor(0x000000));
-            marker.SetAlpha(100);
-        }
-
-        private void InitCodeFolding(ScintillaWPF ScintillaNet)
-        {
-            ScintillaNet.SetFoldMarginColor(true, IntToMediaColor(BACK_COLOR));
-            ScintillaNet.SetFoldMarginHighlightColor(true, IntToMediaColor(BACK_COLOR));
-
-            // Enable code folding
-            ScintillaNet.SetProperty("fold", "1");
-            ScintillaNet.SetProperty("fold.compact", "1");
-
-            // Configure a margin to display folding symbols
-            ScintillaNet.Margins[FOLDING_MARGIN].Type = MarginType.Symbol;
-            ScintillaNet.Margins[FOLDING_MARGIN].Mask = Marker.MaskFolders;
-            ScintillaNet.Margins[FOLDING_MARGIN].Sensitive = true;
-            ScintillaNet.Margins[FOLDING_MARGIN].Width = 20;
-
-            // Set colors for all folding markers
-            for (int i = 25; i <= 31; i++) {
-                ScintillaNet.Markers[i].SetForeColor(IntToColor(BACK_COLOR)); // styles for [+] and [-]
-                ScintillaNet.Markers[i].SetBackColor(IntToColor(FORE_COLOR)); // styles for [+] and [-]
-            }
-
-            // Configure folding markers with respective symbols
-            ScintillaNet.Markers[Marker.Folder].Symbol = CODEFOLDING_CIRCULAR ? MarkerSymbol.CirclePlus : MarkerSymbol.BoxPlus;
-            ScintillaNet.Markers[Marker.FolderOpen].Symbol = CODEFOLDING_CIRCULAR ? MarkerSymbol.CircleMinus : MarkerSymbol.BoxMinus;
-            ScintillaNet.Markers[Marker.FolderEnd].Symbol = CODEFOLDING_CIRCULAR ? MarkerSymbol.CirclePlusConnected : MarkerSymbol.BoxPlusConnected;
-            ScintillaNet.Markers[Marker.FolderMidTail].Symbol = MarkerSymbol.TCorner;
-            ScintillaNet.Markers[Marker.FolderOpenMid].Symbol = CODEFOLDING_CIRCULAR ? MarkerSymbol.CircleMinusConnected : MarkerSymbol.BoxMinusConnected;
-            ScintillaNet.Markers[Marker.FolderSub].Symbol = MarkerSymbol.VLine;
-            ScintillaNet.Markers[Marker.FolderTail].Symbol = MarkerSymbol.LCorner;
-
-            // Enable automatic folding
-            ScintillaNet.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
-        }
-
-        private void InitColors(ScintillaWPF ScintillaNet)
-        {
-            ScintillaNet.CaretForeColor = Colors.Black;
-            ScintillaNet.SetSelectionBackColor(true, IntToMediaColor(0x6070CC));
-
-            //FindReplace.Indicator.ForeColor = System.Drawing.Color.DarkOrange;
-        }
-
-        private void InitNumberMargin(ScintillaWPF ScintillaNet)
-        {
-            ScintillaNet.Styles[ScintillaNET.Style.LineNumber].BackColor = IntToColor(0xCCCCCC);
-            ScintillaNet.Styles[ScintillaNET.Style.LineNumber].ForeColor = IntToColor(0x404040);
-            ScintillaNet.Styles[ScintillaNET.Style.IndentGuide].ForeColor = IntToColor(0x404040);
-            ScintillaNet.Styles[ScintillaNET.Style.IndentGuide].BackColor = IntToColor(0xCCCCCC);
-
-            var nums = ScintillaNet.Margins[NUMBER_MARGIN];
-            nums.Width = LINE_NUMBERS_MARGIN_WIDTH;
-            nums.Type = MarginType.Number;
-            nums.Sensitive = true;
-            nums.Mask = 0;
-
-            ScintillaNet.MarginClick += TextArea_MarginClick;
-        }
-
-        private void InitSyntaxColoring(ScintillaWPF ScintillaNet)
-        {
-            // Configure the default style
-            ScintillaNet.StyleResetDefault();
-            ScintillaNet.Styles[ScintillaNET.Style.Default].Font = "Consolas";
-            ScintillaNet.Styles[ScintillaNET.Style.Default].Size = 13;
-            ScintillaNet.Styles[ScintillaNET.Style.Default].BackColor = IntToColor(0xFFFFFF);
-            ScintillaNet.Styles[ScintillaNET.Style.Default].ForeColor = IntToColor(0x202020);
-            ScintillaNet.StyleClearAll();
-
-            ScintillaNet.Styles[ScintillaNET.Style.BraceLight].BackColor = System.Drawing.Color.LightGray;
-            ScintillaNet.Styles[ScintillaNET.Style.BraceLight].ForeColor = System.Drawing.Color.BlueViolet;
-            ScintillaNet.Styles[ScintillaNET.Style.BraceBad].ForeColor = System.Drawing.Color.Red;
-
-            // Configure the CPP (C#) lexer styles
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Identifier].ForeColor = IntToColor(0x202122);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Comment].ForeColor = IntToColor(0xBD758B);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.CommentLine].ForeColor = IntToColor(0x40BF57);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.CommentDoc].ForeColor = IntToColor(0x2FAE35);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Number].ForeColor = IntToColor(0x0F20F6);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.String].ForeColor = IntToColor(0xED7722);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Character].ForeColor = IntToColor(0xE95454);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Preprocessor].ForeColor = IntToColor(0x8AAFEE);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Operator].ForeColor = IntToColor(0x000000);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Regex].ForeColor = IntToColor(0xff00ff);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.CommentLineDoc].ForeColor = IntToColor(0x77A7DB);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Word].ForeColor = IntToColor(0xAA2063);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Word2].ForeColor = IntToColor(0xAA2063);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.CommentDocKeyword].ForeColor = IntToColor(0xB3D991);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.CommentDocKeywordError].ForeColor = IntToColor(0xFF0000);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.GlobalClass].ForeColor = IntToColor(0xCC4C07);
-            ScintillaNet.Styles[ScintillaNET.Style.Cpp.Default].ForeColor = IntToColor(0x202122);
-
-            ScintillaNet.Lexer = Lexer.Cpp;
-
-            ScintillaNet.SetKeywords(0, "class extends implements import interface new case do while else if for in switch throw get set function var try catch finally while with default break continue delete return each const namespace package include use is as instanceof typeof author copy default deprecated eventType example exampleText exception haxe inheritDoc internal link mtasc mxmlc param private return see serial serialData serialField since throws usage version langversion playerversion productversion dynamic private public partial static intrinsic internal native override protected AS3 final super this arguments null Infinity NaN undefined true false abstract as base bool break by byte case catch char checked class const continue decimal default delegate do double descending explicit event extern else enum false finally fixed float for foreach from goto group if implicit in int interface internal into is lock long new null namespace object operator out override orderby params private protected public readonly ref return switch struct sbyte sealed short sizeof stackalloc static string select this throw true try typeof uint ulong unchecked unsafe ushort using var virtual volatile void while where yield");
-            ScintillaNet.SetKeywords(1, "void Null ArgumentError arguments Array Boolean Class Date DefinitionError Error EvalError Function int Math Namespace Number Object RangeError ReferenceError RegExp SecurityError String SyntaxError TypeError uint XML XMLList Boolean Byte Char DateTime Decimal Double Int16 Int32 Int64 IntPtr SByte Single UInt16 UInt32 UInt64 UIntPtr Void Path File System Windows Forms ScintillaNET");
-        }
 
         /// <summary>
-        /// Converts a Win32 colour to a Drawing.Color
+        /// 点击边栏时。目前主要用来加断点。
         /// </summary>
-        public static System.Drawing.Color IntToColor(int rgb)
-        {
-            return System.Drawing.Color.FromArgb(255, (byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
-        }
-
-        /// <summary>
-        /// Converts a Win32 colour to a Media Color
-        /// </summary>
-        public static Color IntToMediaColor(int rgb)
-        {
-            return Color.FromArgb(255, (byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
-        }
-
-        private void MyFindReplace_KeyPressed(object sender, System.Windows.Forms.KeyEventArgs e)
-        {
-            ScintillaNet_KeyDown(sender, e);
-        }
-
-
-
-        private void SetScintillaToCurrentOptions()
-        {
-            ScintillaWPF ScintillaNet = textEditor;
-            ScintillaNet.KeyDown += ScintillaNet_KeyDown;
-
-            // INITIAL VIEW CONFIG
-            ScintillaNet.WrapMode = WrapMode.None;
-            ScintillaNet.IndentationGuides = IndentView.LookBoth;
-
-            // STYLING
-            InitColors(ScintillaNet);
-            InitSyntaxColoring(ScintillaNet);
-
-            // NUMBER MARGIN
-            InitNumberMargin(ScintillaNet);
-
-            // BOOKMARK MARGIN
-            InitBookmarkMargin(ScintillaNet);
-
-            // CODE FOLDING MARGIN
-            InitCodeFolding(ScintillaNet);
-
-            // DRAG DROP
-            // TODO - Enable InitDragDropFile
-            //InitDragDropFile();
-
-            // INIT HOTKEYS
-            // TODO - Enable InitHotkeys
-            //InitHotkeys(ScintillaNet);
-
-            // Turn on line numbers?
-
-
-            // Show EOL?
-            ScintillaNet.ViewEol = false;
-
-            // Set the zoom
-            ScintillaNet.Zoom = _zoomLevel;
-        }
-
-        private void ScintillaNet_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
-        {
-
-        }
-
         private void TextArea_MarginClick(object sender, MarginClickEventArgs e)
         {
-            ScintillaNET.WPF.ScintillaWPF TextArea = textEditor;
+            const uint mask = (1 << BREAKPOINT_MARKER);
 
-            if (e.Margin == BOOKMARK_MARGIN) {
-                // Do we have a marker for this line?
-                const uint mask = (1 << BOOKMARK_MARKER);
-                var line = TextArea.Lines[TextArea.LineFromPosition(e.Position)];
+            if (e.Margin == BREAKPOINT_MARGIN || e.Margin == NUMBER_MARGIN) {
+                
+                var line = textEditor.Lines[textEditor.LineFromPosition(e.Position)];
                 if ((line.MarkerGet() & mask) > 0) {
-                    // Remove existing bookmark
-                    line.MarkerDelete(BOOKMARK_MARKER);
+                    Debug.WriteLine(line.MarkerGet());
+                    line.MarkerDelete(BREAKPOINT_MARKER);
+                    editorDelegate?.didAddOrRemoveBreakPoint(this, false, line.Index + 1);
                 }
                 else {
-                    // Add bookmark
-                    line.MarkerAdd(BOOKMARK_MARKER);
+                    line.MarkerAdd(BREAKPOINT_MARKER);
+                    editorDelegate?.didAddOrRemoveBreakPoint(this, true, line.Index + 1);
                 }
+                editorDelegate?.breakPointChanged(this, GetBreakPoints());
             }
         }
 
-        //在此处执行自动补全
+        /// <summary>
+        /// 获取断点。
+        /// </summary>
+        public List<int> GetBreakPoints()
+        {
+            const uint mask = (1 << BREAKPOINT_MARKER);
+
+            List<int> points = new List<int>();
+            foreach (Line l in textEditor.Lines) {
+                if ((l.MarkerGet() & mask) > 0) {
+                    points.Add(l.Index + 1);
+                }
+            }
+            return points;
+        }
+
+        private void CharAdded()
+        {
+            
+        }
+
+        #region 自动补全
         private void textEditor_CharAdded(object sender, CharAddedEventArgs e)
         {
-            //InsertMatchedChars(e);
-            //return;
             int oldPos = textEditor.SelectionStart;
             
             switch (e.Char) {
@@ -345,17 +343,30 @@ namespace IDE_UI.Controls
                     textEditor.SelectionStart = oldPos;
                     break;
                 case '\n':
-                    if(textEditor.Text[textEditor.SelectionStart - 3] == '{') {
-                        textEditor.Text = textEditor.Text.Insert(textEditor.SelectionStart - 2, "\r\n    ");
-                        textEditor.SelectionStart = oldPos + 4;
+                    if (textEditor.SelectionStart - 3 >= 0 && textEditor.Text[textEditor.SelectionStart - 3] == '{') {
+
+                        textEditor.Text = textEditor.Text.Insert(textEditor.SelectionStart - 2, "\r\n");
+                        textEditor.SelectionStart = oldPos;
+                        //Debug.WriteLine(textEditor.CurrentLine);
+                        var indent = textEditor.Lines[textEditor.CurrentLine].Indentation = textEditor.Lines[textEditor.CurrentLine - 1].Indentation + 4;
+                        textEditor.Lines[textEditor.CurrentLine + 1].Indentation = textEditor.Lines[textEditor.CurrentLine - 1].Indentation;
+                        textEditor.SelectionStart = oldPos + indent;
+                        //Debug.WriteLine(textEditor.CurrentLine);
+
                     }
-                    
+                    //否则，维持上一行的缩进。
+                    else {
+                        var indent = textEditor.Lines[textEditor.CurrentLine].Indentation = textEditor.Lines[textEditor.CurrentLine - 1].Indentation;
+                        textEditor.SelectionStart += indent;
+                    }
+
                     break;
                 default:
                     performAutoComplete();
                     break;
             }
-            Debug.WriteLine(textEditor.SelectionStart);
+            CharAdded();
+            editorDelegate?.charAdded(this, e);
         }
 
         private void performAutoComplete()
@@ -365,14 +376,50 @@ namespace IDE_UI.Controls
 
             var lenEntered = currentPos - wordStartPos;
             if (lenEntered > 0) {
-                if (!textEditor.AutoCActive)
-                    textEditor.AutoCShow(lenEntered, "break " + "bool int string write read" +
-                        " continue do else void" +
-                        " false for if" +
-                        " return" +
-                        " true" +
-                        " while");
+                if (true) {
+                    string tokens = keyWords;
+                    textEditor.AutoCShow(lenEntered, tokens);
+                }
+
             }
+        }
+
+        private string keyWords =
+            "break bool int string write real read continue do else void false for if return true while test";
+        
+
+        private string getUserTokens()
+        {
+            if(string.IsNullOrEmpty(textEditor.Text)) {
+                return "";
+            }
+            ICharStream stream = CharStreams.fromstring(textEditor.Text);
+            ITokenSource lexer = new CMMLexer(stream);
+            ITokenStream tokens = new CommonTokenStream(lexer);
+
+            StringBuilder sb = new StringBuilder();
+            ISet<string> set = new HashSet<string>();
+
+            IToken token = tokens.TokenSource.NextToken();
+            while (token != null && token.Text != "<EOF>") {
+                
+                if(token.Type == 41) {
+                    set.Add(token.Text);
+                }
+                token = tokens.TokenSource.NextToken();
+            }
+
+            int count = set.Count;
+            int c = 0;
+            foreach(string s in set) {
+                
+                sb.Append(" " + s);
+                c++;
+                if(c >= count - 1) {
+                    break;
+                }
+            }
+            return sb.ToString();
         }
 
         private static bool IsBrace(int c)
@@ -429,6 +476,12 @@ namespace IDE_UI.Controls
             }
         }
 
+        #endregion
+
+
+        /// <summary>
+        /// 暂时没用
+        /// </summary>
         private void InsertMatchedChars(CharAddedEventArgs e)
         {
             var caretPos = textEditor.CurrentPosition;
@@ -497,5 +550,7 @@ namespace IDE_UI.Controls
                     break;
             }
         }
+
+
     }
 }

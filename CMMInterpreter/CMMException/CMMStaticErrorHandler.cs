@@ -6,44 +6,37 @@ using System.Text;
 
 namespace CMMInterpreter.CMMException
 {
+    //静态错误检查类，只能检查词法语法错误
    public class CMMStaticErrorHandler
     {
-        /*
-         * 调用实例：
-         * CMMStaticErrorHandler handler=new CMMStaticErrorHandler(IOutputstream对象);
-         * ErroInfo erroInfo=handler.StaticError(输入字符);存在错误返回一个ErrorInfo对象，否则返回null；
-         */
         public IOutputStream outputStream;
-        public CMMStaticErrorHandler(IOutputStream outputStream)
+        public IErrorShow error;
+        public CMMStaticErrorHandler(IOutputStream outputStream,IErrorShow errorShow)
         {
             this.outputStream = outputStream;
+            this.error = errorShow;
         }
-        public ErrorInfo StaticError(String input)
+        public void StaticError(String input)
         {
-            try{
-            ICharStream stream = CharStreams.fromstring(input);
-            ITokenSource lexer = new CMMLexer(stream);
-            ITokenStream tokens = new CommonTokenStream(lexer);
-            CMMParser parser = new CMMParser(tokens);
-            parser.BuildParseTree = true;
-            parser.RemoveErrorListeners();//移除默认监听器
-            CMMErrorListener errorListener = new CMMErrorListener();
-            errorListener.outputStream = this.outputStream;
-            parser.AddErrorListener(errorListener);//添加自定义错误监听器
-            CMMErrorStrategy errorStrategy = new CMMErrorStrategy();
-            parser.ErrorHandler = errorStrategy;//添加自定义错误策略
-            parser.statements();
-                return null;
+            try {
+                ICharStream stream = CharStreams.fromstring(input);
+                ITokenSource lexer = new ExceptionLexer(stream, outputStream, error);
+                ITokenStream tokens = new CommonTokenStream(lexer);
+                CMMParser parser = new CMMParser(tokens);
+                parser.BuildParseTree = true;
+                parser.RemoveErrorListeners();
+                CMMErrorListener errorListener = new CMMErrorListener();
+                errorListener.outputStream = outputStream;
+                errorListener.errorShow = error;
+                parser.AddErrorListener(errorListener);
+                CMMErrorStrategy errorStrategy = new CMMErrorStrategy();
+                parser.ErrorHandler = errorStrategy;
+                parser.statements();
             }
-            catch (ErrorInfo e1)
-            {
-                return e1;
+            catch (Exception e1) {
+                outputStream?.Print(e1.Message);
             }
-            catch (Exception)
-            {
-                return null;
-            }
-            
+
         }
     }
 }

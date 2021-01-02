@@ -1,0 +1,25 @@
+int add(int a,int b){
+	int z = a + b;
+	return z;
+}
+int sub(int a,int b){
+	int z = a - b;
+	return z;
+}
+int a = 10;
+int b = 20;
+int c = 30;
+int d = 40;
+int e = 50;
+int f = 70;
+int g = add(a, b);
+int h = sub(a, b);
+write(g);
+write(h);
+
+/*  
+* Expected Output:
+* 30
+* -10
+* program exit
+*/

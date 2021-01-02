@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
+
 
 namespace IDE_UI.Helper
 {
@@ -79,6 +75,28 @@ namespace IDE_UI.Helper
             }
         }
         private bool debugWindowShowed = false;
+
+        public bool ErrorWindowShowed {
+            get {
+                return errorWindowShowed;
+            }
+            set {
+                errorWindowShowed = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ErrorWindowShowed"));
+            }
+        }
+        private bool errorWindowShowed = false;
+
+        public bool TreeWindowShowed {
+            get {
+                return treeWindowShowed;
+            }
+            set {
+                treeWindowShowed = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("TreeWindowShowed"));
+            }
+        }
+        private bool treeWindowShowed = false;
 
     }
 }

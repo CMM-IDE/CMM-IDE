@@ -3,8 +3,7 @@
                     xmlns:AduSkinConverter="clr-namespace:AduSkin.Controls.Converter;assembly=AduSkin"
                     xmlns:converter="clr-namespace:AduSkin.Demo.Converter">
     <!--转换器-->
-    <AduSkinConverter:BoolToVisibility x:Key="BoolToVisibility"/>
+
     <BooleanToVisibilityConverter x:Key="Boolean2VisibilityConverter"/>
     
-
 </ResourceDictionary>
