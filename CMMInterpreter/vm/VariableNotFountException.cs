@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CMMInterpreter.CMMException;
+using System;
 using System.Runtime.Serialization;
 
 namespace CMMInterpreter.vm
@@ -7,32 +8,20 @@ namespace CMMInterpreter.vm
     {
         private Antlr4.Runtime.ParserRuleContext _context;
         private string _variable;
+        private ErrorInfo _errorInfo;
 
-        public VariableNotFountException()
-        {
-        }
-
-        public VariableNotFountException(string message) : base(message)
-        {
-        }
-
-        public VariableNotFountException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
 
         public VariableNotFountException(string variable, Antlr4.Runtime.ParserRuleContext context)
         {
             this._context = context;
             this._variable = variable;
+            this._errorInfo = new ErrorInfo(context.Start.Line, context.Start.Column, this.ToString());
+
         }
 
-        protected VariableNotFountException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-        
         public string ToString()
         {
-            return _variable + " 没有定义。起始位置为 " + _context.Start + " 结束位置为：" + _context.Stop;
+            return _context.Start.Line + "行" + _context.Start.Column + "列变量"+_variable + " 没有定义";
         }
     }
 }

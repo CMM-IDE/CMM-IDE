@@ -516,7 +516,7 @@ namespace CMMInterpreter.vm
                 // 直接对已经定义的普通变量进行赋值
                 if (curLocalVariablesTable.ContainsKey(context.GetChild(0).GetText()))
                 {
-                    throw new VariableNotFountException();
+                    throw new VariableRedefinedException(context.GetChild(0).GetText(), context);
                 }
                 curLocalVariablesTable.Add(context.GetChild(0).GetText(), curLocalVariablesTableLength);
                 curLocalVariablesTableLength++;
@@ -717,20 +717,22 @@ namespace CMMInterpreter.vm
             // 访问expression，将执行的结果压入栈中
             // addr_expression是expression（比较）的地址
             int addr_expression = codes.Count;
+            IntermediateCode code0, code1=null;
             if (context.expression() != null)
             {
                 Visit(context.expression());
+
+
+                // 如果expression的结果是真，才会访问
+                // 这里的0是数字，不是索引，要加上范围！！
+                code0 = new IntermediateCode(0, InstructionType.push, context.Start.Line);
+                // 如果是0的话，就直接跳转到codeBlock之后，并且释放局部变量。目的地址待回填
+                code1 = new IntermediateCode(InstructionType.je, context.Start.Line);
+
+                // addr0是codeBlock的起始地址
+                codes.Add(code0);
+                codes.Add(code1);
             }
-
-            // 如果expression的结果是真，才会访问
-            // 这里的0是数字，不是索引，要加上范围！！
-            IntermediateCode code0 = new IntermediateCode(0, InstructionType.push, context.Start.Line);
-            // 如果是0的话，就直接跳转到codeBlock之后，并且释放局部变量。目的地址待回填
-            IntermediateCode code1 = new IntermediateCode(InstructionType.je, context.Start.Line);
-
-            // addr0是codeBlock的起始地址
-            codes.Add(code0);
-            codes.Add(code1);
             int addr0 = codes.Count;
             // 访问codeBlock
             if (context.codeBlock() != null)
@@ -745,7 +747,8 @@ namespace CMMInterpreter.vm
 
             // addr2是执行完codeBlock，而且判断确定不跳转的代码
             int addr2 = codes.Count;
-            code1.setOperant(addr2);
+            if(code1 != null)
+                code1.setOperant(addr2);
             // 替换所有出现的continue break，代码的范围是addr0-add2， 更新操作的代码在addr1
             replaceBreakAndConti(codes, addr0, addr2 - 1, addr1);
             //局部变量表大于curSize的部分全部删掉！

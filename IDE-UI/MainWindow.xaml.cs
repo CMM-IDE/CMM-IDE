@@ -183,6 +183,11 @@ namespace IDE_UI
                 Print(exp.ToString());
                 intermediateCode = null;
             }
+            catch(VariableRedefinedException exp)
+            {
+                Print(exp.ToString());
+                intermediateCode = null;
+            }
 
             VirtualMachine vm = new VirtualMachine();
             vm.register(this);
