@@ -31,6 +31,7 @@ namespace IDE_UI
         }
 
         #region 属性
+        VirtualMachine vm;
 
         /// <summary>
         /// 中间代码面板
@@ -122,10 +123,17 @@ namespace IDE_UI
             if(visitor == null) {
                 return;
             }
+            
             VirtualMachine vm = new VirtualMachine();
+            this.vm = vm;
             vm.register(this);
-            vm.interpret(visitor.codes);
+            vm.needInput += handleNeedInput;
 
+            runnerThread = new Thread(() =>
+            {
+                vm.interpret(visitor.codes);
+            });
+            runnerThread.Start();
         }
 
 

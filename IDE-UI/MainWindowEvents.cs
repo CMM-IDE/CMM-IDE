@@ -47,6 +47,7 @@ namespace IDE_UI
                 var text = consoleTextBox.Text.Substring(consoleTextBox.Text.Length - inputLength - 1, inputLength - 1);
                 isInputMode = false;
                 inputLength = 0;
+                vm.buffer = text;
                 runnerThread.Resume();
                 consoleTextBox.IsReadOnly = true;
             }

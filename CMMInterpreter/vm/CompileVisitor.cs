@@ -841,8 +841,38 @@ namespace CMMInterpreter.vm
          */
         public override object VisitReadStatement([NotNull] CMMParser.ReadStatementContext context)
         {
-            IntermediateCode code = new IntermediateCode(InstructionType.read, context.Start.Line);
-            codes.Add(code);
+            CMMParser.LeftValueContext[] leftValueContexts = context.leftValue();
+            foreach(CMMParser.LeftValueContext leftValueContext in leftValueContexts)
+            {
+                string variableName = leftValueContext.GetChild(0).GetText();
+                Boolean result = curLocalVariablesTable.TryGetValue(variableName, out int address);
+                if (!result)
+                {
+                    throw new VariableNotFountException(variableName, context);
+                }
+                if (leftValueContext.ChildCount == 1)
+                {
+                    
+                    codes.Add(new IntermediateCode(InstructionType.read, context.Start.Line));
+                    codes.Add(new IntermediateCode(address, InstructionType.pop, context.Start.Line));
+                }
+                else
+                {
+                    codes.Add(new IntermediateCode(InstructionType.read, context.Start.Line));
+
+                    // 计算数组地址
+                    codes.Add(new IntermediateCode(address, InstructionType.push, context.Start.Line));
+                    Visit(context.GetChild(2));
+                    codes.Add(new IntermediateCode(InstructionType.add, context.Start.Line));
+                    // 保存地址的值
+                    codes.Add(new IntermediateCode(curLocalVariablesTableLength, InstructionType.pop, context.Start.Line));
+                    // 指针寻址赋值
+                    codes.Add(new IntermediateCode("(" + curLocalVariablesTableLength.ToString() + ")", InstructionType.pop, context.Start.Line));
+
+                    
+                }
+            }
+            
             return null;
         }
 

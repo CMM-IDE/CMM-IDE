@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace CMMInterpreter.vm
 {
@@ -76,6 +77,12 @@ namespace CMMInterpreter.vm
         /// </summary>
         public event Action RunFinish;
 
+        // 需要输入事件
+        public event Action needInput;
+
+        // 输入缓冲区
+        public string buffer = null;
+
         /// <summary>
         /// 程序计数器
         /// </summary>
@@ -99,6 +106,8 @@ namespace CMMInterpreter.vm
             mainWindowListener = listener;
         }
 
+        
+
         /// <summary>
         /// 解释执行代码
         /// </summary>
@@ -115,7 +124,7 @@ namespace CMMInterpreter.vm
             stack.Push(currentStackFrame);
 
             codesArray = codes;
-            
+            printCodes();
             for (; pc < codes.Count; pc++)
             {
                 IntermediateCode code = codesArray[pc];
@@ -270,8 +279,8 @@ namespace CMMInterpreter.vm
         /// <param name="pc">程序计数器</param>
         void sub(StackFrame frame, int pc)
         {
-            double op1 = (double)frame.popFromOperantStack();
-            double op2 = (double)frame.popFromOperantStack();
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
             frame.pushToOperantStack(op2 - op1);
         }
 
@@ -281,8 +290,8 @@ namespace CMMInterpreter.vm
         /// <param name="frame">当前栈帧</param>
         void mul(StackFrame frame)
         {
-            double op1 = (double)frame.popFromOperantStack();
-            double op2 = (double)frame.popFromOperantStack();
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
             frame.pushToOperantStack(op2 * op1);
         }
 
@@ -292,8 +301,8 @@ namespace CMMInterpreter.vm
         /// <param name="frame">当前栈帧</param>
         void div(StackFrame frame)
         {
-            double op1 = (double)frame.popFromOperantStack();
-            double op2 = (double)frame.popFromOperantStack();
+            double op1 = Convert.ToDouble(frame.popFromOperantStack());
+            double op2 = Convert.ToDouble(frame.popFromOperantStack());
             frame.pushToOperantStack(op2 / op1);
         }
 
@@ -303,7 +312,7 @@ namespace CMMInterpreter.vm
         /// <param name="frame">当前栈帧</param>
         void neg(StackFrame frame)
         {
-            double op = (double)frame.popFromOperantStack();
+            double op = Convert.ToDouble(frame.popFromOperantStack());
             frame.pushToOperantStack(-op);
         }
 
@@ -543,7 +552,10 @@ namespace CMMInterpreter.vm
         void read(StackFrame frame)
         {
             // 读取一个输入压到栈顶
-            // 
+            mainWindowListener.write("请输入一个整数:");
+            needInput?.Invoke();
+            Thread.CurrentThread.Suspend();
+            frame.pushToOperantStack((Object)buffer);
         }
 
         /// <summary>
