@@ -5,6 +5,7 @@ int add(int a, int b){
 int i = 10, j = 15;
 int sum = add(i, j);
 write(sum); 
+write();
 
 /* 
 * Expected Output:

@@ -1,0 +1,15 @@
+﻿for(;;)
+{
+    int a = 1;
+    if(a >= 1)
+    {
+        write(a);
+        break;
+     }
+}
+
+/*  
+* Expected Output:
+* 1
+* program exit
+*/

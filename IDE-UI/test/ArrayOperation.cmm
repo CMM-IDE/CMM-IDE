@@ -1,0 +1,21 @@
+int a[5] = [0, 0, 0, 0, 0];
+for(int i = 0; i < 5; i = i + 1){
+    write(a[i]); 
+}
+write();
+a[0] = 12 + 3;
+a[1] = 12 - 3;
+a[2] = 12 * 3;
+a[3] = 12 / 3;
+a[4] = (a[0] + a[1]) * (a[2] / a[3]);
+for(int i = 0; i < 5; i = i + 1){
+    write(a[i]); 
+}
+write();
+
+/*  
+* Expected Output:
+* 0 0 0 0 0
+* 15 9 36 4 216
+* program exit
+*/
