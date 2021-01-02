@@ -21,7 +21,6 @@ namespace IDE_UI
 
         private void loadSample_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            
             textEditor.Text = "int a = 10;\nwhile (a <> 0) {\n\ta = a - 1;\n\twrite(a);\n}";
             if(isDebug) {
                 btnStop_Click(null, null);
@@ -127,6 +126,9 @@ namespace IDE_UI
 
         private GridLength rememberedHeight = new GridLength(0);
 
+        /// <summary>
+        /// 很丑陋，如果有更多面板就要用数组来管理了。
+        /// </summary>
         private void extraPanelButton_Click(object sender, RoutedEventArgs e)
         {
             var btn = sender as Button;
@@ -176,6 +178,7 @@ namespace IDE_UI
                         State.ConsoleShowed = false;
                         State.DebugWindowShowed = false;
                         State.ErrorWindowShowed = false;
+                        drawTreePanel.setNeedUpdate();
                         extraWindowPresenter.Content = drawTreePanel;
                     }
                     break;
@@ -233,18 +236,11 @@ namespace IDE_UI
 
         private void IdleExec_timeOutAction()
         {
-            Dispatcher.Invoke(() => {
-
-            });
             performCheck();
         }
 
         public void breakPointChanged(CMMCodeEditor sender, List<int> points)
         {
-            if(!isDebug || cmmDebuger == null) {
-                return;
-            }
-            
         }
 
         public void didAddOrRemoveBreakPoint(CMMCodeEditor sender, bool addOrRemove, int breakPoint)
@@ -262,7 +258,6 @@ namespace IDE_UI
 
         public void charAdded(CMMCodeEditor sender, CharAddedEventArgs e)
         {
-            Debug.WriteLine("charAdded");
             State.FileModified = true;
             idleExec.MarkActive();
         }
@@ -305,6 +300,61 @@ namespace IDE_UI
                     }
                 });
             });
+        }
+
+        private void SelectAllItem_Click(object sender, RoutedEventArgs e)
+        {
+            textEditor.textEditor.SelectAll();
+        }
+
+        private void CutItem_Click(object sender, RoutedEventArgs e)
+        {
+            textEditor.textEditor.Cut();
+        }
+
+        private void CopyItem_Click(object sender, RoutedEventArgs e)
+        {
+            textEditor.textEditor.Copy();
+        }
+
+        private void PasteItem_Click(object sender, RoutedEventArgs e)
+        {
+            textEditor.textEditor.Paste();
+        }
+
+        private void UndoItem_Click(object sender, RoutedEventArgs e)
+        {
+            textEditor.textEditor.Undo();
+        }
+
+        private void RedoItem_Click(object sender, RoutedEventArgs e)
+        {
+            textEditor.textEditor.Redo();
+        }
+
+
+        private void continueRuning_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug) {
+                cmmDebuger.Continue();
+                debugThread.Resume();
+            }
+        }
+
+        private void stepOver_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug) {
+                cmmDebuger.StepOver();
+                debugThread.Resume();
+            }
+        }
+
+        private void stepInto_Click(object sender, RoutedEventArgs e)
+        {
+            if (isDebug) {
+                cmmDebuger.StepInto();
+                debugThread.Resume();
+            }
         }
     }
 }

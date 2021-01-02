@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 
 namespace IDE_UI
 {
@@ -26,8 +21,6 @@ namespace IDE_UI
         public static RoutedCommand continueCommand = new RoutedCommand();
         public static RoutedCommand stepOverCommand = new RoutedCommand();
         public static RoutedCommand stepIntoCommand = new RoutedCommand();
-
-
 
     }
 }

@@ -29,5 +29,10 @@ namespace IDE_UI.Controls
             }
         }
         private Graph graph;
+
+        public void setNeedUpdate()
+        {
+            graphControl.UpdateLayout();
+        }
     }
 }

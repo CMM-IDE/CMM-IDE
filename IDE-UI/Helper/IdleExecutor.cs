@@ -7,13 +7,13 @@ using System.Timers;
 
 namespace IDE_UI.Helper
 {
-    class IdleExec
+    class IdleExecutor
     {
         public event Action timeOutAction;
 
         private Timer timer;
 
-        private int ms;
+        private int idleTimeInMS;
 
         public void MarkActive()
         {
@@ -26,14 +26,14 @@ namespace IDE_UI.Helper
             };
             timer.Elapsed += Timer_Elapsed;
             timer.AutoReset = false;
-            timer.Interval = ms; //执行间隔时间,单位为毫秒
+            timer.Interval = idleTimeInMS; //执行间隔时间,单位为毫秒
             timer.Start();
             
         }
 
-        public IdleExec(int sec)
+        public IdleExecutor(int sec)
         {
-            this.ms = sec * 1000;
+            this.idleTimeInMS = sec * 1000;
         }
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)

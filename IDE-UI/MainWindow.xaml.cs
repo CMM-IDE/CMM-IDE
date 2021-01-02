@@ -31,11 +31,16 @@ namespace IDE_UI
             init();
         }
 
+        #region 属性
+
         /// <summary>
         /// 中间代码面板
         /// </summary>
         private CodeWindow codeWindow = new CodeWindow();
 
+        /// <summary>
+        /// 暂时存放中间代码
+        /// </summary>
         private string intermediateCode;
 
         /// <summary>
@@ -43,6 +48,9 @@ namespace IDE_UI
         /// </summary>
         private TextBox consoleTextBox;
 
+        /// <summary>
+        /// 仅仅用于提示信息的一个面板。其实完全没必要，但比较赶，所以用了丑陋的做法
+        /// </summary>
         private HintControl hintControl = new HintControl();
 
         /// <summary>
@@ -70,22 +78,37 @@ namespace IDE_UI
         /// </summary>
         private int inputLength = 0;
 
-
         /// <summary>
         /// IDE状态信息
         /// </summary>
         public IDEState State { get; set; } = new IDEState();
 
+        /// <summary>
+        /// 调试器
+        /// </summary>
         private CMMDebuger cmmDebuger;
 
+        /// <summary>
+        /// 调试代码的线程
+        /// </summary>
         private Thread debugThread;
 
+        /// <summary>
+        /// 是否处于调试模式
+        /// </summary>
         private bool isDebug = false;
 
+        /// <summary>
+        /// 运行代码的线程
+        /// </summary>
         private Thread runnerThread = null;
 
-        private IdleExec idleExec = new IdleExec(2);
+        /// <summary>
+        /// 用于在空闲一段时间后，执行某些操作的定时器类
+        /// </summary>
+        private IdleExecutor idleExec = new IdleExecutor(2);
 
+        #endregion
 
         /// <summary>
         /// 准备运行代码
@@ -102,16 +125,13 @@ namespace IDE_UI
 
             var listener = new CMMErrorListener();
 
-
             ICharStream stream = CharStreams.fromstring(input);
             ITokenSource lexer = new ExceptionLexer(stream, listener);
             ITokenStream tokens = new CommonTokenStream(lexer);
             CMMParser parser = new CMMParser(tokens);
 
-            Debug.WriteLine(tokens.Size);
             parser.RemoveErrorListeners();
 
-            
             parser.AddErrorListener(listener);
             parser.ErrorHandler = new CMMErrorStrategy();
 
@@ -128,6 +148,8 @@ namespace IDE_UI
                 textEditor.Errors = listener.errors;
                 return null;
             }
+            var graph = new ParseTreeGrapher().CreateGraph(tree, CMMParser.ruleNames);
+            drawTreePanel.Graph = graph;
             return tree;
         }
 
@@ -146,10 +168,6 @@ namespace IDE_UI
             }
 
             consoleTextBox.Text = "";
-
-            var graph = new ParseTreeGrapher().CreateGraph(tree, CMMParser.ruleNames);
-            drawTreePanel.Graph = graph;
-
             var visitor = new CompileVisitor();
             try {
                 visitor.generateCodes(tree);
@@ -177,7 +195,6 @@ namespace IDE_UI
         /// </summary>
         private void prepareForDebug()
         {
-
             if (!State.DebugWindowShowed) {
                 extraPanelButton_Click(btnDebugWindow, null);
             }
@@ -198,9 +215,6 @@ namespace IDE_UI
             }
 
             prepareForDebug();
-
-            var graph = new ParseTreeGrapher().CreateGraph(tree, CMMParser.ruleNames);
-            drawTreePanel.Graph = graph;
 
             var visitor = new CompileVisitor();
             try {
@@ -255,8 +269,6 @@ namespace IDE_UI
         private void HandlerDebug()
         {
             Dispatcher.Invoke(() => {
-                // 获取行号信息
-                //consoleTextBox.Text += "\nCurrentLine: " + cmmDebuger.GetCurrentLine().ToString() + "\n";
                 
                 List<FrameInformation> informations = cmmDebuger.GetCurrentFrame();
                 List<StackFrameInformation> stackFrames = cmmDebuger.GetStackFrames();
@@ -357,59 +369,5 @@ namespace IDE_UI
             Print(o.ToString() + "\n");
         }
 
-        private void SelectAllItem_Click(object sender, RoutedEventArgs e)
-        {
-            textEditor.textEditor.SelectAll();
-        }
-
-        private void CutItem_Click(object sender, RoutedEventArgs e)
-        {
-            textEditor.textEditor.Cut();
-        }
-
-        private void CopyItem_Click(object sender, RoutedEventArgs e)
-        {
-            textEditor.textEditor.Copy();
-        }
-
-        private void PasteItem_Click(object sender, RoutedEventArgs e)
-        {
-            textEditor.textEditor.Paste();
-        }
-
-        private void UndoItem_Click(object sender, RoutedEventArgs e)
-        {
-            textEditor.textEditor.Undo();
-        }
-
-        private void RedoItem_Click(object sender, RoutedEventArgs e)
-        {
-            textEditor.textEditor.Redo();
-        }
-
-
-        private void continueRuning_Click(object sender, RoutedEventArgs e)
-        {
-            if(isDebug) {
-                cmmDebuger.Continue();
-                debugThread.Resume();
-            }
-        }
-
-        private void stepOver_Click(object sender, RoutedEventArgs e)
-        {
-            if (isDebug) {
-                cmmDebuger.StepOver();
-                debugThread.Resume();
-            }
-        }
-
-        private void stepInto_Click(object sender, RoutedEventArgs e)
-        {
-            if (isDebug) {
-                cmmDebuger.StepInto();
-                debugThread.Resume();
-            }
-        }
     }
 }

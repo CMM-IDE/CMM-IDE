@@ -9,6 +9,9 @@ using System.Windows;
 
 namespace IDE_UI.Helper
 {
+    /// <summary>
+    /// 用于获取屏幕缩放比例的类。
+    /// </summary>
     public static class WindowsMonitorAPI
     {
         private const string User32 = "user32.dll";

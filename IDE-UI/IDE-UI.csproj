@@ -185,23 +185,23 @@
     <Compile Include="DrawTreeGraph\ParseTreeGrapher.cs" />
     <Compile Include="Helper\IDEState.cs" />
     <Compile Include="Helper\FileHelper.cs" />
-    <Compile Include="Helper\IdleExec.cs" />
+    <Compile Include="Helper\IdleExecutor.cs" />
     <Compile Include="Helper\ScreenHelper.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Style\BaseStyle.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+      <Generator>XamlIntelliSenseFileGenerator</Generator>
     </Page>
     <Page Include="Style\Converter.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+      <Generator>XamlIntelliSenseFileGenerator</Generator>
     </Page>
     <Page Include="Style\ShowControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+      <Generator>XamlIntelliSenseFileGenerator</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>

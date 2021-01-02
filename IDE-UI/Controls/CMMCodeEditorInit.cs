@@ -88,8 +88,6 @@ namespace IDE_UI.Controls
         {
             ScintillaNet.CaretForeColor = Colors.Black;
             ScintillaNet.SetSelectionBackColor(true, IntToMediaColor(0x6070CC));
-
-            //FindReplace.Indicator.ForeColor = System.Drawing.Color.DarkOrange;
         }
 
         private void InitNumberMargin(ScintillaWPF ScintillaNet)

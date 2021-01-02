@@ -10,7 +10,6 @@ using System.Windows.Media;
 using IDE_UI.Helper;
 using Antlr4.Runtime;
 using System.Text;
-using System.Collections.Generic;
 
 namespace IDE_UI.Controls
 {
@@ -137,24 +136,6 @@ namespace IDE_UI.Controls
             return new Point(point.X, point.Y);
         }
 
-        public void indicatorTest()
-        {
-            return;
-            textEditor.IndicatorCurrent = 8;
-            textEditor.IndicatorClearRange(0, textEditor.TextLength);
-
-            textEditor.Indicators[8].Style = IndicatorStyle.Squiggle;
-            textEditor.Indicators[8].ForeColor = System.Drawing.Color.Red;
-
-            // Fill ranges
-            textEditor.IndicatorFillRange(2, 5);
-
-            textEditor.Lines[0].AnnotationStyle = 0;
-            textEditor.Lines[0].AnnotationText = "ddddddd";
-            textEditor.AnnotationVisible = Annotation.Boxed;
-
-        }
-
         private void TextEditor_DwellEnd(object sender, DwellEventArgs e)
         {
             hoverWindow.Hide();
@@ -164,12 +145,12 @@ namespace IDE_UI.Controls
         {
             int line = textEditor.LineFromPosition(e.Position);
             int col = textEditor.GetColumn(e.Position);
-            Debug.WriteLine("editor" + line + "    " + col);
+            //Debug.WriteLine("editor" + line + "    " + col);
             ErrorInfo info = getErrorAtCurrentPos(line, col);
             if(info == null) {
                 return;
             }
-            Debug.WriteLine("info" + info.Line + "    " + info.CharPositionInLine);
+            //Debug.WriteLine("info" + info.Line + "    " + info.CharPositionInLine);
             showWindow(info);
       
         }
@@ -177,13 +158,13 @@ namespace IDE_UI.Controls
         private ErrorInfo getErrorAtCurrentPos(int line, int col)
         {
             if(errors == null) { return null; }
-            int c;
-            int l;
+            int errCol;
+            int errLine;
             foreach (ErrorInfo err in Errors) {
-                c = err.CharPositionInLine;
-                l = err.Line;
+                errCol = err.CharPositionInLine;
+                errLine = err.Line;
 
-                if(l == line + 1 && (c > col - 4 && c < col + 2)) {
+                if(errLine == line + 1 && (errCol > col - 4 && errCol < col + 2)) {
                     return err;
                 }
             }
@@ -200,7 +181,6 @@ namespace IDE_UI.Controls
                 return;
             }
 
-            int length = textEditor.Text.Length;
             foreach(ErrorInfo err in Errors) {
                 var line = textEditor.Lines[err.Line - 1];
                 int pos;
@@ -230,43 +210,26 @@ namespace IDE_UI.Controls
 
             InitIndicator(textEditor);
 
-            textEditor.TextInput += (a, b) => {
-                Debug.WriteLine("TextInput!!!");
-            };
-
             textEditor.KeyUp += (a, b) => {
                 editorDelegate?.charAdded(this, null);
             };
 
-            // INITIAL VIEW CONFIG
             textEditor.WrapMode = WrapMode.None;
+
             textEditor.IndentationGuides = IndentView.LookBoth;
 
-            // STYLING
             InitColors(textEditor);
+
             InitSyntaxColoring(textEditor);
 
-            // NUMBER MARGIN
             InitNumberMargin(textEditor);
 
-            // BOOKMARK MARGIN
             InitBookmarkMargin(textEditor);
 
-            // CODE FOLDING MARGIN
             InitCodeFolding(textEditor);
 
-            // DRAG DROP
-            // TODO - Enable InitDragDropFile
-            //InitDragDropFile();
-
-            // INIT HOTKEYS
-            // TODO - Enable InitHotkeys
-            //InitHotkeys(ScintillaNet);
-
-            // Show EOL?
             textEditor.ViewEol = false;
 
-            // Set the zoom
             textEditor.Zoom = _zoomLevel;
         }
 
@@ -314,19 +277,6 @@ namespace IDE_UI.Controls
         }
         
 
-        private void toggleBookmarkMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            Line currentLine = textEditor.Lines[textEditor.CurrentLine];
-            const uint mask = (1 << DEBUG_MARKER);
-            uint markers = currentLine.MarkerGet();
-            if ((markers & mask) > 0) {
-                currentLine.MarkerDelete(DEBUG_MARKER);
-            }
-            else {
-                currentLine.MarkerAdd(DEBUG_MARKER);
-            }
-        }
-
         #endregion
 
 
@@ -337,7 +287,6 @@ namespace IDE_UI.Controls
         {
             const uint mask = (1 << BREAKPOINT_MARKER);
 
-            //
             if (e.Margin == BREAKPOINT_MARGIN || e.Margin == NUMBER_MARGIN) {
                 
                 var line = textEditor.Lines[textEditor.LineFromPosition(e.Position)];
@@ -378,8 +327,6 @@ namespace IDE_UI.Controls
         #region 自动补全
         private void textEditor_CharAdded(object sender, CharAddedEventArgs e)
         {
-            //InsertMatchedChars(e);
-            //return;
             int oldPos = textEditor.SelectionStart;
             
             switch (e.Char) {
@@ -430,8 +377,7 @@ namespace IDE_UI.Controls
             var lenEntered = currentPos - wordStartPos;
             if (lenEntered > 0) {
                 if (true) {
-                    string tokens = getUserTokens() + " " + keyWords;
-                    Debug.WriteLine(tokens);
+                    string tokens = keyWords;
                     textEditor.AutoCShow(lenEntered, tokens);
                 }
 
