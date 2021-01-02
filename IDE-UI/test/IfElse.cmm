@@ -1,14 +1,14 @@
-int a = 3;
-while(a <> 0){
-    a = a - 1;
+﻿int a = -10;
+if( a > 0 ){
     write(a); 
+    write();
+}else{
+    write(-a); 
     write();
 }
 
 /* 
 * Expected Output:
-* 2
-* 1
-* 0
+* 10
 * program exit
 */
