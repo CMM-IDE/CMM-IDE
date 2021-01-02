@@ -674,8 +674,10 @@ namespace CMMInterpreter.vm
             code2.setOperant(idx);
             codes.Add(new IntermediateCode(curSize, InstructionType.delv, context.codeBlock().Stop.Line));
             curLocalVariablesTableLength = curSize;
-            
-            
+            removeVariableBiggerThanK(curSize);
+
+
+
             return null;
         }
 
@@ -749,6 +751,7 @@ namespace CMMInterpreter.vm
             //局部变量表大于curSize的部分全部删掉！
             codes.Add(new IntermediateCode(curSize, InstructionType.delv, context.Stop.Line));
             curLocalVariablesTableLength = curSize;
+            removeVariableBiggerThanK(curSize);
             return null;
         }
 
@@ -889,6 +892,9 @@ namespace CMMInterpreter.vm
             return null;
         }
 
+        /*
+         在codeBlock中定义的变量在出了block之后应该全部失效
+         */
         public override object VisitCodeBlock([NotNull] CMMParser.CodeBlockContext context)
         {
             int tmp = curLocalVariablesTableLength;
@@ -899,7 +905,25 @@ namespace CMMInterpreter.vm
             // codeBlock中新定义的变量全部失效
             codes.Add(new IntermediateCode(tmp, InstructionType.delv,  context.Stop.Line));
             curLocalVariablesTableLength = tmp;
+            removeVariableBiggerThanK(tmp);
             return null;
+        }
+
+        public void removeVariableBiggerThanK(int k)
+        {
+            List<String> removedVariablesName = new List<String>();
+            foreach (String str in curLocalVariablesTable.Keys)
+            {
+                curLocalVariablesTable.TryGetValue(str, out int index);
+                if(index >= k)
+                {
+                    removedVariablesName.Add(str);
+                }
+            }
+            foreach(String str in removedVariablesName)
+            {
+                curLocalVariablesTable.Remove(str);
+            }
         }
 
 
