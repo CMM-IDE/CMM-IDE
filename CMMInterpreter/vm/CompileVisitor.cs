@@ -511,38 +511,47 @@ namespace CMMInterpreter.vm
             // 当前局部变量表的大小，访问完ForStatement之后要恢复局部变量表
             int curSize = curLocalVariablesTableLength;
             // 这里面可能会定义新的变量，不过没关系，直接插入局部变量表中就可以了，最后我们恢复的。
-            Visit(context.forInitializer());
+            if (context.forInitializer() != null)
+            {
+                Visit(context.forInitializer());
+            }
             // 访问expression，将执行的结果压入栈中
             // addr_expression是expression（比较）的地址
             int addr_expression = codes.Count;
-            Visit(context.expression());
+            if (context.expression() != null)
+            {
+                Visit(context.expression());
+            }
+
             // 如果expression的结果是真，才会访问
             // 这里的0是数字，不是索引，要加上范围！！
-            IntermediateCode code0 = new IntermediateCode(0, InstructionType.push, context.expression().Start.Line);
+            IntermediateCode code0 = new IntermediateCode(0, InstructionType.push, context.Start.Line);
             // 如果是0的话，就直接跳转到codeBlock之后，并且释放局部变量。目的地址待回填
-            IntermediateCode code1 = new IntermediateCode(InstructionType.je, context.expression().Start.Line);
+            IntermediateCode code1 = new IntermediateCode(InstructionType.je, context.Start.Line);
 
             // addr0是codeBlock的起始地址
             codes.Add(code0);
             codes.Add(code1);
             int addr0 = codes.Count;
             // 访问codeBlock
-            Visit(context.codeBlock());
+            if (context.codeBlock() != null)
+                Visit(context.codeBlock());
 
             // 访问更新操作,更新操作的起始地址是addr1
             int addr1 = codes.Count;
-            Visit(context.assignment());
+            if (context.assignment() != null)
+                Visit(context.assignment());
             // 跳转回去expression去判断
-            codes.Add(new IntermediateCode(addr_expression, InstructionType.j, context.assignment().Stop.Line));
+            codes.Add(new IntermediateCode(addr_expression, InstructionType.j, context.Start.Line));
 
             // addr2是执行完codeBlock，而且判断确定不跳转的代码
             int addr2 = codes.Count;
             code1.setOperant(addr2);
             // 替换所有出现的continue break，代码的范围是addr0-add2， 更新操作的代码在addr1
-            replaceBreakAndConti(codes, addr0, addr2-1, addr1);
+            replaceBreakAndConti(codes, addr0, addr2 - 1, addr1);
             //局部变量表大于等于curSize的部分全部删掉！
             codes.Add(new IntermediateCode(curSize, InstructionType.delv, context.Stop.Line));
-            
+
             return null;
         }
 
@@ -577,37 +586,49 @@ namespace CMMInterpreter.vm
          */
         public override object VisitIfStatement([NotNull] CMMParser.IfStatementContext context)
         {
-            
+
             // 查看expression的结果
             Visit(context.expression());
             IntermediateCode code0 = new IntermediateCode(0, InstructionType.push, context.expression().Start.Line);
             codes.Add(code0);
             // 比较expression的结果和0的关系,等于0的话就跳转走,code1的目的地址待回填
             IntermediateCode code1 = new IntermediateCode(InstructionType.je, context.expression().Stop.Line);
-            
+
             codes.Add(code1);
-            Visit(context.codeBlock());
+            if(context.codeBlock() != null)
+                Visit(context.codeBlock());
+            IntermediateCode code3 = new IntermediateCode(InstructionType.j, context.codeBlock().Stop.Line);
+            codes.Add(code3);
             // 条件不符合的情况应该执行的代码行号为addr0,回填一下
             int addr0 = codes.Count;
             code1.setOperant(addr0);
-            
+            List<IntermediateCode> needToAddFinishAddrCodes = new List<IntermediateCode>();
+            needToAddFinishAddrCodes.Add(code3);
 
             // 每个else语句都执行一下
-            if(context.elseClause() != null)
+            if (context.elseClause() != null)
             {
-                foreach(CMMParser.ElseClauseContext ctx in context.elseClause())
+                foreach (CMMParser.ElseClauseContext ctx in context.elseClause())
                 {
-                    if (ctx.ifStatement() == null) {
+                    if (ctx.ifStatement() == null)
+                    {
                         Visit(ctx.codeBlock());
-                        codes.Add(new IntermediateCode(codes.Count, InstructionType.j, ctx.codeBlock().Stop.Line));
+                        IntermediateCode code = new IntermediateCode(InstructionType.j, ctx.codeBlock().Stop.Line);
+                        needToAddFinishAddrCodes.Add(code);
+                        codes.Add(code);
                     }
                     else
                     {
                         Visit(ctx.ifStatement());
                     }
-                    
+
                 }
-                
+
+
+            }
+            foreach (IntermediateCode c in needToAddFinishAddrCodes)
+            {
+                c.operant = codes.Count;
             }
 
             return null;
