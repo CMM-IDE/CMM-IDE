@@ -7,11 +7,13 @@ using System.Text;
 namespace CMMInterpreter.CMMException
 {
     //修改了错误处理的词法分析器
-    class ExceptionLexer : CMMLexer
+    public class ExceptionLexer : CMMLexer
     {
-        public ExceptionLexer(ICharStream input) : base(input)
+        public ExceptionLexer(ICharStream input, IAntlrErrorListener<int> listener) : base(input)
         {
-
+            IAntlrErrorListener<int> errorListener = listener;
+            this.RemoveErrorListeners();
+            this.AddErrorListener(errorListener);
         }
         public ExceptionLexer(ICharStream input,IOutputStream outputStream,IErrorShow errorShow) : base(input)
         {

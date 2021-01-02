@@ -99,15 +99,19 @@ namespace IDE_UI
             if (String.IsNullOrEmpty(input)) {
                 return null;
             }
+
+            var listener = new CMMErrorListener();
+
+
             ICharStream stream = CharStreams.fromstring(input);
-            ITokenSource lexer = new CMMLexer(stream);
+            ITokenSource lexer = new ExceptionLexer(stream, listener);
             ITokenStream tokens = new CommonTokenStream(lexer);
             CMMParser parser = new CMMParser(tokens);
 
             Debug.WriteLine(tokens.Size);
             parser.RemoveErrorListeners();
 
-            var listener = new CMMErrorListener();
+            
             parser.AddErrorListener(listener);
             parser.ErrorHandler = new CMMErrorStrategy();
 

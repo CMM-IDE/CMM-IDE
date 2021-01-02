@@ -272,13 +272,16 @@ namespace IDE_UI
                 errorPanel.Errors = null;
                 textEditor.Errors = null;
                 Task.Run(() => {
+
+                    var listener = new CMMErrorListener();
+
                     ICharStream stream = CharStreams.fromstring(input);
-                    ITokenSource lexer = new CMMLexer(stream);
+                    ITokenSource lexer = new ExceptionLexer(stream, listener);
                     ITokenStream tokens = new CommonTokenStream(lexer);
                     CMMParser parser = new CMMParser(tokens);
                     parser.RemoveErrorListeners();
 
-                    var listener = new CMMErrorListener();
+                    
                     parser.AddErrorListener(listener);
                     parser.ErrorHandler = new CMMErrorStrategy();
 
