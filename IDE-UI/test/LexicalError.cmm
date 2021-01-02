@@ -1,3 +1,10 @@
 int a = 12, b = 12;
 /* End by Chinese semicolon */
 int c = a + b；
+
+/*
+* Expected Output:
+* Line Col Message
+* 3    13  无法识别字符:'；'
+* 10   12  字符缺少匹配'<EOF>'期望匹配的字符:';' 
+*/

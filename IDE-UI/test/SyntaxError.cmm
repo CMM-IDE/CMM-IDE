@@ -1,13 +1,10 @@
-﻿int a = 4, sum = 0;
+int a = 4, sum = 0;
 while(a <> 0 {
     sum = sum + a;
 }
 
 /* 
 * Expected Output:
-* ErrorCode: 102,
-* ErrorType: MISS_
-* PARENTHESE, 
-* ErrorMessage: "圆括号未闭合", 
-* ErrorLine: Line 2.
+* Line Col Message
+* 2    13  字符缺少匹配'{期望匹配的字符':')'
 */

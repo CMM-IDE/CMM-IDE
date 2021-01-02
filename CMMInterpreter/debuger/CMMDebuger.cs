@@ -7,6 +7,9 @@ using System.Threading;
 
 namespace CMMInterpreter.debuger
 {
+    /// <summary>
+    /// 调试器
+    /// </summary>
     public class CMMDebuger
     {
         /// <summary>
@@ -33,14 +36,45 @@ namespace CMMInterpreter.debuger
         /// 运行模式, -1为停止调试, 0为step into, 1为step over, 2为continue
         /// </summary>
         private int mode;
+
+        /// <summary>
+        /// 断点列表
+        /// </summary>
         private List<int> breakpoints;
+
+        /// <summary>
+        /// 中间代码
+        /// </summary>
         private List<IntermediateCode> codesArray;
+
+        /// <summary>
+        /// 函数信息表
+        /// </summary>
         private Dictionary<string, FunctionInformation> functionInformationTable;
+
+        /// <summary>
+        /// 下一行源代码缓存
+        /// </summary>
         private Dictionary<int, List<int>> nextLines;
+
+        /// <summary>
+        /// 中间代码信息表
+        /// </summary>
         private Dictionary<int, IntermediateCodeInformation> intermediateCodeInformations;
+
+        /// <summary>
+        /// 中间代码保存表
+        /// </summary>
         private Dictionary<int, IntermediateCode> savedInstructions;
+
+        /// <summary>
+        /// 中间代码长度
+        /// </summary>
         private int maxLine;
 
+        /// <summary>
+        /// 虚拟机
+        /// </summary>
         private IVirtualMachine vm;
 
         /// <summary>
@@ -397,6 +431,10 @@ namespace CMMInterpreter.debuger
             return nextLine;
         }
 
+        /// <summary>
+        /// 获取源代码-中间代码信息
+        /// </summary>
+        /// <returns>源代码中间代码信息</returns>
         private Dictionary<int, IntermediateCodeInformation> GetIntermediateCodeInformation()
         {
             int length = codesArray.Count;

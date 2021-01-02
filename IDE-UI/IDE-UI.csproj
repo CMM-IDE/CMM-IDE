@@ -231,13 +231,11 @@
     </None>
     <None Include="test\Debug%28Continue%29.cmm" />
     <None Include="test\Debug.cmm" />
-    <None Include="test\ArrayOperation.cmm" />
     <None Include="test\Break.cmm" />
     <None Include="test\Debug%28step into%29.cmm" />
     <None Include="test\debug%28step over%29.cmm" />
     <None Include="test\DoWhile.cmm" />
     <None Include="test\For.cmm" />
-    <None Include="test\ForBlank.cmm" />
     <None Include="test\Function.cmm" />
     <None Include="test\IfElse.cmm" />
     <None Include="test\LexicalError.cmm" />

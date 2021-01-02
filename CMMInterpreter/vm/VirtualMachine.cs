@@ -6,21 +6,34 @@ using System.Text;
 
 namespace CMMInterpreter.vm
 {
+    /// <summary>
+    /// 虚拟机
+    /// </summary>
     public class VirtualMachine : IVirtualMachine
     {
-        // 运行时栈 每个线程对应一个运行时栈
+        /// <summary>
+        /// 运行时栈 每个线程对应一个运行时栈
+        /// </summary>
         List<Stack<StackFrame>> stacks;
 
-        // 代码区
+        /// <summary>
+        /// 代码区
+        /// </summary>
         List<IntermediateCode> codesArray;
 
-        // 当前栈帧
+        /// <summary>
+        /// 当前栈帧
+        /// </summary>
         StackFrame currentStackFrame;
 
-        // 全局栈帧
+        /// <summary>
+        /// 全局栈帧
+        /// </summary>
         StackFrame globalStackFrame;
 
-        // 当前符号表
+        /// <summary>
+        /// 当前符号表
+        /// </summary>
         Dictionary<string, int> currentSymbolTable;
 
         /// <summary>
@@ -38,20 +51,39 @@ namespace CMMInterpreter.vm
         /// </summary>
         Dictionary<string, FunctionInformation> functionInformationTable;
 
+        /// <summary>
+        /// 调用栈
+        /// </summary>
         Stack<StackFrame> stack;
 
+        /// <summary>
+        /// 调用栈中函数的入口地址
+        /// </summary>
         Stack<int> entryStacks;
 
+        /// <summary>
+        /// 是否停止运行
+        /// </summary>
         bool isStop;
-        
-        // 调试器动作
+
+        /// <summary>
+        /// 调试器事件
+        /// </summary>
         public event Action NeedDebug;
 
-        // 运行结束
+        /// <summary>
+        /// 运行结束事件
+        /// </summary>
         public event Action RunFinish;
 
+        /// <summary>
+        /// 程序计数器
+        /// </summary>
         int pc = 0;
 
+        /// <summary>
+        /// 窗口监听器
+        /// </summary>
         VirtualMachineListener mainWindowListener;
 
         public VirtualMachine()
@@ -59,11 +91,19 @@ namespace CMMInterpreter.vm
             stacks = new List<Stack<StackFrame>>();
         }
 
+        /// <summary>
+        /// 注册窗口监听器
+        /// </summary>
+        /// <param name="listener">窗口监听器</param>
         public void register(VirtualMachineListener listener) {
             mainWindowListener = listener;
         }
 
-        // 解释执行代码
+        /// <summary>
+        /// 解释执行代码
+        /// </summary>
+        /// <param name="codes">中间代码</param>
+        /// <returns>是否成功运行</returns>
         public Boolean interpret(List<IntermediateCode> codes)
         {
             
@@ -211,6 +251,11 @@ namespace CMMInterpreter.vm
             return true;
         }
 
+        /// <summary>
+        /// 加法指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
+        /// <param name="pc">程序计数器</param>
         void add(StackFrame frame, int pc)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -218,6 +263,11 @@ namespace CMMInterpreter.vm
             frame.pushToOperantStack(op2 + op1);
         }
 
+        /// <summary>
+        /// 减法指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
+        /// <param name="pc">程序计数器</param>
         void sub(StackFrame frame, int pc)
         {
             double op1 = (double)frame.popFromOperantStack();
@@ -225,6 +275,10 @@ namespace CMMInterpreter.vm
             frame.pushToOperantStack(op2 - op1);
         }
 
+        /// <summary>
+        /// 乘法指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void mul(StackFrame frame)
         {
             double op1 = (double)frame.popFromOperantStack();
@@ -232,6 +286,10 @@ namespace CMMInterpreter.vm
             frame.pushToOperantStack(op2 * op1);
         }
 
+        /// <summary>
+        /// 除法指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void div(StackFrame frame)
         {
             double op1 = (double)frame.popFromOperantStack();
@@ -239,32 +297,63 @@ namespace CMMInterpreter.vm
             frame.pushToOperantStack(op2 / op1);
         }
 
+        /// <summary>
+        /// 取反指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void neg(StackFrame frame)
         {
             double op = (double)frame.popFromOperantStack();
             frame.pushToOperantStack(-op);
         }
+
+        /// <summary>
+        /// 与指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void and(StackFrame frame)
         {
             Boolean op1 = Convert.ToBoolean(frame.popFromOperantStack());
             Boolean op2 = Convert.ToBoolean(frame.popFromOperantStack());
             frame.pushToOperantStack(op2 && op1);
         }
+
+        /// <summary>
+        /// 或指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void or(StackFrame frame)
         {
             Boolean op1 = Convert.ToBoolean(frame.popFromOperantStack());
             Boolean op2 = Convert.ToBoolean(frame.popFromOperantStack());
             frame.pushToOperantStack(op2 || op1);
         }
+
+        /// <summary>
+        /// 非指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void not(StackFrame frame)
         {
             Boolean op = Convert.ToBoolean(frame.popFromOperantStack());
             frame.pushToOperantStack(!op);
         }
+
+        /// <summary>
+        /// 压栈指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
+        /// <param name="operant">操作数</param>
         void push(StackFrame frame, Object operant)
         {
             frame.pushToOperantStack(operant);
         }
+
+        /// <summary>
+        /// 弹栈指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
+        /// <param name="operant">操作数</param>
         void pop(StackFrame frame, Object operant)
         {
             
@@ -278,6 +367,11 @@ namespace CMMInterpreter.vm
                 frame.popFromOperantStack(Convert.ToInt32(operant), false);
             }
         }
+
+        /// <summary>
+        /// 大于指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void g(StackFrame frame)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -287,6 +381,11 @@ namespace CMMInterpreter.vm
             else
                 frame.pushToOperantStack(0.0);
         }
+
+        /// <summary>
+        /// 小于指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void l(StackFrame frame)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -296,6 +395,11 @@ namespace CMMInterpreter.vm
             else
                 frame.pushToOperantStack(0.0);
         }
+
+        /// <summary>
+        /// 大于等于指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void ge(StackFrame frame)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -305,6 +409,11 @@ namespace CMMInterpreter.vm
             else
                 frame.pushToOperantStack(0.0);
         }
+
+        /// <summary>
+        /// 小于等于指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void le(StackFrame frame)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -314,6 +423,11 @@ namespace CMMInterpreter.vm
             else
                 frame.pushToOperantStack(0.0);
         }
+
+        /// <summary>
+        /// 等于指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void eq(StackFrame frame)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -323,6 +437,11 @@ namespace CMMInterpreter.vm
             else
                 frame.pushToOperantStack(0.0);
         }
+
+        /// <summary>
+        /// 不等于指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
         void ne(StackFrame frame)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -333,6 +452,10 @@ namespace CMMInterpreter.vm
                 frame.pushToOperantStack(0.0);
         }
 
+        /// <summary>
+        /// 无条件转指令
+        /// </summary>
+        /// <param name="operant">操作数</param>
         void j(Object operant)
         {
             pc = (int)operant-1;
@@ -356,6 +479,11 @@ namespace CMMInterpreter.vm
             }
         }
 
+        /// <summary>
+        /// 大于则跳转指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
+        /// <param name="operant">操作数</param>
         void jg(StackFrame frame, Object operant)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -366,6 +494,11 @@ namespace CMMInterpreter.vm
             }
         }
 
+        /// <summary>
+        /// 小于则跳转指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
+        /// <param name="operant">操作数</param>
         void jl(StackFrame frame, Object operant)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -375,6 +508,12 @@ namespace CMMInterpreter.vm
                 pc = (int)operant-1;
             }
         }
+
+        /// <summary>
+        /// 不等于则跳转指令
+        /// </summary>
+        /// <param name="frame">当前栈帧</param>
+        /// <param name="operant">操作数</param>
         void jne(StackFrame frame, Object operant)
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
@@ -384,16 +523,30 @@ namespace CMMInterpreter.vm
                 pc = (int)operant-1;
             }
         }
+
+        /// <summary>
+        /// 调用指令
+        /// </summary>
         void call()
         {
 
         }
+
+        /// <summary>
+        /// 读指令
+        /// </summary>
+        /// <param name="frame"></param>
         void read(StackFrame frame)
         {
             // 读取一个输入压到栈顶
             // 
         }
 
+        /// <summary>
+        /// 写指令
+        /// </summary>
+        /// <param name="frame"></param>
+        /// <returns></returns>
         Object write(StackFrame frame)
         {
             // 打印栈顶元素
@@ -432,6 +585,9 @@ namespace CMMInterpreter.vm
             
         }
 
+        /// <summary>
+        /// 中断指令
+        /// </summary>
         void i()
         {
             // 调用调试器处理
@@ -501,6 +657,10 @@ namespace CMMInterpreter.vm
             return lastInformation;
         }
 
+        /// <summary>
+        /// 获取源代码-中间代码信息
+        /// </summary>
+        /// <returns>源代码-中间代码信息</returns>
         public Dictionary<int, IntermediateCodeInformation> GetIntermediateCodeInformation()
         {
             int length = codesArray.Count;
@@ -539,6 +699,10 @@ namespace CMMInterpreter.vm
             return informations;
         }
 
+        /// <summary>
+        /// 执行单条指令
+        /// </summary>
+        /// <param name="code">单条指令</param>
         public void InterpretSingleInstruction(IntermediateCode code)
         {
             switch (code.type)
@@ -666,7 +830,6 @@ namespace CMMInterpreter.vm
                     currentSymbolTable = globalSymbolTable;
                     break;
                 default:
-
                     break;
 
             }
@@ -803,6 +966,12 @@ namespace CMMInterpreter.vm
             }
         }
 
+        /// <summary>
+        /// 获取栈帧信息
+        /// </summary>
+        /// <param name="stackFrame">栈帧</param>
+        /// <param name="symbolTable">符号表</param>
+        /// <returns>栈帧信息</returns>
         private List<FrameInformation> GetFrame(StackFrame stackFrame, Dictionary<string, int> symbolTable)
         {
             List<FrameInformation> informations = new List<FrameInformation>();
