@@ -366,8 +366,7 @@ namespace IDE_UI
 
         public void write(Object o)
         {
-            Print(o.ToString() + "\n");
+            Print(o.ToString().Equals("\n") ? "\n" : (o.ToString() + " "));
         }
-
     }
 }

@@ -253,7 +253,6 @@ namespace CMMInterpreter.vm
         public override object VisitFactor([NotNull] CMMParser.FactorContext context)
         {
             int funcAddr;
-            // TODO: 还没写完，有空再写
             if(context.Identifier() != null)
             {
 
@@ -304,10 +303,10 @@ namespace CMMInterpreter.vm
                 return null;
                 
             }
-            if (context.LeftBracket() != null)
+            if (context.GetChild(0).GetText() == "(")
             {
                 // 表达式的情况 直接遍历表达式求值
-                Visit(context.GetChild(2));
+                Visit(context.GetChild(1));
             }
             if (context.Sub() != null)
             {
@@ -825,10 +824,21 @@ namespace CMMInterpreter.vm
          */
         public override object VisitWriteStatement([NotNull] CMMParser.WriteStatementContext context)
         {
-            if (context.expression() != null) {
-                VisitChildren(context);
+            IntermediateCode code;
+            if (context.ChildCount == 4) {
+                // write不带参数
+                code = new IntermediateCode(0, InstructionType.write, context.Start.Line);
+                
+
             }
-            IntermediateCode code = new IntermediateCode(InstructionType.write, context.Start.Line);
+            else
+            {
+                // write带参数 先访问参数 将其压栈
+                VisitChildren(context);
+                // 打印栈顶元素
+                code = new IntermediateCode(1, InstructionType.write, context.Start.Line);
+            }
+
             codes.Add(code);
             return null;
         }

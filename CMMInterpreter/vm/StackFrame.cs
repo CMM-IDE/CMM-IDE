@@ -108,7 +108,11 @@ namespace CMMInterpreter.vm
             
             try
             {
-                if (isPointer)
+                if(index == -1)
+                {
+                    return operantStack.Pop();
+                }
+                else if (isPointer)
                 {
                     // pop (1)表示把局部变量地址为1元素的值作为地址，将栈顶元素出栈并赋值给这个地址的局部变量
                     int address = Convert.ToInt32(variableStack[index]);

@@ -115,6 +115,13 @@ namespace CMMInterpreter.vm
             stack.Push(currentStackFrame);
 
             codesArray = codes;
+
+            int line = 0;
+            foreach(IntermediateCode code in codesArray)
+            {
+                Console.WriteLine(line.ToString() + ":" + code.type.ToString() + " " + (code.operant == null ? "" : code.operant.ToString()));
+                line++;
+            }
             
             for (; pc < codes.Count; pc++)
             {
@@ -206,7 +213,7 @@ namespace CMMInterpreter.vm
                         read(currentStackFrame);
                         break;
                     case InstructionType.write:
-                        write(currentStackFrame);
+                        write(currentStackFrame, code.operant);
                         break;
                     case InstructionType.delv:
                         delv(currentStackFrame);
@@ -356,8 +363,12 @@ namespace CMMInterpreter.vm
         /// <param name="operant">操作数</param>
         void pop(StackFrame frame, Object operant)
         {
-            
-            if (operant.ToString().Contains("("))
+            if (operant == null)
+            {
+                // pop不带操作数
+                frame.popFromOperantStack(-1, false);
+            }
+            else if (operant.ToString().Contains("("))
             {
                 // 指针寻址模式
                 frame.popFromOperantStack(Convert.ToInt32(operant.ToString().Substring(1, operant.ToString().Length - 2)), true);
@@ -547,12 +558,19 @@ namespace CMMInterpreter.vm
         /// </summary>
         /// <param name="frame"></param>
         /// <returns></returns>
-        Object write(StackFrame frame)
+        void write(StackFrame frame, Object operant)
         {
-            // 打印栈顶元素
-            Console.WriteLine(frame.peek());
-            mainWindowListener.write(frame.peek());
-            return frame.peek();
+            if (Convert.ToBoolean(operant))
+            {
+                // 操作数为1，栈顶元素出栈并打印之
+                Object peek = frame.popFromOperantStack();
+                mainWindowListener.write(peek);
+                return;
+            }
+            // 否则打印换行符号
+            mainWindowListener.write("\n");
+            return;
+            
         }
 
         void delv(StackFrame frame)
@@ -796,7 +814,7 @@ namespace CMMInterpreter.vm
                     read(currentStackFrame);
                     break;
                 case InstructionType.write:
-                    write(currentStackFrame);
+                    write(currentStackFrame, code.operant);
                     break;
                 case InstructionType.delv:
                     delv(currentStackFrame);
