@@ -116,12 +116,7 @@ namespace CMMInterpreter.vm
 
             codesArray = codes;
 
-            int line = 0;
-            foreach(IntermediateCode code in codesArray)
-            {
-                Console.WriteLine(line.ToString() + ":" + code.type.ToString() + " " + (code.operant == null ? "" : code.operant.ToString()));
-                line++;
-            }
+            
             
             for (; pc < codes.Count; pc++)
             {
@@ -1009,6 +1004,17 @@ namespace CMMInterpreter.vm
                 }
             }
             return informations;
+        }
+
+        // 在控制台打印codes，用来debug，勿删
+        public void printCodes()
+        {
+            int line = 0;
+            foreach (IntermediateCode code in codesArray)
+            {
+                Console.WriteLine(line.ToString() + ":" + code.type.ToString() + " " + (code.operant == null ? "" : code.operant.ToString()));
+                line++;
+            }
         }
     }
 }
