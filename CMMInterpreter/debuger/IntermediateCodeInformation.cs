@@ -28,5 +28,11 @@ namespace CMMInterpreter.debuger
         /// 调用函数入口地址表
         /// </summary>
         public LinkedList<int> FuncionEntryList { get; set; }
+
+
+        /// <summary>
+        /// 是否为函数体语句
+        /// </summary>
+        public bool IsFunctionBody { get; set; }
     }
 }

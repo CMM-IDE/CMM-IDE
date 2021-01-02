@@ -1,0 +1,18 @@
+﻿int func(int x, int y) {
+    int z = sub(x,y);
+    return z;
+}
+int sub(int x, int y) {
+    int z = x-y;
+    return z;
+}
+int a = 4;
+int b = 6;
+a = func(a, b)+sub(a,b);
+write(a);
+
+/*  
+* Expected Output:
+* -4
+* program exit
+*/

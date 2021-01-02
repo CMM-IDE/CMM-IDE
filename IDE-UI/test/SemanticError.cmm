@@ -1,4 +1,4 @@
-﻿bool add(int a, int b){
+bool add(int a, int b){
     return a + b;
 }
 

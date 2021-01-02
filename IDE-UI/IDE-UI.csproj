@@ -229,6 +229,8 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="test\Debug%28Continue%29.cmm" />
+    <None Include="test\Debug.cmm" />
     <None Include="test\ArrayOperation.cmm" />
     <None Include="test\Break.cmm" />
     <None Include="test\Debug%28step into%29.cmm" />

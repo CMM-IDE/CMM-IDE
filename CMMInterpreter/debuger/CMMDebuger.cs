@@ -34,6 +34,7 @@ namespace CMMInterpreter.debuger
         /// </summary>
         private int mode;
         private List<int> breakpoints;
+        private List<IntermediateCode> codesArray;
         private Dictionary<string, FunctionInformation> functionInformationTable;
         private Dictionary<int, List<int>> nextLines;
         private Dictionary<int, IntermediateCodeInformation> intermediateCodeInformations;
@@ -63,37 +64,7 @@ namespace CMMInterpreter.debuger
 
             // 载入中间代码
             vm.Load(codes);
-
-            // 获取源代码-中间代码信息
-            intermediateCodeInformations = vm.GetIntermediateCodeInformation();
-
-            nextLines = new Dictionary<int, List<int>>();
-
-            savedInstructions = new Dictionary<int, IntermediateCode>();
-
-            // 获取最大行信息
-            maxLine = int.MinValue;
-
-            foreach(int key in intermediateCodeInformations.Keys)
-            {
-                if (key > maxLine) 
-                { 
-                    maxLine = key; 
-                }
-            }
-
-            // 遍历断点信息
-            foreach(int breakpoint in breakpoints)
-            {
-                // 保存断点处指令并替换为int指令
-                if (intermediateCodeInformations.ContainsKey(breakpoint))
-                {
-                    IntermediateCodeInformation information = intermediateCodeInformations[breakpoint];
-                    int address = information.Address;
-                    IntermediateCode saved =  vm.ReplaceWithInt(address);
-                    savedInstructions.Add(address, saved);
-                }
-            }
+            codesArray = codes;
         }
 
         /// <summary>
@@ -110,6 +81,36 @@ namespace CMMInterpreter.debuger
         /// </summary>
         public void Run()
         {
+            // 获取源代码-中间代码信息
+            intermediateCodeInformations = GetIntermediateCodeInformation();
+
+            nextLines = new Dictionary<int, List<int>>();
+
+            savedInstructions = new Dictionary<int, IntermediateCode>();
+
+            // 获取最大行信息
+            maxLine = int.MinValue;
+
+            foreach (int key in intermediateCodeInformations.Keys)
+            {
+                if (key > maxLine)
+                {
+                    maxLine = key;
+                }
+            }
+
+            // 遍历断点信息
+            foreach (int breakpoint in breakpoints)
+            {
+                // 保存断点处指令并替换为int指令
+                if (intermediateCodeInformations.ContainsKey(breakpoint))
+                {
+                    IntermediateCodeInformation information = intermediateCodeInformations[breakpoint];
+                    int address = information.Address;
+                    IntermediateCode saved = vm.ReplaceWithInt(address);
+                    savedInstructions.Add(address, saved);
+                }
+            }
             vm.Run();
         }
 
@@ -343,7 +344,12 @@ namespace CMMInterpreter.debuger
                                 // 同时保存该行的下一行
                                 if (information.Key != maxLine)
                                 {
-                                    nextLines.Add(line, new List<int> { GetNextLine(line), GetNextLine(information.Key) });
+                                    int nextLine = GetNextLine(information.Key);
+                                    while (intermediateCodeInformations[nextLine].IsFunctionBody&&nextLine<maxLine)
+                                    {
+                                        nextLine = GetNextLine(nextLine);
+                                    }
+                                    nextLines.Add(line, new List<int> { GetNextLine(line), nextLine });
                                     break;
                                 }
                                 else
@@ -356,7 +362,12 @@ namespace CMMInterpreter.debuger
                     else
                     {
                         // 非函数体中的直接获取下一行
-                        nextLines.Add(line, new List<int> { GetNextLine(line) });
+                        int nextLine = GetNextLine(line);
+                        while (intermediateCodeInformations[nextLine].IsFunctionBody && nextLine < maxLine)
+                        {
+                            nextLine = GetNextLine(nextLine);
+                        }
+                        nextLines.Add(line, new List<int> { nextLine });
                     }
                 }
                 
@@ -384,6 +395,51 @@ namespace CMMInterpreter.debuger
                 nextLine++;
             }
             return nextLine;
+        }
+
+        private Dictionary<int, IntermediateCodeInformation> GetIntermediateCodeInformation()
+        {
+            int length = codesArray.Count;
+            Dictionary<int, IntermediateCodeInformation> informations = new Dictionary<int, IntermediateCodeInformation>();
+            // 遍历中间代码
+            for (int i = 0; i < length; i++)
+            {
+                IntermediateCode current = codesArray[i];
+                int currentLine = current.lineNum;
+                IntermediateCodeInformation currentInformation;
+
+                // 判断该中间指令对应源代码的行是否已经加入信息表中
+                if (informations.TryGetValue(currentLine, out currentInformation))
+                {
+                    // 该行含函数调用则更新函数入口地址列表
+                    if (current.type == InstructionType.call)
+                    {
+                        currentInformation.IsFunctionCall = true;
+                        currentInformation.FuncionEntryList.AddLast((int)current.operant);
+                        currentInformation.IsFunctionBody = false;
+                        informations[currentLine] = currentInformation;
+                    }
+                }
+                else
+                {
+                    // 该行源代码首条中间指令
+                    currentInformation = new IntermediateCodeInformation();
+                    currentInformation.Address = i;
+                    currentInformation.Line = currentLine;
+                    currentInformation.IsFunctionCall = false;
+                    currentInformation.FuncionEntryList = new LinkedList<int>();
+                    currentInformation.IsFunctionBody = false;
+                    informations.Add(currentLine, currentInformation);
+                }
+
+
+            }
+            foreach(FunctionInformation information in functionInformationTable.Values)
+            {
+                int line = codesArray[information.enrtyAddress].lineNum;
+                informations[line].IsFunctionBody = true;
+            }
+            return informations;
         }
     }
 }

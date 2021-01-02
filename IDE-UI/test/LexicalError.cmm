@@ -1,11 +1,3 @@
-﻿int a = 12, b = 12;
+int a = 12, b = 12;
 /* End by Chinese semicolon */
 int c = a + b；
-
-/* 
-* Expected Output:
-* ErrorCode: 002,
-* ErrorType: ILLEGAL_CHARACTER, 
-* ErrorMessage: "非法字符", 
-* ErrorLine: Line 3.
-*/
