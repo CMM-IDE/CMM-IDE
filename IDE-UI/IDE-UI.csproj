@@ -242,7 +242,7 @@
     <None Include="test\IfElse.cmm" />
     <None Include="test\LexicalError.cmm" />
     <None Include="test\OpenFile.cmm" />
-    <None Include="test\SemanticError.cmm" />
+    <None Include="test\ReadAndWrite.cmm" />
     <None Include="test\SyntaxError.cmm" />
     <None Include="test\While.cmm" />
   </ItemGroup>

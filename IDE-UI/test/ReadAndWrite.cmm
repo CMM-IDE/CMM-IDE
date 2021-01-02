@@ -1,0 +1,16 @@
+write(100); 
+write();
+int a = 0;
+read(a);
+write(a); 
+write();
+
+/* input: 200 */
+
+/* 
+* Expected Output:
+* 100
+* 请输入一个整数:
+* 200
+* program exit
+*/
