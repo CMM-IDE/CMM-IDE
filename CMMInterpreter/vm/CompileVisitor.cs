@@ -673,7 +673,7 @@ namespace CMMInterpreter.vm
             code1.setOperant(addr1);
             code2.setOperant(idx);
             codes.Add(new IntermediateCode(curSize, InstructionType.delv, context.codeBlock().Stop.Line));
-            
+            curLocalVariablesTableLength = curSize;
             
             
             return null;
@@ -746,9 +746,9 @@ namespace CMMInterpreter.vm
             code1.setOperant(addr2);
             // 替换所有出现的continue break，代码的范围是addr0-add2， 更新操作的代码在addr1
             replaceBreakAndConti(codes, addr0, addr2 - 1, addr1);
-            //局部变量表大于等于curSize的部分全部删掉！
+            //局部变量表大于curSize的部分全部删掉！
             codes.Add(new IntermediateCode(curSize, InstructionType.delv, context.Stop.Line));
-
+            curLocalVariablesTableLength = curSize;
             return null;
         }
 
@@ -886,6 +886,19 @@ namespace CMMInterpreter.vm
             }
             codes.Add(code);
             
+            return null;
+        }
+
+        public override object VisitCodeBlock([NotNull] CMMParser.CodeBlockContext context)
+        {
+            int tmp = curLocalVariablesTableLength;
+            if(context.statements() != null)
+            {
+                Visit(context.statements());
+            }
+            // codeBlock中新定义的变量全部失效
+            codes.Add(new IntermediateCode(tmp, InstructionType.delv,  context.Stop.Line));
+            curLocalVariablesTableLength = tmp;
             return null;
         }
 
