@@ -115,8 +115,6 @@ namespace CMMInterpreter.vm
             stack.Push(currentStackFrame);
 
             codesArray = codes;
-
-            
             
             for (; pc < codes.Count; pc++)
             {
@@ -410,7 +408,7 @@ namespace CMMInterpreter.vm
         {
             double op1 = Convert.ToDouble(frame.popFromOperantStack());
             double op2 = Convert.ToDouble(frame.popFromOperantStack());
-            if (op2 < op1)
+            if (op2 >= op1)
                 frame.pushToOperantStack(1.0);
             else
                 frame.pushToOperantStack(0.0);
