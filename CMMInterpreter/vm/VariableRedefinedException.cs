@@ -10,6 +10,8 @@ namespace CMMInterpreter.vm
         private CMMParser.InitializerContext context;
         private ErrorInfo errorInfo;
 
+        public ErrorInfo Error => errorInfo;
+
         public VariableRedefinedException()
         {
         }
@@ -19,10 +21,10 @@ namespace CMMInterpreter.vm
         {
             this.v = v;
             this.context = context;
-            errorInfo = new ErrorInfo(context.Start.Line, context.Start.Column, this.ToString());
+            errorInfo = new ErrorInfo(context.Start.Line, context.Start.Column, "列变量" + v + "多次定义");
         }
 
-        public String ToString()
+        override public string ToString()
         {
             return context.Start.Line + "行" + context.Start.Column + "列变量" + v + "多次定义";
         }

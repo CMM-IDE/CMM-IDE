@@ -8,7 +8,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Grid x:Name="hintGrid" Grid.Row="0">
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" Foreground="#DDDDDD">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" Foreground="#BBBBBB">
                 请到切换至“调试”面板查看输出
             </TextBlock>
         </Grid>
