@@ -146,12 +146,8 @@ namespace IDE_UI
                         State.TreeWindowShowed = false;
                         State.ErrorWindowShowed = false;
 
-                        if(isDebug) {
-                            extraWindowPresenter.Content = hintControl;
-                        }
-                        else {
-                            extraWindowPresenter.Content = consoleTextBox;
-                        }
+                        extraWindowPresenter.Content = isDebug ? (object)hintControl : consoleTextBox;
+
                     }
                     break;
                 case "debug":
@@ -211,6 +207,9 @@ namespace IDE_UI
 
         private void init()
         {
+            AllowsTransparency = false;
+            this.DataContext = this;
+
             consoleTextBox = new TextBox();
             consoleTextBox.FontSize = 14;
             consoleTextBox.AcceptsReturn = true;
@@ -262,13 +261,14 @@ namespace IDE_UI
             idleExec.MarkActive();
         }
 
+
         private void performCheck()
         {
             Debug.WriteLine("perform check");
-            String input;
+            
             Dispatcher.Invoke(() => {
-                input = textEditor.Text;
-                if(String.IsNullOrEmpty(input)) {
+                string input = textEditor.Text;
+                if(string.IsNullOrEmpty(input)) {
                     return;
                 }
                 errorPanel.Errors = null;

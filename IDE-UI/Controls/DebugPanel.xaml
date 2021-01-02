@@ -19,7 +19,7 @@
     
     <Grid>
         <Grid x:Name="hintGrid" Grid.Row="0" Visibility="{Binding InDebugMode, Converter={StaticResource BoolToVisibilityReverse}}">
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" Foreground="#DDDDDD">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" Foreground="#999999">
                 当前不在调试模式
             </TextBlock>
         </Grid>

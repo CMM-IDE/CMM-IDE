@@ -26,8 +26,7 @@ namespace IDE_UI
         public MainWindow()
         {
             InitializeComponent();
-            AllowsTransparency = false;
-            this.DataContext = this;
+
             init();
         }
 
@@ -110,103 +109,25 @@ namespace IDE_UI
 
         #endregion
 
-        /// <summary>
-        /// 准备运行代码
-        /// </summary>
-        private IParseTree prepareForRunning()
-        {
-            errorPanel.Errors = null;
-            textEditor.Errors = null;
 
-            String input = textEditor.Text;
-            if (String.IsNullOrEmpty(input)) {
-                return null;
-            }
-
-            var listener = new CMMErrorListener();
-
-            ICharStream stream = CharStreams.fromstring(input);
-            ITokenSource lexer = new ExceptionLexer(stream, listener);
-            ITokenStream tokens = new CommonTokenStream(lexer);
-            CMMParser parser = new CMMParser(tokens);
-
-            parser.RemoveErrorListeners();
-
-            parser.AddErrorListener(listener);
-            parser.ErrorHandler = new CMMErrorStrategy();
-
-            parser.BuildParseTree = true;
-            IParseTree tree = parser.statements();
-
-            //如果出错，转到错误面板并返回null
-            if(listener.errors.Count != 0) {
-                Debug.WriteLine(listener.errors.Count);
-                if (!State.ErrorWindowShowed) {
-                    extraPanelButton_Click(btnErrorWindow, null);
-                }
-                errorPanel.Errors = listener.errors;
-                textEditor.Errors = listener.errors;
-                return null;
-            }
-            var graph = new ParseTreeGrapher().CreateGraph(tree, CMMParser.ruleNames);
-            drawTreePanel.Graph = graph;
-            return tree;
-        }
 
         /// <summary>
         /// 运行代码
         /// </summary>
         private void run_Click(object sender, RoutedEventArgs e)
         {
-            IParseTree tree = prepareForRunning();
-            if (tree == null) {
+            IParseTree tree = prepareForCodeGen();
+            CompileVisitor visitor = prepareForRunning(tree);
+
+            if(visitor == null) {
                 return;
             }
-
-            if (!State.ConsoleShowed) {
-                extraPanelButton_Click(btnConsoleWindow, null);
-            }
-
-            consoleTextBox.Text = "";
-            var visitor = new CompileVisitor();
-            try {
-                visitor.generateCodes(tree);
-
-                //中间代码存为字符串。
-                intermediateCode = "";
-                for (int i = 0; i < visitor.codes.Count; i++) {
-                    string newLine = i + ":\t" + visitor.codes[i].toString() + "\n";
-                    intermediateCode += newLine;
-                }
-            }
-            catch (VariableNotFountException exp) {
-                Print(exp.ToString());
-                intermediateCode = null;
-            }
-            catch(VariableRedefinedException exp)
-            {
-                Print(exp.ToString());
-                intermediateCode = null;
-            }
-
             VirtualMachine vm = new VirtualMachine();
             vm.register(this);
             vm.interpret(visitor.codes);
 
         }
 
-        /// <summary>
-        /// 准备调试
-        /// </summary>
-        private void prepareForDebug()
-        {
-            if (!State.DebugWindowShowed) {
-                extraPanelButton_Click(btnDebugWindow, null);
-            }
-            debugPanel.consolePresenter.Content = consoleTextBox;
-
-            consoleTextBox.Text = "";
-        }
 
         /// <summary>
         /// 调试代码
@@ -214,28 +135,14 @@ namespace IDE_UI
         private void btnDebug_Click(object sender, RoutedEventArgs e)
         {
 
-            IParseTree tree = prepareForRunning();
-            if (tree == null) {
+            IParseTree tree = prepareForCodeGen();
+            CompileVisitor visitor = prepareForRunning(tree);
+
+            if (visitor == null) {
                 return;
             }
 
             prepareForDebug();
-
-            var visitor = new CompileVisitor();
-            try {
-                visitor.generateCodes(tree);
-
-                //中间代码存为字符串。
-                intermediateCode = "";
-                for (int i = 0; i < visitor.codes.Count; i++) {
-                    string newLine = i + ":\t" + visitor.codes[i].toString() + "\n";
-                    intermediateCode += newLine;
-                }
-            }
-            catch (VariableNotFountException exp) {
-                Print(exp.ToString());
-                intermediateCode = null;
-            }
 
             // 断点列表
             List<int> breakpoints = textEditor.GetBreakPoints();
@@ -269,6 +176,111 @@ namespace IDE_UI
         }
 
         /// <summary>
+        /// 准备生成代码
+        /// </summary>
+        private IParseTree prepareForCodeGen()
+        {
+            errorPanel.Errors = null;
+            textEditor.Errors = null;
+
+            String input = textEditor.Text;
+            if (String.IsNullOrEmpty(input)) {
+                return null;
+            }
+
+            var listener = new CMMErrorListener();
+
+            ICharStream stream = CharStreams.fromstring(input);
+            ITokenSource lexer = new ExceptionLexer(stream, listener);
+            ITokenStream tokens = new CommonTokenStream(lexer);
+            CMMParser parser = new CMMParser(tokens);
+
+            parser.RemoveErrorListeners();
+
+            parser.AddErrorListener(listener);
+            parser.ErrorHandler = new CMMErrorStrategy();
+
+            parser.BuildParseTree = true;
+            IParseTree tree = parser.statements();
+
+            //如果出错，转到错误面板并返回null
+            if (listener.errors.Count != 0) {
+
+                handleCompileTimeError(listener.errors);
+                return null;
+            }
+            var graph = new ParseTreeGrapher().CreateGraph(tree, CMMParser.ruleNames);
+            drawTreePanel.Graph = graph;
+
+            return tree;
+        }
+
+        /// <summary>
+        /// 准备运行代码
+        /// </summary>
+        private CompileVisitor prepareForRunning(IParseTree tree)
+        {
+            if (tree == null) {
+                return null;
+            }
+
+            var visitor = new CompileVisitor();
+            try {
+                visitor.generateCodes(tree);
+
+                //中间代码存为字符串。
+                intermediateCode = "";
+                for (int i = 0; i < visitor.codes.Count; i++) {
+                    string newLine = i + ":\t" + visitor.codes[i].toString() + "\n";
+                    intermediateCode += newLine;
+                }
+            }
+            catch (VariableNotFountException exp) {
+                handleCompileTimeError(new List<ErrorInfo> { exp.Error });
+                intermediateCode = null;
+                return null;
+            }
+            catch (VariableRedefinedException exp) {
+                handleCompileTimeError(new List<ErrorInfo> { exp.Error });
+                intermediateCode = null;
+                return null;
+            }
+
+            if (!State.ConsoleShowed) {
+                extraPanelButton_Click(btnConsoleWindow, null);
+            }
+
+            consoleTextBox.Text = "";
+
+            return visitor;
+        }
+
+        /// <summary>
+        /// 准备调试
+        /// </summary>
+        private void prepareForDebug()
+        {
+            if (!State.DebugWindowShowed) {
+                extraPanelButton_Click(btnDebugWindow, null);
+            }
+            debugPanel.consolePresenter.Content = consoleTextBox;
+
+            consoleTextBox.Text = "";
+        }
+
+        /// <summary>
+        /// 处理运行前错误
+        /// </summary>
+        private void handleCompileTimeError(List<ErrorInfo> errors)
+        {
+            if (!State.ErrorWindowShowed) {
+                extraPanelButton_Click(btnErrorWindow, null);
+            }
+            errorPanel.Errors = errors;
+            textEditor.Errors = errors;
+        }
+
+        /// <summary>
         /// 处理调试
         /// </summary>
         private void HandlerDebug()
@@ -281,24 +293,7 @@ namespace IDE_UI
                 debugPanel.InDebugMode = true;
                 debugPanel.StackFrameSymbols = stackFrames;
                 textEditor.CurrentDebugLine = cmmDebuger.GetCurrentLine() - 1;
-
-                //// 获取当前栈帧
-                //consoleTextBox.Text += "\n---Current Frame Stack---\nAddress\tName\tValue\n";
-                //foreach (FrameInformation information in informations)
-                //{
-                //    consoleTextBox.Text += information.Address + "\t" + information.Name + "\t" + information.Value + "\n";
-                //}
-
-                //// 获取调用栈
-                //consoleTextBox.Text += "\n---Call Frame Stack---\n";
-                //foreach (StackFrameInformation information in stackFrames)
-                //{
-                //    consoleTextBox.Text += information.Name + "\t" + information.Line + "\nAddress\tName\tValue\n";
-                //    foreach (FrameInformation frame in information.Frame)
-                //    {
-                //        consoleTextBox.Text += frame.Address + "\t" + frame.Name + "\t" + frame.Value + "\n";
-                //    }
-                //}
+                //这里本来被注释掉的大段东西放在文件末尾
             });
         }
 
@@ -375,3 +370,22 @@ namespace IDE_UI
         }
     }
 }
+
+
+//// 获取当前栈帧
+//consoleTextBox.Text += "\n---Current Frame Stack---\nAddress\tName\tValue\n";
+//foreach (FrameInformation information in informations)
+//{
+//    consoleTextBox.Text += information.Address + "\t" + information.Name + "\t" + information.Value + "\n";
+//}
+
+//// 获取调用栈
+//consoleTextBox.Text += "\n---Call Frame Stack---\n";
+//foreach (StackFrameInformation information in stackFrames)
+//{
+//    consoleTextBox.Text += information.Name + "\t" + information.Line + "\nAddress\tName\tValue\n";
+//    foreach (FrameInformation frame in information.Frame)
+//    {
+//        consoleTextBox.Text += frame.Address + "\t" + frame.Name + "\t" + frame.Value + "\n";
+//    }
+//}
